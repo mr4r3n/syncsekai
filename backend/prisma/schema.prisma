@@ -1,0 +1,495 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum AnimeProvider {
+  ANILIST
+  MAL
+  KITSU
+}
+
+enum SyncStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  SKIPPED
+  REVERTED
+}
+
+model User {
+  id                  String             @id @default(cuid())
+  userToken           String             @unique // usr_live_xxxx
+  email               String             @unique
+  pendingEmail        String?
+  emailChangeToken    String?            @unique
+  emailChangeExpiresAt DateTime?
+  username            String
+  passwordHash        String?
+  role                Role               @default(USER)
+  isActive            Boolean            @default(false)
+  activationToken     String?
+  activationExpiresAt DateTime?
+  avatarUrl           String?
+  lastUsernameChange  DateTime?
+  twoFactorEnabled    Boolean            @default(false)
+  twoFactorType       String             @default("NONE") // NONE, APP_TOTP, EMAIL_OTP
+  twoFactorSecret     String?
+  emailOtpCode        String?
+  emailOtpExpiresAt   DateTime?
+  passwordResetToken     String?            @unique
+  passwordResetExpiresAt DateTime?
+  backupCodes            String[]           @default([])
+  backupCodesGeneratedAt DateTime?
+  // Campos usados por auth.service.ts (borrado de cuenta con periodo de gracia
+  // de 24h) que faltaban en el schema versionado -- bug preexistente ajeno a
+  // Jellyfin, detectado porque bloqueaba `nest start` en local. Aditivo: solo
+  // añade columnas nullable, no toca nada existente.
+  deletionToken          String?
+  deletionTokenExpiresAt DateTime?
+  deletionScheduledAt    DateTime?
+  googleId            String?            @unique
+  discordId           String?            @unique
+  githubId            String?            @unique
+  webhookToken        String             @unique // whk_live_xxxx
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  settings            UserSettings?
+  plexConnection      PlexConnection?
+  jellyfinConnection  JellyfinConnection?
+  embyConnection      EmbyConnection?
+  animeConnections    AnimeConnection[]
+  scrobbleHistory     ScrobbleHistory[]
+  titleMappings       TitleMapping[]
+  blacklist           BlacklistEntry[]
+  sessions            Session[]
+  notifications       Notification[]
+  createdTickets      Ticket[]           @relation("UserTickets")
+  assignedTickets     Ticket[]           @relation("AdminAssignedTickets")
+  ticketMessages      TicketMessage[]
+  favorites           UserFavorite[]
+}
+
+model UserFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  animeId   String
+  title     String
+  coverUrl  String?
+  genres    String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, animeId])
+  @@index([userId])
+}
+
+model UserSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completionPercentage Int      @default(85)
+  syncRatings          Boolean  @default(true)
+  emailErrorAlerts     Boolean  @default(true)
+  discordNotifications Boolean  @default(true)
+  webNotifications     Boolean  @default(true)
+  autoApproveMappings  Boolean  @default(true)
+  preferredTracker     String   @default("BOTH")
+  blockedGenres        String[] @default([])
+  canScrobble          Boolean  @default(true)
+  canAccessCatalog     Boolean  @default(true)
+  canEditMappings      Boolean  @default(true)
+  canSyncAnilist       Boolean  @default(true)
+  canSyncMal           Boolean  @default(true)
+  canSyncKitsu         Boolean  @default(true)
+  isSuspended          Boolean  @default(false)
+  themePalette         String   @default("sync") // sync, plex, discord-dark, discord-ash, discord-light
+  themeMode            String   @default("dark") // dark, light
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("UNMAPPED_ANIME") // UNMAPPED_ANIME, SYNC_ERROR, SYSTEM
+  metadata  Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+}
+
+model PlexConnection {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverName         String?
+  serverUrl          String?
+  plexUsername       String?
+  encryptedAuthToken String?
+  monitoredLibraries String[]  @default([])
+  isConnected        Boolean   @default(false)
+  lastSyncAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+// Tabla separada de PlexConnection (no reutilizada) a propósito: así un usuario
+// puede tener Plex y Jellyfin a la vez, y esta tabla nueva es 100% aditiva para
+// `prisma db push` (nunca puede confundirse con el rename destructivo que sí
+// arriesgaría PlexConnection). Un servidor Jellyfin por cuenta, igual que Plex.
+model JellyfinConnection {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverName         String?
+  serverUrl          String?
+  jellyfinUsername   String? // usuario LOCAL de Jellyfin vinculado a esta cuenta (reparto de reproducciones compartidas)
+  encryptedApiKey    String?
+  monitoredLibraries String[]  @default([])
+  isConnected        Boolean   @default(false)
+  lastSyncAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+// Igual criterio que JellyfinConnection: tabla nueva y separada, nunca una
+// generalización de PlexConnection/JellyfinConnection. Aditiva para `db push`.
+model EmbyConnection {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverName         String?
+  serverUrl          String?
+  embyUsername       String? // usuario LOCAL de Emby vinculado a esta cuenta (reparto de reproducciones compartidas)
+  encryptedApiKey    String?
+  monitoredLibraries String[]  @default([])
+  isConnected        Boolean   @default(false)
+  lastSyncAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model AnimeConnection {
+  id                   String        @id @default(cuid())
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider             AnimeProvider
+  remoteUsername       String?
+  remoteUserId         String?
+  avatarUrl            String?
+  encryptedAccessToken String
+  encryptedRefreshToken String?
+  tokenExpiresAt       DateTime?
+  isConnected          Boolean       @default(true)
+  lastLatencyMs        Int?
+  lastCheckedAt        DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@unique([userId, provider])
+}
+
+model TitleMapping {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plexTitle       String
+  plexSeason      Int?     @default(1)
+  anilistMediaId  Int?
+  anilistTitle    String?
+  malMediaId      Int?
+  malTitle        String?
+  kitsuMediaId    Int?
+  kitsuTitle      String?
+  confidenceScore Float    @default(1.0)
+  isApproved      Boolean  @default(true)
+  isManual        Boolean  @default(false)
+  isGlobal        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, plexTitle, plexSeason])
+  @@index([isGlobal, isApproved])
+  @@index([plexTitle])
+}
+
+model BlacklistEntry {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titlePattern String
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ScrobbleHistory {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  showTitle       String
+  episodeNumber   Int
+  seasonNumber    Int?       @default(1)
+  viewPercentage  Float
+  rating          Float?
+  anilistStatus   SyncStatus @default(PENDING)
+  malStatus       SyncStatus @default(PENDING)
+  kitsuStatus     SyncStatus @default(PENDING)
+  source          String?
+  serverName      String?
+  libraryName     String?
+  errorMessage    String?
+  payloadSnapshot Json?
+  viewedAt        DateTime   @default(now())
+  createdAt       DateTime   @default(now())
+
+  @@index([userId, viewedAt(sort: Desc)])
+  @@index([userId, showTitle])
+  @@index([viewedAt(sort: Desc)])
+}
+
+model DomainPolicy {
+  id        String   @id @default(cuid())
+  domain    String   @unique
+  isAllowed Boolean  @default(true)
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model SystemMetric {
+  id        String   @id @default(cuid())
+  metricKey String
+  ipAddress String?
+  dateKey   String
+  value     Float    @default(1)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@unique([metricKey, ipAddress, dateKey])
+  @@index([metricKey, dateKey])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  level     String   @default("INFO")
+  service   String   @default("SYSTEM")
+  message   String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([service, level])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  deviceName   String?
+  deviceType   String?  @default("DESKTOP") // DESKTOP, MOBILE, TABLET, TV, SERVER
+  browser      String?
+  os           String?
+  iconType     String?  @default("DEFAULT") // CHROME, WINDOWS, IOS, FIRETV, PLEX, SAFARI, FIREFOX, EDGE, LINUX, ANDROID, PLEXSYNC, DEFAULT
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([userId, lastActiveAt(sort: Desc)])
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  isSecret  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+enum SiteLinkKind {
+  SOCIAL // redes sociales: sólo icono y URL
+  FRIEND // sitios recomendados: llevan nombre, descripción y logo
+}
+
+// Enlaces externos que se muestran en el pie de la web pública. Una sola tabla
+// para los dos tipos: la forma es la misma y dos tablas gemelas serían dos
+// sitios donde arreglar cada fallo.
+model SiteLink {
+  id          String       @id @default(cuid())
+  kind        SiteLinkKind
+  // Red elegida del catalogo (SOCIAL). De ella salen el nombre y el icono, asi
+  // que no hay que subir ninguna imagen. Los FRIEND no la usan.
+  provider    String?
+  label       String // "Discord", "AnimeThemes"
+  url         String
+  description String? // sólo lo usan los FRIEND
+  iconUrl     String? // logo subido desde el panel, sólo FRIEND
+  isEnabled   Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([kind, isEnabled, sortOrder])
+}
+
+model SystemAnnouncement {
+  id                     String    @id @default(cuid())
+  isActive               Boolean   @default(false)
+  category               String    @default("FESTIVE") // FESTIVE, PROMO, INFO, CUSTOM
+  themePreset            String    @default("CUSTOM") // MEE6_PROMO, CHRISTMAS, VALENTINE, HALLOWEEN, AUTUMN, NEW_YEAR, CYBER_NEON, INFO, WARNING, CRITICAL, CUSTOM
+  badgeText              String?
+  badgeBgColor           String?
+  badgeTextColor         String?
+  message                String
+  mediaType              String    @default("NONE") // NONE, IMAGE, GIF, ICON
+  mediaUrl               String?
+  mediaPosition          String    @default("LEFT") // LEFT, RIGHT, BACKGROUND
+  backgroundType         String    @default("GRADIENT") // GRADIENT, SOLID, IMAGE, GIF
+  backgroundValue        String?
+  textColor              String?
+  effectType             String    @default("NONE") // NONE, SNOWFLAKES, FLOATING_HEARTS, CONFETTI, SPOOKY_BATS, AUTUMN_LEAVES, CYBER_GLOW, SPARKLES
+  enableGlobalAtmosphere Boolean   @default(true)
+  ctaText                String?
+  ctaUrl                 String?
+  ctaTarget              String    @default("_self") // _self, _blank
+  ctaBgColor             String?
+  ctaTextColor           String?
+  isClosable             Boolean   @default(true)
+  targetAudience         String    @default("ALL") // ALL, AUTHENTICATED, GUEST, ADMIN_ONLY
+  startsAt               DateTime?
+  endsAt                 DateTime?
+  dismissExpiryDays      Int       @default(7)
+  updatedAt              DateTime  @updatedAt
+  createdAt              DateTime  @default(now())
+}
+
+model AnnouncementPreset {
+  id                     String   @id @default(cuid())
+  name                   String
+  category               String   @default("CUSTOM") // FESTIVE, PROMO, INFO, CUSTOM
+  themePreset            String   @default("CUSTOM")
+  badgeText              String?
+  badgeBgColor           String?
+  badgeTextColor         String?
+  message                String
+  mediaType              String   @default("NONE")
+  mediaUrl               String?
+  mediaPosition          String   @default("LEFT")
+  backgroundType         String   @default("GRADIENT")
+  backgroundValue        String?
+  textColor              String?  @default("#ffffff")
+  effectType             String   @default("NONE")
+  enableGlobalAtmosphere Boolean  @default(true)
+  ctaText                String?
+  ctaUrl                 String?
+  ctaTarget              String   @default("_self")
+  ctaBgColor             String?
+  ctaTextColor           String?
+  isClosable             Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+enum TicketCategory {
+  TECHNICAL
+  SCROBBLE_SYNC
+  MAPPINGS
+  ACCOUNT
+  FEATURE_REQUEST
+  OTHER
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  WAITING_USER
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Ticket {
+  id              String         @id @default(cuid())
+  ticketNumber    Int            @default(autoincrement())
+  userId          String
+  user            User           @relation("UserTickets", fields: [userId], references: [id], onDelete: Cascade)
+  subject         String
+  category        TicketCategory @default(TECHNICAL)
+  priority        TicketPriority @default(NORMAL)
+  status          TicketStatus   @default(OPEN)
+  assignedAdminId String?
+  assignedAdmin   User?          @relation("AdminAssignedTickets", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+  lastReplyAt     DateTime       @default(now())
+  closedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  messages        TicketMessage[]
+  attachments     TicketAttachment[]
+
+  @@index([userId, status])
+  @@index([status, priority])
+  @@index([createdAt(sort: Desc)])
+  @@index([lastReplyAt(sort: Desc)])
+}
+
+model TicketMessage {
+  id             String             @id @default(cuid())
+  ticketId       String
+  ticket         Ticket             @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User               @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  isStaff        Boolean            @default(false)
+  isInternalNote Boolean            @default(false)
+  content        String
+  createdAt      DateTime           @default(now())
+
+  attachments    TicketAttachment[]
+
+  @@index([ticketId, createdAt(sort: Asc)])
+  @@index([senderId])
+}
+
+model TicketAttachment {
+  id        String         @id @default(cuid())
+  ticketId  String
+  ticket    Ticket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  messageId String?
+  message   TicketMessage? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  fileName  String
+  fileSize  Int
+  mimeType  String
+  fileUrl   String
+  createdAt DateTime       @default(now())
+
+  @@index([ticketId])
+  @@index([messageId])
+}
+
+
+
+

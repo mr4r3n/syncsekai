@@ -1,0 +1,2022 @@
+@import "tailwindcss";
+
+@theme {
+  --radius: 6px;
+  --radius-xs: 4px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+
+  /* Font Families */
+  --font-urbane: var(--font-urbane), 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-circular: var(--font-circular), 'Circular', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
+}
+
+:root {
+  /* ==========================================================================
+     MODO OSCURO (INSPIRADO ESTRICTAMENTE EN "INK WASH")
+     ========================================================================== */
+  --bg-app: #1A1A1A;
+  --bg-surface: rgba(37, 37, 37, 0.70);
+  --bg-surface-elevated: rgba(50, 50, 54, 0.65);
+  --bg-surface-hover: rgba(84, 84, 84, 0.35);
+  
+  --border-subtle: rgba(207, 207, 207, 0.12);
+  --border-strong: rgba(207, 207, 207, 0.22);
+  --border-focus: rgba(207, 207, 207, 0.45);
+  
+  --text-primary: #F4F4F6;
+  --text-secondary: #D4D4D8;
+  --text-muted: #A1A1AA;
+  
+  /* Brand Accent Color */
+  --color-brand-primary: #FF634A;
+  --color-brand-hover: #ff4d30;
+  --accent-primary: #FF634A;
+  --accent-primary-hover: #ff4d30;
+  
+  /* Glassmorphism System Tokens (Dark) */
+  --glass-bg: rgba(37, 37, 37, 0.70);
+  --glass-bg-subtle: rgba(37, 37, 37, 0.45);
+  --glass-border: rgba(207, 207, 207, 0.12);
+  --glass-border-highlight: rgba(207, 207, 207, 0.22);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.45);
+  --glass-backdrop-blur: 16px;
+
+  /* Estandarización de Botones (Dark: Cinnabar #FF634A) */
+  --btn-primary-bg: #FF634A;
+  /* Texto oscuro sobre el coral: en blanco daba 2,94:1 y la referencia AA
+     para este tamano es 4,5:1. Asi son 6,7:1 y el color de marca no cambia,
+     que es lo mismo que ya hacia el tema Plex con su ambar. */
+  --btn-primary-text: #0A0A0A;
+  --btn-primary-hover: #ff4d30;
+  --btn-primary-glow: rgba(255, 99, 74, 0.25);
+
+  --btn-secondary-bg: rgba(255, 255, 255, 0.06);
+  --btn-secondary-border: rgba(207, 207, 207, 0.14);
+  --btn-secondary-text: #F4F4F6;
+  --btn-secondary-hover: rgba(255, 255, 255, 0.12);
+
+  /* Menú Lateral Activo (Dark) */
+  --nav-active-bg: rgba(255, 255, 255, 0.08);
+  --nav-active-text: #F4F4F6;
+  --nav-active-border: rgba(207, 207, 207, 0.20);
+
+  /* Badges & Píldoras (Dark) */
+  --badge-bg: rgba(255, 255, 255, 0.06);
+  --badge-text: #CFCFCF;
+  --badge-border: rgba(207, 207, 207, 0.15);
+
+  /* Brand Logos & Tracker Colors */
+  --brand-plex: #e5a00d;
+  --brand-plex-hover: #cc8e0b;
+  --brand-jellyfin: #00a4dc;
+  --brand-jellyfin-hover: #0090c3;
+  --brand-emby: #52b54b;
+  --brand-emby-hover: #479f41;
+  --brand-anilist: #02a9ff;
+  --brand-mal: #2e51a2;
+  --brand-mal-hover: #223d7a;
+  --brand-kitsu: #fd755c;
+  --brand-kitsu-hover: #e55e45;
+  --brand-discord: #5865f2;
+  
+  --status-success: #10b981;
+  --status-success-bg: rgba(16, 185, 129, 0.12);
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+  --status-danger: #f43f5e;
+  --status-danger-bg: rgba(244, 63, 94, 0.12);
+  
+  --sidebar-width: 260px;
+  --header-height: 64px;
+
+  /* Popovers y Toasts Sólidos Responsivos al Tema (Dark) */
+  --popover-solid-bg: #242427;
+  --popover-solid-header: #1d1d20;
+  --popover-solid-item-unread: #2c2c31;
+  --popover-solid-item-hover: #323238;
+}
+
+[data-theme="light"] {
+  /* ==========================================================================
+     MODO CLARO (LIMPIO, NÍTIDO, FONDO BLANCO PURO)
+     ========================================================================== */
+  --bg-app: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F8F9FB;
+  --bg-surface-hover: #F1F2F5;
+  
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --border-focus: rgba(255, 99, 74, 0.60);
+  
+  --text-primary: #18181B;
+  --text-secondary: #3F3F46;
+  --text-muted: #52525B;
+  
+  /* Brand Accent Color */
+  --color-brand-primary: #FF634A;
+  --color-brand-hover: #ff4d30;
+  --accent-primary: #FF634A;
+  --accent-primary-hover: #ff4d30;
+  
+  /* Glassmorphism System Tokens (Light) */
+  --glass-bg: rgba(255, 255, 255, 0.98);
+  --glass-bg-subtle: rgba(248, 249, 251, 0.92);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-highlight: rgba(0, 0, 0, 0.15);
+  --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+  --glass-shadow-lg: 0 14px 40px 0 rgba(0, 0, 0, 0.08);
+  --glass-backdrop-blur: 16px;
+
+  /* Estandarización de Botones (Light: Cinnabar #FF634A) */
+  --btn-primary-bg: #FF634A;
+  /* Texto oscuro sobre el coral: en blanco daba 2,94:1 y la referencia AA
+     para este tamano es 4,5:1. Asi son 6,7:1 y el color de marca no cambia,
+     que es lo mismo que ya hacia el tema Plex con su ambar. */
+  --btn-primary-text: #0A0A0A;
+  --btn-primary-hover: #E5533D;
+  --btn-primary-glow: rgba(255, 99, 74, 0.25);
+
+  --btn-secondary-bg: #F4F4F6;
+  --btn-secondary-border: rgba(0, 0, 0, 0.10);
+  --btn-secondary-text: #18181B;
+  --btn-secondary-hover: #EAEAEF;
+
+  /* Menú Lateral Activo (Light: Cinnabar) */
+  --nav-active-bg: rgba(255, 99, 74, 0.10);
+  --nav-active-text: #FF634A;
+  --nav-active-border: rgba(255, 99, 74, 0.30);
+
+  /* Badges & Píldoras (Light: Cinnabar) */
+  --badge-bg: rgba(255, 99, 74, 0.08);
+  --badge-text: #FF634A;
+  --badge-border: rgba(255, 99, 74, 0.20);
+  
+  --status-success: #059669;
+  --status-success-bg: rgba(16, 185, 129, 0.14);
+  --status-warning: #b45309;
+  --status-warning-bg: rgba(245, 158, 11, 0.14);
+  --status-danger: #e11d48;
+  --status-danger-bg: rgba(244, 63, 94, 0.14);
+
+  /* Popovers y Toasts Sólidos Responsivos al Tema (Light) */
+  --popover-solid-bg: #FFFFFF;
+  --popover-solid-header: #F4F4F6;
+  --popover-solid-item-unread: #F0F4F8;
+  --popover-solid-item-hover: #E2E8F0;
+}
+
+/* ==========================================================================
+   REGLAS DE LEGIBILIDAD UNIVERSAL: CONTRASTE DE TEXTOS EN MODO CLARO
+   Garantiza que cualquier texto con clases de acento Tailwind (400/300)
+   se oscurezca automáticamente en modo claro para máxima legibilidad WCAG AAA.
+   ========================================================================== */
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-amber-300,
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-amber-400,
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-yellow-300,
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-yellow-400 {
+  color: #92400e !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-amber-500 {
+  color: #78350f !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-emerald-400 {
+  color: #065f46 !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-emerald-300 {
+  color: #047857 !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-sky-400 {
+  color: #0369a1 !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-sky-300 {
+  color: #0284c7 !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-purple-400 {
+  color: #6b21a8 !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-purple-300 {
+  color: #7e22ce !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-rose-400 {
+  color: #9f1239 !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-rose-300 {
+  color: #be123c !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-orange-400 {
+  color: #9a3412 !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-orange-300 {
+  color: #c2410c !important;
+}
+
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-zinc-400,
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-gray-400,
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-neutral-400,
+:is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-slate-400 {
+  color: #52525b !important;
+}
+
+/* ==========================================================================
+   PALETA: PLEX (Dorado Plex #E5A00D)
+   ========================================================================== */
+[data-palette="plex"] {
+  --color-brand-primary: #E5A00D;
+  --color-brand-hover: #CC8E0C;
+  --nav-active-text: #E5A00D;
+  --nav-active-border: rgba(229, 160, 13, 0.35);
+  --badge-text: #E5A00D;
+  --badge-border: rgba(229, 160, 13, 0.25);
+  --btn-primary-bg: #E5A00D;
+  --btn-primary-text: #000000;
+  --btn-primary-hover: #F2B022;
+  --btn-primary-glow: rgba(229, 160, 13, 0.30);
+  --border-focus: rgba(229, 160, 13, 0.60);
+}
+
+[data-palette="plex"][data-theme="light"] {
+  --bg-app: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F8F9FB;
+  --bg-surface-hover: #F1F2F5;
+  --glass-bg: rgba(255, 255, 255, 0.98);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --btn-primary-bg: #E5A00D;
+  --btn-primary-text: #000000;
+  --btn-primary-hover: #D99505;
+  --btn-secondary-bg: #F4F4F6;
+  --btn-secondary-text: #18181B;
+  --btn-secondary-hover: #EAEAEF;
+  --nav-active-bg: rgba(229, 160, 13, 0.12);
+  --nav-active-text: #B47B00;
+  --nav-active-border: rgba(229, 160, 13, 0.40);
+  --badge-bg: rgba(229, 160, 13, 0.10);
+  --badge-text: #B47B00;
+  --badge-border: rgba(229, 160, 13, 0.30);
+}
+
+/* ==========================================================================
+   PALETA: OSCURO (#313338 / Cyan #01BCF3)
+   ========================================================================== */
+[data-palette="grafito"] {
+  --bg-app: #313338;
+  --bg-surface: rgba(43, 45, 49, 0.88);
+  --bg-surface-elevated: rgba(30, 31, 34, 0.88);
+  --bg-surface-hover: rgba(53, 55, 60, 0.65);
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: rgba(1, 188, 243, 0.60);
+  
+  --text-primary: #F2F3F5;
+  --text-secondary: #DBDEE1;
+  --text-muted: #949BA4;
+  
+  --color-brand-primary: #01BCF3;
+  --color-brand-hover: #00A7DA;
+  
+  --btn-primary-bg: #01BCF3;
+  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  --btn-primary-text: #0A0A0A;
+  --btn-primary-hover: #00A7DA;
+  --btn-primary-glow: rgba(1, 188, 243, 0.30);
+  
+  --nav-active-bg: rgba(1, 188, 243, 0.15);
+  --nav-active-text: #FFFFFF;
+  --nav-active-border: rgba(1, 188, 243, 0.45);
+  
+  --badge-bg: rgba(1, 188, 243, 0.12);
+  --badge-text: #01BCF3;
+  --badge-border: rgba(1, 188, 243, 0.25);
+}
+
+[data-palette="grafito"][data-theme="light"] {
+  --bg-app: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F8F9FB;
+  --bg-surface-hover: #F1F2F5;
+  --glass-bg: rgba(255, 255, 255, 0.98);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --border-focus: rgba(1, 188, 243, 0.60);
+  
+  --text-primary: #18181B;
+  --text-secondary: #52525B;
+  --text-muted: #52525B;
+  
+  --color-brand-primary: #01BCF3;
+  --color-brand-hover: #00A7DA;
+  
+  --btn-primary-bg: #01BCF3;
+  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  --btn-primary-text: #0A0A0A;
+  --btn-primary-hover: #00A7DA;
+  --btn-secondary-bg: #F4F4F6;
+  --btn-secondary-text: #18181B;
+  --btn-secondary-hover: #EAEAEF;
+  
+  --nav-active-bg: rgba(1, 188, 243, 0.12);
+  --nav-active-text: #0090BE;
+  --nav-active-border: rgba(1, 188, 243, 0.35);
+  
+  --badge-bg: rgba(1, 188, 243, 0.10);
+  --badge-text: #0090BE;
+  --badge-border: rgba(1, 188, 243, 0.25);
+}
+
+/* ==========================================================================
+   PALETA: CENIZA (Ash / Midnight #111214 / Cyan #01BCF3)
+   ========================================================================== */
+[data-palette="carbon"] {
+  --bg-app: #111214;
+  --bg-surface: rgba(30, 31, 34, 0.88);
+  --bg-surface-elevated: rgba(43, 45, 49, 0.80);
+  --bg-surface-hover: rgba(53, 55, 60, 0.65);
+  
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-focus: rgba(1, 188, 243, 0.60);
+  
+  --text-primary: #F2F3F5;
+  --text-secondary: #B5BAC1;
+  --text-muted: #80848E;
+  
+  --color-brand-primary: #01BCF3;
+  --color-brand-hover: #00A7DA;
+  
+  --btn-primary-bg: #01BCF3;
+  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  --btn-primary-text: #0A0A0A;
+  --btn-primary-hover: #00A7DA;
+  --btn-primary-glow: rgba(1, 188, 243, 0.30);
+  
+  --nav-active-bg: rgba(1, 188, 243, 0.18);
+  --nav-active-text: #FFFFFF;
+  --nav-active-border: rgba(1, 188, 243, 0.45);
+  
+  --badge-bg: rgba(1, 188, 243, 0.12);
+  --badge-text: #01BCF3;
+  --badge-border: rgba(1, 188, 243, 0.25);
+}
+
+[data-palette="carbon"][data-theme="light"] {
+  --bg-app: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F8F9FB;
+  --bg-surface-hover: #F1F2F5;
+  --glass-bg: rgba(255, 255, 255, 0.98);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --border-focus: rgba(1, 188, 243, 0.60);
+  
+  --text-primary: #18181B;
+  --text-secondary: #52525B;
+  --text-muted: #52525B;
+  
+  --color-brand-primary: #01BCF3;
+  --color-brand-hover: #00A7DA;
+  
+  --btn-primary-bg: #01BCF3;
+  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  --btn-primary-text: #0A0A0A;
+  --btn-secondary-bg: #F4F4F6;
+  --btn-secondary-text: #18181B;
+  --btn-secondary-hover: #EAEAEF;
+  
+  --nav-active-bg: rgba(1, 188, 243, 0.12);
+  --nav-active-text: #0090BE;
+  --nav-active-border: rgba(1, 188, 243, 0.35);
+  
+  --badge-bg: rgba(1, 188, 243, 0.10);
+  --badge-text: #0090BE;
+  --badge-border: rgba(1, 188, 243, 0.25);
+}
+
+/* ==========================================================================
+   PALETA: CLARO (Light Theme #FFFFFF / Cyan #01BCF3)
+   ========================================================================== */
+[data-palette="marfil"] {
+  --bg-app: #FFFFFF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F8F9FB;
+  --bg-surface-hover: #F1F2F5;
+  
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --border-focus: rgba(1, 188, 243, 0.60);
+  
+  --glass-bg: rgba(255, 255, 255, 0.98);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  
+  --text-primary: #18181B;
+  --text-secondary: #52525B;
+  --text-muted: #52525B;
+  
+  --color-brand-primary: #01BCF3;
+  --color-brand-hover: #00A7DA;
+  
+  --btn-primary-bg: #01BCF3;
+  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  --btn-primary-text: #0A0A0A;
+  --btn-primary-hover: #00A7DA;
+  --btn-primary-glow: rgba(1, 188, 243, 0.25);
+  --btn-secondary-bg: #F4F4F6;
+  --btn-secondary-text: #18181B;
+  --btn-secondary-hover: #EAEAEF;
+  
+  --nav-active-bg: rgba(1, 188, 243, 0.12);
+  --nav-active-text: #0090BE;
+  --nav-active-border: rgba(1, 188, 243, 0.35);
+  
+  --badge-bg: rgba(1, 188, 243, 0.10);
+  --badge-text: #0090BE;
+  --badge-border: rgba(1, 188, 243, 0.25);
+}
+
+[data-palette="marfil"][data-theme="dark"] {
+  --bg-app: #313338;
+  --bg-surface: rgba(43, 45, 49, 0.88);
+  --bg-surface-elevated: rgba(30, 31, 34, 0.88);
+  --bg-surface-hover: rgba(53, 55, 60, 0.65);
+  
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  
+  --text-primary: #F2F3F5;
+  --text-secondary: #DBDEE1;
+  --text-muted: #949BA4;
+  
+  --color-brand-primary: #01BCF3;
+  --color-brand-hover: #00A7DA;
+  
+  --btn-primary-bg: #01BCF3;
+  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  --btn-primary-text: #0A0A0A;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   TIPOGRAFÍAS: URBANE (Títulos) & CIRCULAR (Cuerpo y Controles)
+   ========================================================================== */
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-urbane);
+  letter-spacing: -0.02em;
+}
+
+body, button, input, select, textarea, .font-body {
+  font-family: var(--font-circular);
+}
+
+code, kbd, samp, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* ==========================================================================
+   REGLA UNIVERSAL DE 6PX EN ELEMENTOS INTERACTIVOS
+   --------------------------------------------------------------------------
+   Va en @layer base a proposito. Sin capa, esta regla gana a TODAS las
+   utilidades de Tailwind v4 -el CSS sin capa siempre pasa por delante de
+   @layer utilities-, asi que `rounded-full` en un boton no hacia nada y los
+   interruptores salian como un rectangulo de 6 px con la bola redonda
+   asomando por fuera. Lo mismo con `rounded-none`, que tampoco pintaba nada.
+
+   En @layer base sigue siendo el valor por defecto de cualquier control que no
+   diga otra cosa, que es lo que se buscaba, pero ahora una clase explicita
+   puede cambiarlo.
+   ========================================================================== */
+@layer base {
+  input, textarea, select, button {
+    border-radius: 6px;
+  }
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+}
+
+/* ==========================================================================
+   TRANSICIÓN SUAVE ENTRE TEMAS (CLARO / OSCURO)
+   ========================================================================== */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *:before,
+html.theme-transitioning *:after {
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ==========================================================================
+   CLASES REUTILIZABLES: BOTONES ESTANDARIZADOS
+   ========================================================================== */
+/* --------------------------------------------------------------------------
+   TODO ESTO VA EN @layer components, Y NO ES COSMETICA
+   --------------------------------------------------------------------------
+   En Tailwind v4 el CSS sin capa gana a TODAS las utilidades. Con estas clases
+   fuera de la capa, escribir `btn-secondary text-xs` o `badge-pill rounded-full`
+   no hacia nada: la clase de aqui ganaba en silencio y quien lo escribia no
+   tenia forma de enterarse. Es el mismo fallo que tenian .glass-card y la regla
+   universal de 6 px.
+
+   Dentro de la capa siguen siendo el valor por defecto de la clase, pero una
+   utilidad puesta al lado ya puede cambiarlo, que es lo que espera cualquiera.
+   -------------------------------------------------------------------------- */
+@layer components {
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0 0.875rem;
+  height: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover);
+  box-shadow: 0 6px 20px var(--btn-primary-glow);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
+  color: var(--btn-secondary-text);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0 0.875rem;
+  height: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--btn-secondary-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-danger {
+  background-color: var(--status-danger-bg);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  color: #f43f5e;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0 0.875rem;
+  height: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 150ms ease, background-color 150ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: rgba(244, 63, 94, 0.20);
+  border-color: rgba(244, 63, 94, 0.40);
+  transform: translateY(-1px);
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-danger-solid {
+  background-color: #e11d48;
+  color: #ffffff;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0 0.875rem;
+  height: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+}
+
+.btn-danger-solid:hover:not(:disabled) {
+  background-color: #be123c;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-danger-solid:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-danger-solid:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================================================
+   CLASES DE CRISTAL TEMPLADO (GLASSMORPHISM)
+   ========================================================================== */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--glass-backdrop-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 6px;
+}
+
+/*
+ * En capa `components` a proposito.
+ *
+ * En Tailwind v4 el CSS sin capa gana a TODAS las utilidades, asi que estando
+ * fuera estas reglas anulaban en silencio cualquier utilidad que se les
+ * pusiera al lado: `rounded-none` sobre una glass-card se ignoraba y la
+ * tarjeta seguia redondeada, sin ningun aviso. Dentro de la capa, la utilidad
+ * gana, que es lo que espera cualquiera que escriba la clase.
+ */
+  /* En movil, la tarjeta se queda sin caja.
+     --------------------------------------------------------------------------
+     Un movil de 375 px ya tiene 16 px de margen por lado en el contenedor de la
+     pagina; encima, cada tarjeta anadia su borde, su fondo, su sombra y otros
+     16 px de relleno. Eso son 64 px de los 375 -un 17% de la pantalla- gastados
+     en dibujar una caja alrededor de algo que ya ocupa el ancho entero y que no
+     esta al lado de nada de lo que haya que distinguirlo.
+
+     De sm en adelante la tarjeta es una tarjeta. Por debajo es una seccion sin
+     mas: lo que las separa es el propio hueco entre ellas. */
+  @media (max-width: 639px) {
+    /* Caja sin raya: en movil las tarjetas de cada servicio se separan con su
+       fondo y su sombra, que ya lo dicen todo; el borde encima solo anadia una
+       linea mas en una pantalla que va sobrada de lineas. Se deja el ancho del
+       borde y se vuelve transparente para no mover el contenido un pixel. */
+    .glass-card.card-sin-borde-movil {
+      border-color: transparent;
+    }
+
+    .glass-card.card-plana-movil,
+    .card-plana-movil {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--glass-backdrop-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 10px;
+    transition: transform 200ms cubic-bezier(0.25, 1, 0.5, 1),
+                box-shadow 200ms cubic-bezier(0.25, 1, 0.5, 1),
+                border-color 200ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .glass-card:hover {
+    border-color: var(--glass-border-highlight);
+    box-shadow: var(--glass-shadow-lg);
+  }
+
+  .glass-card-interactive {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--glass-backdrop-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 10px;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .glass-card-interactive:hover {
+    transform: translateY(-2px);
+    border-color: var(--glass-border-highlight);
+    box-shadow: var(--glass-shadow-lg);
+  }
+
+  .glass-card-interactive:active {
+    transform: translateY(0) scale(0.99);
+  }
+
+.glass-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--glass-backdrop-blur));
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* Un campo de texto tiene que parecer un sitio donde escribir.
+   --------------------------------------------------------------------------
+   En oscuro --bg-surface y --glass-bg valen EXACTAMENTE lo mismo
+   -rgba(37,37,37,.70)-, asi que un buscador dentro de una cabecera de cristal
+   se dibujaba del mismo color que la cabecera y lo unico que lo delataba era un
+   borde al 12% de opacidad: no se veia que estuviera ahi.
+
+   El fondo se saca ahora del fondo de la aplicacion tirando hacia negro, que da
+   un hueco mas oscuro en los temas oscuros y un gris claro en los blancos -que
+   es como se ve un campo de texto en los dos casos- y funciona en las nueve
+   paletas sin tener que declarar nada en cada una. El borde sube al fuerte. */
+.glass-input {
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  background: color-mix(in srgb, var(--bg-app) 88%, #000 12%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  display: flex;
+  align-items: center;
+}
+
+.glass-input::placeholder {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.glass-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 1.5px var(--border-focus);
+  outline: none;
+}
+
+.glass-input-icon {
+  padding-left: 2.5rem !important;
+}
+
+/* Ocultar flechas/spinners nativos feos en inputs de tipo número */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+/* ==========================================================================
+   PESTAÑAS Y FILTROS ESTANDARIZADOS (DIMENSIÓN FIJA ANTI-JUMP)
+   ========================================================================== */
+.filter-tab {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  color: var(--text-secondary);
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.filter-tab:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.filter-tab-active,
+.filter-tab.active {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: var(--nav-active-bg);
+  color: var(--nav-active-text);
+  border: 1px solid var(--nav-active-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   BADGES & PÍLDORAS ESTANDARIZADAS
+   ========================================================================== */
+.badge-pill {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: var(--badge-bg);
+  color: var(--badge-text);
+  border: 1px solid var(--badge-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-status-success {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-status-warning {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-status-danger {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-status-neutral {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: var(--badge-bg);
+  color: var(--badge-text);
+  border: 1px solid var(--badge-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-status-info {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background-color: rgba(2, 169, 255, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(2, 169, 255, 0.25);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Badges de tamaño botón cuando conviven directamente en una fila de botones de acción */
+.badge-action-pill {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 0.875rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--badge-bg);
+  color: var(--badge-text);
+  border: 1px solid var(--badge-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-action-success {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 0.875rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-action-warning {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 0.875rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.badge-action-danger {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 0.875rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: rgba(244, 63, 94, 0.12);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ==========================================================================
+   BOTONES DE ICONO CUADRADOS (EVITAN APLASTAMIENTO DE SVG)
+   ========================================================================== */
+/* Los `!important` de estos dos eran un parche para el mismo fallo de capas
+   que tenia el resto del fichero: sin capa, cualquier utilidad de Tailwind los
+   pisaba... al reves, eran ELLOS los que no podian pisar a .btn-secondary. Ya
+   dentro de @layer components mandan por orden, y sin el !important una
+   utilidad puesta al lado -un w-full en movil- vuelve a poder cambiarlos. */
+.btn-icon {
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.btn-icon-sm {
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-icon-sm svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Ocultar barra de scroll manteniendo desplazamiento táctil/horizontal */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Ocultar botones nativos de Edge/IE para ver contraseñas que colisionan con botones personalizados */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+/* ==========================================================================
+   SKELETON LOADERS
+   ========================================================================== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-elevated) 0%,
+    var(--bg-surface-hover) 50%,
+    var(--bg-surface-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite ease-in-out;
+  border-radius: var(--radius);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ==========================================================================
+   LEAFLET MAP DARK STYLING
+   ========================================================================== */
+.leaflet-container {
+  background-color: #0c0c0e !important;
+  outline: none;
+}
+
+/* ==========================================================================
+   SLIDERS DE RANGO ULTRA-MINIMALISTAS (SYNCSEKAI DESIGN SYSTEM)
+   ========================================================================== */
+.range-slider-ink {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 9999px;
+  outline: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.range-slider-ink:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.range-slider-ink::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f4f4f6;
+  border: 2px solid #1a1a1a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.range-slider-ink::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.range-slider-ink::-webkit-slider-thumb:active {
+  transform: scale(0.95);
+}
+
+.range-slider-ink::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f4f4f6;
+  border: 2px solid #1a1a1a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   ANIMACIONES DE EFECTOS PARA BANNERS & ANUNCIOS (FESTIVOS & PROMOS)
+   ========================================================================== */
+@keyframes snowflake {
+  0% {
+    transform: translateY(-10px) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(65px) translateX(18px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-snowflake {
+  animation: snowflake linear infinite;
+}
+
+@keyframes floating-heart {
+  0% {
+    transform: translateY(10px) scale(0.7);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-55px) scale(1.15);
+    opacity: 0;
+  }
+}
+
+.animate-floating-heart {
+  animation: floating-heart ease-in-out infinite;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-12px) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(65px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti-fall {
+  animation: confetti-fall ease-in-out infinite;
+}
+
+@keyframes bat-fly {
+  0% {
+    transform: translateX(-5vw) translateY(0) scale(0.85);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  25% {
+    transform: translateX(25vw) translateY(-8px) scale(1);
+  }
+  50% {
+    transform: translateX(50vw) translateY(6px) scale(0.9);
+  }
+  75% {
+    transform: translateX(75vw) translateY(-6px) scale(1);
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(105vw) translateY(0) scale(0.85);
+    opacity: 0;
+  }
+}
+
+.animate-bat-fly {
+  animation: bat-fly linear infinite;
+}
+
+@keyframes cyber-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-cyber-sweep {
+  animation: cyber-sweep 3.5s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    transform: scale(0.5);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.95;
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle ease-in-out infinite;
+}
+
+/* ==========================================================================
+   ATMÓSFERA FESTIVA GLOBAL (SEASONAL AMBIENCE - FULL VIEWPORT)
+   ========================================================================== */
+
+/* 1. Nieve Ambiental en toda la pantalla */
+@keyframes ambient-snowfall {
+  0% {
+    transform: translateY(-8vh) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(50vh) translateX(24px) rotate(180deg);
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(106vh) translateX(-18px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-ambient-snow {
+  animation: ambient-snowfall linear infinite;
+  will-change: transform, opacity;
+}
+
+/* 2. Trineo y Renos Navideños cruzando el cielo (Ciclo fluido de 18s) */
+@keyframes flying-sleigh {
+  0% {
+    transform: translateX(105vw) translateY(0) scale(0.9);
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  25% {
+    transform: translateX(60vw) translateY(-16px) scale(0.95);
+  }
+  50% {
+    transform: translateX(25vw) translateY(8px) scale(0.92);
+  }
+  75% {
+    transform: translateX(-10vw) translateY(-12px) scale(0.95);
+  }
+  96% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-120vw) translateY(0) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.animate-flying-sleigh {
+  animation: flying-sleigh 18s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, opacity;
+}
+
+/* 3. Hojas de Otoño cayendo con rotación 3D natural */
+@keyframes autumn-leaf-fall {
+  0% {
+    transform: translateY(-8vh) translateX(0) rotateZ(0deg) rotateY(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  30% {
+    transform: translateY(28vh) translateX(35px) rotateZ(45deg) rotateY(90deg);
+  }
+  60% {
+    transform: translateY(60vh) translateX(-25px) rotateZ(-30deg) rotateY(220deg);
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(106vh) translateX(40px) rotateZ(90deg) rotateY(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-autumn-leaf {
+  animation: autumn-leaf-fall linear infinite;
+  will-change: transform, opacity;
+}
+
+/* 4. Corazones Flotantes Ascendentes (San Valentín) */
+@keyframes ambient-heart-rise {
+  0% {
+    transform: translateY(106vh) translateX(0) scale(0.7);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.95;
+  }
+  50% {
+    transform: translateY(50vh) translateX(25px) scale(1);
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-8vh) translateX(-20px) scale(1.15);
+    opacity: 0;
+  }
+}
+
+.animate-ambient-heart {
+  animation: ambient-heart-rise ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* 5. Murciélagos de Halloween en vuelo panorámico */
+@keyframes bat-fly-ambient {
+  0% {
+    transform: translateX(105vw) translateY(6vh) scale(0.85);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  40% {
+    transform: translateX(55vw) translateY(-2vh) scale(1);
+  }
+  70% {
+    transform: translateX(15vw) translateY(10vh) scale(0.9);
+  }
+  92% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(-25vw) translateY(2vh) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.animate-bat-fly-ambient {
+  animation: bat-fly-ambient 14s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* 6. Confeti en Cascada (Año Nuevo & Celebración) */
+@keyframes ambient-confetti-fall {
+  0% {
+    transform: translateY(-8vh) translateX(0) rotateX(0deg) rotateZ(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50vh) translateX(-25px) rotateX(360deg) rotateZ(180deg);
+  }
+  85% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(106vh) translateX(30px) rotateX(720deg) rotateZ(360deg);
+    opacity: 0;
+  }
+}
+
+.animate-ambient-confetti {
+  animation: ambient-confetti-fall linear infinite;
+  will-change: transform, opacity;
+}
+
+/* 7. Arañas de Halloween bajando por su hilo de seda */
+@keyframes spider-drop-left {
+  0% {
+    transform: translateY(-85%);
+    opacity: 0.2;
+  }
+  15% {
+    transform: translateY(0);
+    opacity: 0.95;
+  }
+  45% {
+    transform: translateY(18px);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-15px);
+    opacity: 0.95;
+  }
+  90% {
+    transform: translateY(-85%);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-85%);
+    opacity: 0.2;
+  }
+}
+
+.animate-spider-drop-left {
+  animation: spider-drop-left 11s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes spider-drop-right {
+  0% {
+    transform: translateY(-85%);
+    opacity: 0.2;
+  }
+  20% {
+    transform: translateY(22px);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-12px);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translateY(12px);
+    opacity: 0.95;
+  }
+  92% {
+    transform: translateY(-85%);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-85%);
+    opacity: 0.2;
+  }
+}
+
+.animate-spider-drop-right {
+  animation: spider-drop-right 14s ease-in-out infinite;
+  animation-delay: 1.8s;
+  will-change: transform, opacity;
+}
+
+@keyframes spider-wiggle {
+  0%, 100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+}
+
+.animate-spider-wiggle {
+  animation: spider-wiggle 3s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+.animate-spider-wiggle-alt {
+  animation: spider-wiggle 2.5s ease-in-out infinite reverse;
+  transform-origin: top center;
+}
+
+/* ==========================================================================
+   BANNER TICKER / MARQUEE ANIMATION (PAUSE ON EDGES & LOOP)
+   ========================================================================== */
+@keyframes marquee-pause {
+  0%, 25% {
+    transform: translateX(0px);
+  }
+  70%, 90% {
+    transform: translateX(var(--scroll-dist, -60px));
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+
+.animate-marquee-pause {
+  animation: marquee-pause ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ==========================================================================
+   FIREWORKS / FUEGOS ARTIFICIALES (AÑO NUEVO & CELEBRACIONES)
+   ========================================================================== */
+@keyframes firework-burst-ring {
+  0% {
+    transform: scale(0.05) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.6) rotate(35deg);
+    opacity: 0;
+  }
+}
+
+@keyframes firework-flash {
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+  }
+  15% {
+    transform: scale(1.6);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(2.6);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}
+
+@keyframes firework-spark-radiate {
+  0% {
+    transform: translate(0, 0) scale(1.2);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(var(--tx, 40px), var(--ty, 40px)) scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes firework-rocket-shoot {
+  0% {
+    transform: translateY(110vh) translateX(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(var(--burst-y, 25vh)) translateX(var(--drift-x, 15px)) scale(1);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(var(--burst-y, 25vh)) translateX(var(--drift-x, 15px)) scale(1.6);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(var(--burst-y, 25vh)) translateX(var(--drift-x, 15px)) scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-firework-burst {
+  animation: firework-burst-ring 2.2s cubic-bezier(0.1, 0.85, 0.3, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-firework-flash {
+  animation: firework-flash 2.2s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-firework-spark {
+  animation: firework-spark-radiate 2.2s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-firework-rocket {
+  animation: firework-rocket-shoot 4.2s cubic-bezier(0.25, 0.1, 2.25, 1) infinite;
+  will-change: transform, opacity;
+}
+
+/* ==========================================================================
+   ACCESIBILIDAD: MODO DE ALTO CONTRASTE (WINDOWS FORCED-COLORS & FOCUS)
+   ========================================================================== */
+@media (forced-colors: active) {
+  div:focus-within {
+    outline: 2px solid Highlight !important;
+    outline-offset: 1px !important;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  select:focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Indicador de foco visible universal accesible para elementos interactivos,
+   excluyendo inputs contenidos para evitar doble borde interno */
+:focus-visible:not(input):not(textarea) {
+  outline: 2px solid var(--accent-primary, #FF634A);
+  outline-offset: 2px;
+}
+
+/* El foco por puntero no dibuja anillo: lo indica el borde del contenedor. */
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+/* Pero el foco por TECLADO siempre debe verse. Antes había un
+   `outline: none !important` sobre todos los campos, de modo que quien navega con
+   Tab no tenía ninguna señal, y en el modo de alto contraste de Windows —que
+   descarta fondos y bordes personalizados— el campo enfocado era indistinguible.
+   El offset negativo lo dibuja por dentro, así que no descuadra el contenedor. */
+/* Un outline sólido dibujado dentro del campo se leía como estado de error y
+   chocaba con el borde del contenedor. En su lugar, el propio campo no dibuja
+   nada y el indicador se aplica al recuadro que lo envuelve (regla de abajo),
+   que es lo que el usuario percibe como "el campo". */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+/* El foco en inputs es manejado internamente por cada campo sin crear marcos exteriores en contenedores */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+/* En modo de colores forzados, el sistema decide el color del indicador. */
+@media (forced-colors: active) {
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+}
+
+
+
+/* ==========================================================================
+   ESCALA DE MEDIDAS COMPARTIDA
+   --------------------------------------------------------------------------
+   Motivo: una misma pantalla llegó a tener 7 alturas de botón distintas
+   (20, 24, 26, 30, 34, 36, 40 px) y 6 de badge (14, 15, 16, 19, 20, 28).
+   Las diferencias de 1 px no se leen como error, se leen como descuido.
+   Aquí se fija el repertorio; las vistas eligen de él en vez de inventar.
+   ========================================================================== */
+
+:root {
+  /* Alturas de control. 40px es el tamaño por defecto de formularios y acciones. */
+  --control-sm: 32px;
+  --control-md: 40px;
+  --control-lg: 48px;
+
+  /* Badges: dos únicos tamaños. */
+  --badge-sm: 20px;
+  --badge-md: 24px;
+
+  /* Escala tipográfica. Se eliminan los 9.5px y 10.5px: ilegibles y
+     visualmente indistinguibles de sus vecinos. El mínimo pasa a ser 11px. */
+  --text-2xs: 0.6875rem; /* 11px - solo metadatos y etiquetas cortas */
+  --text-xs: 0.75rem;    /* 12px - texto secundario */
+  --text-sm: 0.875rem;   /* 14px - cuerpo por defecto */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.25rem;    /* 20px */
+
+  /* Movimiento: un solo repertorio de curvas y tiempos. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 140ms;
+  --dur-fast: 180ms;
+  --dur-base: 240ms;
+
+  /* Contraste: el acento de marca cumple 5.91:1 sobre el fondo oscuro. */
+  --accent-text: var(--accent-primary);
+  /* Borde de campo con 3.27:1, exigido por WCAG 1.4.11 para identificar el
+     control. --border-subtle (1.32:1) vale para separadores decorativos,
+     que están exentos, pero no para delimitar un campo. */
+  --border-input: rgba(207, 207, 207, 0.45);
+}
+
+[data-theme="light"] {
+  /* #FF634A sobre blanco da 2.94:1 y no llega ni al mínimo de texto grande.
+     Esta variante mantiene la familia de color y alcanza 4.71:1.
+     Solo para TEXTO e iconos: los rellenos siguen usando --accent-primary. */
+  --accent-text: #D63916;
+  --border-input: rgba(0, 0, 0, 0.42);
+}
+
+/* Utilidades de tamaño: alturas fijas, sin depender del relleno del contenido. */
+.control-sm { height: var(--control-sm); }
+.control-md { height: var(--control-md); }
+.control-lg { height: var(--control-lg); }
+
+.badge-sm { height: var(--badge-sm); display: inline-flex; align-items: center; }
+.badge-md { height: var(--badge-md); display: inline-flex; align-items: center; }
+
+/* Todo destino interactivo alcanza el mínimo de 24x24 de WCAG 2.5.8, aunque
+   su contenido sea un icono pequeño. */
+button,
+[role="button"],
+a[class*="px-"] {
+  min-height: 24px;
+}
+
+/* ==========================================================================
+   MOVIMIENTO REDUCIDO
+   --------------------------------------------------------------------------
+   Este fichero define 21 animaciones, varias en bucle infinito (fuegos
+   artificiales, trineo, atmósfera). No había ni una sola guarda de
+   prefers-reduced-motion: para alguien con sensibilidad vestibular eso no es
+   un detalle estético, provoca mareo. Se reduce en lugar de eliminar, para
+   que las transiciones sigan comunicando el cambio de estado.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Los efectos puramente decorativos se retiran del todo. */
+  .firework-burst-ring,
+  .firework-spark,
+  .flying-sleigh,
+  [class*="animate-pulse"],
+  [class*="animate-bounce"] {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   TRANSICIÓN ENTRE PÁGINAS DEL PANEL (cambio de menú lateral)
+   --------------------------------------------------------------------------
+   Cada página del dashboard monta su propio Sidebar/Topbar/contenido, así que
+   Next.js sustituye el árbol entero al navegar: sin esto el contenido nuevo
+   aparecía de golpe, en vez de sentirse como un cambio fluido. Un fade + leve
+   deslizamiento hacia arriba (nada de deslizar en horizontal: eso sí "salta
+   de un lado a otro"). Ver PageTransition.tsx, que aplica esta clase con una
+   key por ruta para que el navegador dispare la animación en cada cambio.
+   ========================================================================== */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: page-fade-in 220ms var(--ease-out, ease-out);
+}
+
+/* --------------------------------------------------------------------------
+   CAMPOS DE TEXTO: altura real
+   Los buscadores viven dentro de contenedores con relleno, pero el relleno es
+   del contenedor y no del campo: el <input> medía 16px de alto, así que la
+   franja superior e inferior del cuadro era zona muerta. Se le da altura
+   mínima propia para que la superficie pulsable coincida con la visible.
+   -------------------------------------------------------------------------- */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="tel"],
+input[type="number"],
+textarea {
+  min-height: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   SUELO TIPOGRÁFICO
+   Convivían 9.5px, 10px, 10.5px, 11px y 12px. Los tres primeros no se
+   distinguen entre sí pero sí ensucian el ritmo vertical, y por debajo de 11px
+   el texto deja de ser cómodo de leer. Se elevan al mínimo de la escala.
+   -------------------------------------------------------------------------- */
+[class*="text-[9px]"],
+[class*="text-[9.5px]"],
+[class*="text-[10px]"],
+[class*="text-[10.5px]"] {
+  font-size: var(--text-2xs); /* 11px */
+}
+
+/* ==========================================================================
+   COMPORTAMIENTO DEL MOVIMIENTO
+   --------------------------------------------------------------------------
+   Medido: 97 de 99 elementos interactivos usaban cubic-bezier(0.4, 0, 0.2, 1),
+   una curva simétrica que arranca despacio. En un control que responde a una
+   pulsación, ese arranque lento se percibe como retardo. Una curva de salida
+   —rápida al inicio, suave al asentar— hace que la interfaz se sienta
+   reaccionando en lugar de reproduciendo una animación.
+   ========================================================================== */
+
+button,
+[role="button"],
+a[class*="px-"],
+input,
+select,
+textarea {
+  transition-timing-function: var(--ease-out);
+}
+
+/* --------------------------------------------------------------------------
+   RESPUESTA AL PULSAR
+   405 de 435 botones no tenían ningún estado :active. Pulsarlos no devolvía
+   nada y la interfaz se sentía inerte.
+   Deliberadamente sutil (0.97 en 140ms): a decenas de pulsaciones diarias, un
+   rebote marcado deja de ser agradable y pasa a estorbar.
+   Se excluyen los que ya definen su propia transformación para no pisarla.
+   -------------------------------------------------------------------------- */
+button:active:not([class*="translate"]):not([class*="scale"]):not(:disabled),
+[role="button"]:active:not([class*="translate"]):not([class*="scale"]) {
+  transform: scale(0.97);
+  transition-duration: var(--dur-press);
+}
+
+/* Sin puntero fino no hay hover real: evita estados pegados en táctil. */
+@media (hover: none) {
+  button:hover,
+  [role="button"]:hover {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   ICONOS DE MARCA CON DOS VARIANTES
+
+   Marcas monocromas y negras (X, GitHub, TikTok): sobre el tema oscuro
+   desaparecen, asi que traen una segunda variante en blanco y se pintan las
+   dos. Con CSS y no leyendo el tema en JavaScript, que daria discrepancia de
+   hidratacion y parpadeo en la primera pintura. Lo usa <BrandIcon />.
+   ========================================================================== */
+
+.icono-marca-claro {
+  display: block;
+}
+
+.icono-marca-oscuro {
+  display: none;
+}
+
+[data-theme='dark'] .icono-marca-claro {
+  display: none;
+}
+
+[data-theme='dark'] .icono-marca-oscuro {
+  display: block;
+}

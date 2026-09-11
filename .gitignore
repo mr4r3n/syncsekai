@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+# Plantilla con marcadores, sin secretos
+!.env.production.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Credenciales locales: nunca deben versionarse
+LOCAL_CREDENTIALS.md
+
+# Herramientas de agentes: se instalan por máquina, no forman parte del proyecto
+.agents/
+.claude/
+skills-lock.json
+
+# Builds and Distribution
+dist/
+backend/dist/
+frontend/.next/
+frontend/out/
+frontend/build/
+*.tsbuildinfo
+
+# Uploads and User Media (Generated Content)
+uploads/
+backend/uploads/
+backend/uploads/covers/
+backend/uploads/avatars/
+backend/uploads/temp/
+
+# Backups and Tarballs
+*.tar.gz
+*.tar
+*.zip
+*.sql
+migration/*.sql
+# Con "backups/" a secas tambien quedaba fuera el codigo de la pantalla de
+# copias -frontend/src/app/(dashboard)/admin/backups-, que es una carpeta que se
+# llama igual. Anclado a la raiz solo tapa lo que genera la aplicacion.
+/backups/
+/backend/backups/
+
+# Logs and Debugging
+/logs/
+backend/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS and IDE Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.pem
+scratch/
+
+
+# Documentacion e informes generados sobre la infraestructura, no sobre el codigo
+GUIA_PROXMOX_MANTENIMIENTO.html
+MAINTENANCE.md
+security_reports/
+
+# Evidencia de auditorias: capturas e informes de trabajo.
+# No forman parte de la web y git guarda los binarios para siempre, asi que
+# cada captura commiteada pesa en el historial aunque luego se borre.
+audit/
+AUDITORIA_UI.md

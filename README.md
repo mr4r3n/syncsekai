@@ -120,22 +120,13 @@ The short version, with the long version in [SECURITY.md](SECURITY.md):
 If you find a vulnerability, [SECURITY.md](SECURITY.md) says how to report it. Please don't
 open a public issue for it.
 
-## How this was built
+## Development
 
-This project was written with heavy use of AI assistants, working alongside me. There is
-nothing to hide there, and it is worth saying plainly for two reasons.
-
-The first is that you may want to weigh it when deciding how much to trust the code. So:
-every decision here was reviewed by a person, the security-sensitive parts more than once,
-and a separate AI agent was pointed at the codebase as a reviewer. It found real problems —
-a session-fixation flaw in the OAuth flow among them — which are fixed in this repository.
-That review is also what pushed a batch of invented statistics off the interface: numbers
-that were written into the markup rather than measured. They are all counted now, or they
-are not shown. **No security firm has audited this code.** [SECURITY.md](SECURITY.md) says
-the same, and says what that means for you.
-
-The second is that if you are doing something similar, the honest version of this is more
-useful to you than pretending a single person typed all of it.
+SyncSekai was developed with the assistance of AI coding tools and reviewed by the
+maintainer, with additional review of security-sensitive code. A separate AI agent was
+used as a code reviewer and identified issues that have since been fixed, including an
+OAuth session-fixation vulnerability. No security firm has audited this code; see
+[SECURITY.md](SECURITY.md).
 
 ## Where it stands
 

@@ -1183,7 +1183,43 @@ export class AdminService {
   /**
    * Actualizar usuario completo (Edición de datos, contraseña, 2FA, bloqueo y permisos)
    */
+  /**
+   * Un administrador no puede quitarse a si mismo el rol, el acceso ni la
+   * cuenta, y ningun cambio puede dejar la instalacion sin un administrador
+   * activo: el asistente de instalacion queda sellado y no habria forma de
+   * recuperar el panel desde la aplicacion.
+   */
+  private async comprobarQueQuedaAdmin(
+    actorId: string,
+    objetivo: { id: string; role: Role; isActive: boolean; settings?: { isSuspended: boolean } | null },
+    cambio: { role?: Role; isActive?: boolean; isSuspended?: boolean; borrar?: boolean },
+  ) {
+    const pierdeAdmin =
+      objetivo.role === 'ADMIN' &&
+      (cambio.borrar ||
+        (cambio.role !== undefined && cambio.role !== 'ADMIN') ||
+        cambio.isActive === false ||
+        cambio.isSuspended === true);
+    if (!pierdeAdmin) return;
+
+    if (objetivo.id === actorId) {
+      throw new BadRequestException('No puedes quitarte a ti mismo el acceso de administrador.');
+    }
+    const otrosAdmins = await this.prisma.user.count({
+      where: {
+        id: { not: objetivo.id },
+        role: 'ADMIN',
+        isActive: true,
+        OR: [{ settings: null }, { settings: { isSuspended: false } }],
+      },
+    });
+    if (otrosAdmins === 0) {
+      throw new BadRequestException('Es el único administrador activo; no se puede quitar.');
+    }
+  }
+
   async updateUserPermissions(
+    actorId: string,
     userId: string,
     payload: {
       username?: string;
@@ -1209,6 +1245,8 @@ export class AdminService {
     if (!user) {
       throw new NotFoundException('Usuario no encontrado.');
     }
+
+    await this.comprobarQueQuedaAdmin(actorId, user, payload);
 
     // Validar unicidad de email o username si se editan
     if (payload.email && payload.email !== user.email) {
@@ -1277,9 +1315,10 @@ export class AdminService {
   /**
    * Eliminar usuario
    */
-  async deleteUser(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  async deleteUser(actorId: string, userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { settings: true } });
     if (!user) throw new NotFoundException('Usuario no encontrado.');
+    await this.comprobarQueQuedaAdmin(actorId, user, { borrar: true });
 
     await this.prisma.user.delete({ where: { id: userId } });
     return { success: true, message: 'Usuario eliminado del sistema.' };

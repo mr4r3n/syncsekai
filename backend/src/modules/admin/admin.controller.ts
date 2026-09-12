@@ -155,13 +155,13 @@ export class AdminController {
     },
   ) {
     this.checkAdmin(user);
-    return this.adminService.updateUserPermissions(id, body);
+    return this.adminService.updateUserPermissions(user.id, id, body);
   }
 
   @Delete('users/:id')
   async deleteUser(@CurrentUser() user: any, @Param('id') id: string) {
     this.checkAdmin(user);
-    return this.adminService.deleteUser(id);
+    return this.adminService.deleteUser(user.id, id);
   }
 
   @Get('system-health')

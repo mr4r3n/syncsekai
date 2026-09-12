@@ -46,7 +46,7 @@ const AVAILABLE_GENRES = [
 
 export default function BlacklistPage() {
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
 
   const [loading, setLoading] = useState(true);
@@ -110,14 +110,21 @@ export default function BlacklistPage() {
     }
   };
 
-  const handleRemoveTitle = async (id: string, title: string) => {
-    try {
-      await api.blacklist.remove(id);
-      setBlacklist((prev) => prev.filter((item) => item.id !== id));
-      showToast(`"${title}" desbloqueado correctamente.`, 'info');
-    } catch (e: any) {
-      showToast(t('blacklist.unblockError'), 'error');
-    }
+  const handleRemoveTitle = (id: string, title: string) => {
+    const entrada = blacklist.find((item) => item.id === id);
+    setBlacklist((prev) => prev.filter((item) => item.id !== id));
+    showUndoToast(t('common.deletingItem', { name: title }), {
+      alDeshacer: () => setBlacklist((prev) => (entrada ? [...prev, entrada] : prev)),
+      alExpirar: async () => {
+        try {
+          await api.blacklist.remove(id);
+          showToast(t('blacklist.unblocked', { title }), 'info');
+        } catch (e: any) {
+          setBlacklist((prev) => (entrada ? [...prev, entrada] : prev));
+          showToast(t('blacklist.unblockError'), 'error');
+        }
+      },
+    });
   };
 
   const toggleGenre = (genreId: string) => {

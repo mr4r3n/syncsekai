@@ -39,7 +39,7 @@ import { useModalA11y } from '@/components/useModalA11y';
 
 export default function MappingsPage() {
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
   const [currentUser, setCurrentUser] = useState<any>(null);
   // El historial y las notificaciones enlazan aqui con el anime a mapear:
@@ -228,17 +228,21 @@ export default function MappingsPage() {
       isOpen: true,
       title: t('mappings.unlinkConfirm'),
       description: `¿Deseas desvincular el mapeo para "${item.plexTitle}" (Temporada ${item.plexSeason || 1})? Los futuros scrobbles volverán a buscar coincidencias automáticamente.`,
-      onConfirm: async () => {
-        try {
-          await api.mappings.unlink(item.id);
-          showToast(t('mappings.mappingUnlinked'), 'info');
-          loadUserAndMappings();
-        } catch (e: any) {
-          setMappings((prev) => prev.filter((m) => m.id !== item.id));
-          showToast(t('mappings.deletedToast'), 'info');
-        } finally {
-          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-        }
+      onConfirm: () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        setMappings((prev) => prev.filter((m) => m.id !== item.id));
+        showUndoToast(t('common.deletingItem', { name: item.plexTitle }), {
+          alDeshacer: () => loadUserAndMappings(),
+          alExpirar: async () => {
+            try {
+              await api.mappings.unlink(item.id);
+              showToast(t('mappings.mappingUnlinked'), 'info');
+            } catch (e: any) {
+              showToast(e.message || t('mappings.deletedToast'), 'error');
+            }
+            loadUserAndMappings();
+          },
+        });
       },
     });
   };

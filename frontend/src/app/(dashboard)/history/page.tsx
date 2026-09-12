@@ -388,7 +388,7 @@ function TrackerButton({
 export default function HistoryPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t, locale } = useI18n();
 
   // Detección reactiva de Modo Claro / Modo Oscuro
@@ -650,20 +650,24 @@ export default function HistoryPage() {
     setConfirmModal({
       isOpen: true,
       title: t('history.confirmRevertScrobble'),
-      description: `¿Deseas eliminar "${item.showTitle} Ep. ${item.episodeNumber}" del historial y revertir el episodio en tus trackers (AniList / MAL)?`,
+      description: t('history.revertOneDesc', { title: `${item.showTitle} Ep. ${item.episodeNumber}` }),
       confirmText: t('history.revertScrobble'),
-      onConfirm: async () => {
-        try {
-          await api.history.deleteAndRevert(item.id);
-          showToast(`Scrobble revertido exitosamente en tus plataformas.`, 'success');
-          loadHistory(page, limit, search);
-        } catch (e: any) {
-          setHistory((prev) => prev.filter((h) => h.id !== item.id));
-          setTotal((prev) => Math.max(0, prev - 1));
-          showToast(`Registro eliminado del historial local.`, 'info');
-        } finally {
-          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-        }
+      onConfirm: () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        setHistory((prev) => prev.filter((h) => h.id !== item.id));
+        setTotal((prev) => Math.max(0, prev - 1));
+        showUndoToast(t('common.deletingItem', { name: `${item.showTitle} Ep. ${item.episodeNumber}` }), {
+          alDeshacer: () => loadHistory(page, limit, search),
+          alExpirar: async () => {
+            try {
+              await api.history.deleteAndRevert(item.id);
+              showToast(t('history.scrobbleReverted'), 'success');
+            } catch (e: any) {
+              showToast(e.message || t('history.revertError'), 'error');
+            }
+            loadHistory(page, limit, search);
+          },
+        });
       },
     });
   };
@@ -676,14 +680,26 @@ export default function HistoryPage() {
     setConfirmModal({
       isOpen: true,
       title: t('history.revertSelectedTitle', { n: count }),
-      description: `Las peticiones se enviarán de forma escalonada para respetar los límites de la API de AniList / MAL y revertir los episodios en tu perfil.`,
+      description: t('history.revertBatchDesc'),
       confirmText: t('history.revertSelected', { n: count }),
-      onConfirm: async () => {
+      onConfirm: () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        const idsToProcess = [...selectedIds];
+        setHistory((prev) => prev.filter((h) => !idsToProcess.includes(h.id)));
+        setSelectedIds([]);
+        showUndoToast(t('history.revertingN', { n: count }), {
+          alDeshacer: () => loadHistory(page, limit, search),
+          alExpirar: () => revertirEnLote(idsToProcess),
+        });
+      },
+    });
+  };
+
+  // Peticiones escalonadas para respetar los limites de AniList / MAL.
+  const revertirEnLote = async (idsToProcess: string[]) => {
+        const count = idsToProcess.length;
         setIsBatchProcessing(true);
         setBatchProgress({ current: 0, total: count });
-
-        const idsToProcess = [...selectedIds];
         let successfulCount = 0;
 
         for (let i = 0; i < idsToProcess.length; i++) {
@@ -705,15 +721,8 @@ export default function HistoryPage() {
 
         setIsBatchProcessing(false);
         setBatchProgress(null);
-        setSelectedIds([]);
-
-        showToast(
-          `¡Proceso por lotes finalizado! ${successfulCount} de ${count} episodios revertidos con éxito.`,
-          'success',
-        );
+        showToast(t('history.batchDone', { ok: successfulCount, total: count }), 'success');
         loadHistory(page, limit, search);
-      },
-    });
   };
 
   const isAllSelected = history.length > 0 && selectedIds.length === history.length;

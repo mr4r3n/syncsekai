@@ -38,7 +38,7 @@ import { useModalA11y } from '@/components/useModalA11y';
 
 export default function AdminMappingsPage() {
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
   const [mappings, setMappings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,16 +192,21 @@ export default function AdminMappingsPage() {
       isOpen: true,
       title: t('admin.confirmDeleteGlobalMapping'),
       description: `¿Deseas eliminar permanentemente el mapeo para "${item.plexTitle}" (Temporada ${item.plexSeason || 1})?`,
-      onConfirm: async () => {
-        try {
-          await api.mappings.unlink(item.id);
-          showToast(t('admin.mappingDeleted'), 'info');
-          loadAdminMappings();
-        } catch (e: any) {
-          showToast(`${t('admin.deleteMappingError')} ` + e.message, 'error');
-        } finally {
-          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
-        }
+      onConfirm: () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        setMappings((prev) => prev.filter((m) => m.id !== item.id));
+        showUndoToast(t('common.deletingItem', { name: item.plexTitle }), {
+          alDeshacer: () => loadAdminMappings(),
+          alExpirar: async () => {
+            try {
+              await api.mappings.unlink(item.id);
+              showToast(t('admin.mappingDeleted'), 'info');
+            } catch (e: any) {
+              showToast(`${t('admin.deleteMappingError')} ` + e.message, 'error');
+            }
+            loadAdminMappings();
+          },
+        });
       },
     });
   };

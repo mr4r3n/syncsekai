@@ -213,7 +213,7 @@ const sortOptions = [
 export default function AdminMediaPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
 
   const [loading, setLoading] = useState(true);
@@ -251,7 +251,6 @@ export default function AdminMediaPage() {
   // Modales
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<MediaItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const [purgeModalOpen, setPurgeModalOpen] = useState(false);
   const [isPurging, setIsPurging] = useState(false);
@@ -390,14 +389,21 @@ export default function AdminMediaPage() {
     }
   };
 
-  const handleRemovePreset = async (preset: string) => {
-    try {
-      const res = await api.admin.removePresetAvatar(preset);
-      setPresetAvatars(res.avatars || []);
-      showToast(t('admin.presetAvatarsRemoved'), 'success');
-    } catch (err: any) {
-      showToast(`${t('admin.presetAvatarsError')} ` + err.message, 'error');
-    }
+  const handleRemovePreset = (preset: string) => {
+    setPresetAvatars((prev) => prev.filter((p) => p !== preset));
+    showUndoToast(t('common.deletingItem', { name: preset }), {
+      alDeshacer: () => setPresetAvatars((prev) => [...prev, preset]),
+      alExpirar: async () => {
+        try {
+          const res = await api.admin.removePresetAvatar(preset);
+          setPresetAvatars(res.avatars || []);
+          showToast(t('admin.presetAvatarsRemoved'), 'success');
+        } catch (err: any) {
+          setPresetAvatars((prev) => [...prev, preset]);
+          showToast(`${t('admin.presetAvatarsError')} ` + err.message, 'error');
+        }
+      },
+    });
   };
 
   const handleDeleteClick = (item: MediaItem) => {
@@ -405,53 +411,65 @@ export default function AdminMediaPage() {
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     if (!itemToDelete) return;
-    try {
-      setIsDeleting(true);
-      await api.admin.deleteMedia(itemToDelete.filename);
-      showToast(`Archivo ${itemToDelete.filename} eliminado correctamente.`, 'success');
-      setDeleteModalOpen(false);
-      if (selectedItem?.filename === itemToDelete.filename) {
-        setSelectedItem(null);
-      }
-      setItemToDelete(null);
-      loadMedia();
-    } catch (err: any) {
-      showToast(`${t('admin.deleteFileError')} ` + err.message, 'error');
-    } finally {
-      setIsDeleting(false);
-    }
+    const fichero = itemToDelete;
+    setDeleteModalOpen(false);
+    setItemToDelete(null);
+    if (selectedItem?.filename === fichero.filename) setSelectedItem(null);
+    setMediaList((prev) => prev.filter((m) => m.filename !== fichero.filename));
+    showUndoToast(t('common.deletingItem', { name: fichero.filename }), {
+      alDeshacer: () => loadMedia(),
+      alExpirar: async () => {
+        try {
+          await api.admin.deleteMedia(fichero.filename);
+          showToast(t('admin.fileDeleted', { name: fichero.filename }), 'success');
+        } catch (err: any) {
+          showToast(`${t('admin.deleteFileError')} ` + err.message, 'error');
+        }
+        loadMedia();
+      },
+    });
   };
 
-  const handleConfirmPurge = async () => {
-    try {
-      setIsPurging(true);
-      const res = await api.admin.purgeMedia();
-      showToast(res.message || t('admin.cachePurged'), 'success');
-      setPurgeModalOpen(false);
-      setSelectedItem(null);
-      loadMedia();
-    } catch (err: any) {
-      showToast(`${t('admin.purgeCacheError')} ` + err.message, 'error');
-    } finally {
-      setIsPurging(false);
-    }
+  const handleConfirmPurge = () => {
+    setPurgeModalOpen(false);
+    showUndoToast(t('admin.purgingCache'), {
+      alDeshacer: () => {},
+      alExpirar: async () => {
+        try {
+          setIsPurging(true);
+          const res = await api.admin.purgeMedia();
+          showToast(res.message || t('admin.cachePurged'), 'success');
+          setSelectedItem(null);
+          loadMedia();
+        } catch (err: any) {
+          showToast(`${t('admin.purgeCacheError')} ` + err.message, 'error');
+        } finally {
+          setIsPurging(false);
+        }
+      },
+    });
   };
 
-  const handleConfirmPurgeOrphans = async () => {
-    try {
-      setIsPurgingOrphans(true);
-      const res = await api.admin.purgeOrphanMedia();
-      showToast(res.message || t('admin.orphansDeleted'), 'success');
-      setPurgeOrphansModalOpen(false);
-      setSelectedItem(null);
-      loadMedia();
-    } catch (err: any) {
-      showToast(`${t('admin.deleteOrphansError')} ` + err.message, 'error');
-    } finally {
-      setIsPurgingOrphans(false);
-    }
+  const handleConfirmPurgeOrphans = () => {
+    setPurgeOrphansModalOpen(false);
+    showUndoToast(t('admin.purgingOrphans'), {
+      alDeshacer: () => {},
+      alExpirar: async () => {
+        try {
+          setIsPurgingOrphans(true);
+          const res = await api.admin.purgeOrphanMedia();
+          showToast(res.message || t('admin.orphansDeleted'), 'success');
+          setSelectedItem(null);
+          loadMedia();
+        } catch (err: any) {
+          showToast(`${t('admin.deleteOrphansError')} ` + err.message, 'error');
+        } finally {
+          setIsPurgingOrphans(false);
+        }
+      },
+    });
   };
 
   const handleRefreshCover = async (item: MediaItem) => {
@@ -1159,7 +1177,6 @@ export default function AdminMediaPage() {
         confirmText="Eliminar Archivo"
         cancelText="Cancelar"
         variant="danger"
-        loading={isDeleting}
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteModalOpen(false)}
       />

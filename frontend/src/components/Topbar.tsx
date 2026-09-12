@@ -10,6 +10,7 @@ import { useSidebar } from '@/components/SidebarProvider';
 import { useUnsavedChanges } from '@/components/UnsavedChangesProvider';
 import { useActiveThemeEffect } from '@/lib/useActiveThemeEffect';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useToast } from '@/components/ToastProvider';
 import { api } from '@/lib/api';
 
 interface TopbarProps {
@@ -27,6 +28,7 @@ export function Topbar({
 }: TopbarProps) {
   const router = useRouter();
   const { t } = useI18n();
+  const { showUndoToast } = useToast();
   // Los valores por defecto no pueden salir de t(): se evaluan en el ambito de
   // parametros, antes de que el hook exista.
   const rootTexto = rootLabel ?? t('topbar.rootConfig');
@@ -115,15 +117,25 @@ export function Topbar({
     }
   };
 
-  const handleDeleteNotification = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteNotification = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    try {
-      await api.notifications.delete(id);
-      setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== id));
-      setUnreadCount((prev: number) => Math.max(0, prev - 1));
-    } catch (err) {
-      console.warn('Error al eliminar notificación:', err);
-    }
+    const aviso = notifications.find((n: any) => n.id === id);
+    setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== id));
+    if (aviso && !aviso.isRead) setUnreadCount((prev: number) => Math.max(0, prev - 1));
+    showUndoToast(t('common.deletingItem', { name: aviso?.title || t('topbar.notification') }), {
+      alDeshacer: () => {
+        if (!aviso) return;
+        setNotifications((prev: any[]) => [aviso, ...prev]);
+        if (!aviso.isRead) setUnreadCount((prev: number) => prev + 1);
+      },
+      alExpirar: async () => {
+        try {
+          await api.notifications.delete(id);
+        } catch (err) {
+          console.warn('Error al eliminar notificación:', err);
+        }
+      },
+    });
   };
 
   const handleNavigateToMapping = (n: any) => {

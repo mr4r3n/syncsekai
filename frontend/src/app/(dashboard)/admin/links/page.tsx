@@ -39,7 +39,7 @@ import {
 export default function AdminLinksPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { isCollapsed } = useSidebar();
 
   const [links, setLinks] = useState<SiteLink[]>([]);
@@ -133,17 +133,24 @@ export default function AdminLinksPage() {
     }
   };
 
-  const handleBorrar = async () => {
+  const handleBorrar = () => {
     if (!aBorrar) return;
-    try {
-      const res = await api.admin.deleteSiteLink(aBorrar.id);
-      setLinks(res.links || []);
-      showToast(t('adminLinks.deleted'), 'success');
-    } catch (err: any) {
-      showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
-    } finally {
-      setABorrar(null);
-    }
+    const enlace = aBorrar;
+    setABorrar(null);
+    setLinks((prev) => prev.filter((l) => l.id !== enlace.id));
+    showUndoToast(t('common.deletingItem', { name: enlace.label }), {
+      alDeshacer: () => setLinks((prev) => [...prev, enlace]),
+      alExpirar: async () => {
+        try {
+          const res = await api.admin.deleteSiteLink(enlace.id);
+          setLinks(res.links || []);
+          showToast(t('adminLinks.deleted'), 'success');
+        } catch (err: any) {
+          setLinks((prev) => [...prev, enlace]);
+          showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
+        }
+      },
+    });
   };
 
   /**

@@ -39,7 +39,7 @@ import { useModalA11y } from '@/components/useModalA11y';
 export default function AdminBackupsPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
 
   const [loading, setLoading] = useState(true);
@@ -77,7 +77,6 @@ export default function AdminBackupsPage() {
 
   // Delete modal state
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   // Semántica de diálogo y gestión de foco de los modales de esta vista.
   const { dialogProps: propsCrear } = useModalA11y(Boolean(showCreateModal), () => setShowCreateModal(false));
@@ -202,19 +201,23 @@ export default function AdminBackupsPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    try {
-      setDeleting(true);
-      await api.admin.deleteBackup(deleteTarget.filename);
-      showToast(`Copia ${deleteTarget.filename} eliminada correctamente.`, 'info');
-      setDeleteTarget(null);
-      await loadBackupsData();
-    } catch (err: any) {
-      showToast(`${t('backups.deleteBackupError')} ` + err.message, 'error');
-    } finally {
-      setDeleting(false);
-    }
+    const copia = deleteTarget;
+    setDeleteTarget(null);
+    setBackups((prev) => prev.filter((b) => b.filename !== copia.filename));
+    showUndoToast(t('common.deletingItem', { name: copia.filename }), {
+      alDeshacer: () => loadBackupsData(),
+      alExpirar: async () => {
+        try {
+          await api.admin.deleteBackup(copia.filename);
+          showToast(t('backups.backupDeleted', { name: copia.filename }), 'info');
+        } catch (err: any) {
+          showToast(`${t('backups.deleteBackupError')} ` + err.message, 'error');
+        }
+        loadBackupsData();
+      },
+    });
   };
 
   const formatDateTime = (dateStr: string) => {
@@ -915,20 +918,14 @@ export default function AdminBackupsPage() {
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                disabled={deleting}
                 className="px-4 py-2 rounded-[6px] text-xs font-semibold border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >{t('common.cancel')}</button>
               <button
                 type="button"
                 onClick={handleDelete}
-                disabled={deleting}
                 className="px-4 py-2 rounded-[6px] text-xs font-bold bg-red-500 text-white hover:bg-red-600 shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                {deleting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="w-3.5 h-3.5" />
-                )}
+                <Trash2 className="w-3.5 h-3.5" />
                 <span>{t('backups.deleteBackup')}</span>
               </button>
             </div>

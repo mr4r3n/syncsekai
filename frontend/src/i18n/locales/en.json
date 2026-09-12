@@ -38,7 +38,8 @@
     "unsavedDesc": "You have pending modifications in this section. If you leave now, every setting you have not saved will be lost.",
     "closeModal": "Close dialog",
     "saveAndExit": "Save and exit",
-    "undo": "Undo"
+    "undo": "Undo",
+    "deletingItem": "Deleting {name}…"
   },
   "navigation": {
     "userLibrary": "User Library",
@@ -97,7 +98,8 @@
     "markAllReadLong": "Mark all as read",
     "connectionsHub": "Connections hub",
     "switchToDark": "Switch to dark theme",
-    "switchToLight": "Switch to light theme"
+    "switchToLight": "Switch to light theme",
+    "notification": "notification"
   },
   "auth": {
     "loginTitle": "Log In",
@@ -845,7 +847,13 @@
     "goPage": "Go",
     "refresh": "Refresh",
     "refreshHistory": "Refresh history",
-    "revertSelectedTitle": "Revert {n} selected episode? | Revert {n} selected episodes?"
+    "revertSelectedTitle": "Revert {n} selected episode? | Revert {n} selected episodes?",
+    "revertingN": "Reverting {n} episode… | Reverting {n} episodes…",
+    "scrobbleReverted": "Scrobble reverted on your trackers.",
+    "revertError": "Could not revert the scrobble.",
+    "batchDone": "Batch finished: {ok} of {total} episodes reverted.",
+    "revertOneDesc": "Remove \"{title}\" from the history and roll the episode back on your trackers?",
+    "revertBatchDesc": "Requests are sent one at a time to respect the tracker rate limits."
   },
   "mappings": {
     "title": "Smart Title Mappings",
@@ -977,7 +985,8 @@
     "countBadge": "● {titles} TITLES • {genres} GENRES",
     "selectedCount": "{n} selected",
     "blockNsfw": "🔞 Block NSFW",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "unblocked": "\"{title}\" unblocked."
   },
   "rules": {
     "title": "Scrobbler Rules & Thresholds",
@@ -1376,7 +1385,10 @@
     "successOfTotal": "{ok} successful out of {total} total",
     "percentUsersWithServer": "{p}% of users with a {server} server connected",
     "mediaLoadFailed": "The media list could not be loaded.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "fileDeleted": "File {name} deleted.",
+    "purgingCache": "Purging cover cache…",
+    "purgingOrphans": "Deleting orphan files…"
   },
   "users": {
     "title": "User Management",
@@ -1869,7 +1881,8 @@
     "freqDAILY": "Daily",
     "freqWEEKLY": "Weekly",
     "freqMONTHLY": "Monthly",
-    "spaceUsed": "Space used"
+    "spaceUsed": "Space used",
+    "backupDeleted": "Backup {name} deleted."
   },
   "announcements": {
     "gradEmerald": "Emerald green",
@@ -1971,7 +1984,8 @@
     "noEndDate": "No expiry date (it stays active until disabled manually).",
     "audienceAll": "All visitors (public + registered)",
     "audienceRegistered": "Registered users only (signed in)",
-    "audienceGuests": "Guests only (not signed in)"
+    "audienceGuests": "Guests only (not signed in)",
+    "presetDeleted": "Template \"{name}\" deleted."
   },
   "setup": {
     "checkingInstaller": "Checking installer status…",

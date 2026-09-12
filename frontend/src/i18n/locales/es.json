@@ -38,7 +38,8 @@
     "unsavedDesc": "Tienes modificaciones pendientes en este apartado. Si sales ahora, se perderán todos los ajustes que no hayas guardado.",
     "closeModal": "Cerrar modal",
     "saveAndExit": "Guardar y Salir",
-    "undo": "Deshacer"
+    "undo": "Deshacer",
+    "deletingItem": "Eliminando {name}…"
   },
   "navigation": {
     "userLibrary": "Biblioteca de Usuario",
@@ -97,7 +98,8 @@
     "markAllReadLong": "Marcar todas como leídas",
     "connectionsHub": "Hub de Conexiones",
     "switchToDark": "Cambiar a tema oscuro",
-    "switchToLight": "Cambiar a tema claro"
+    "switchToLight": "Cambiar a tema claro",
+    "notification": "notificación"
   },
   "auth": {
     "loginTitle": "Iniciar Sesión",
@@ -845,7 +847,13 @@
     "goPage": "Ir",
     "refresh": "Refrescar",
     "refreshHistory": "Refrescar historial",
-    "revertSelectedTitle": "¿Revertir {n} episodio seleccionado? | ¿Revertir {n} episodios seleccionados?"
+    "revertSelectedTitle": "¿Revertir {n} episodio seleccionado? | ¿Revertir {n} episodios seleccionados?",
+    "revertingN": "Revirtiendo {n} episodio… | Revirtiendo {n} episodios…",
+    "scrobbleReverted": "Scrobble revertido en tus trackers.",
+    "revertError": "No se pudo revertir el scrobble.",
+    "batchDone": "Lote terminado: {ok} de {total} episodios revertidos.",
+    "revertOneDesc": "¿Eliminar \"{title}\" del historial y retroceder el episodio en tus trackers?",
+    "revertBatchDesc": "Las peticiones se envían de una en una para respetar los límites de los trackers."
   },
   "mappings": {
     "title": "Mapeo Inteligente de Títulos",
@@ -977,7 +985,8 @@
     "countBadge": "● {titles} TÍTULOS • {genres} GÉNEROS",
     "selectedCount": "{n} seleccionados",
     "blockNsfw": "🔞 Bloquear NSFW",
-    "clearFilters": "Limpiar filtros"
+    "clearFilters": "Limpiar filtros",
+    "unblocked": "\"{title}\" desbloqueado."
   },
   "rules": {
     "title": "Reglas del Scrobbler & Umbrales",
@@ -1376,7 +1385,10 @@
     "successOfTotal": "{ok} correctos de {total} en total",
     "percentUsersWithServer": "{p}% de los usuarios con servidor {server} conectado",
     "mediaLoadFailed": "No se ha podido cargar la lista de medios.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "fileDeleted": "Archivo {name} eliminado.",
+    "purgingCache": "Purgando la caché de portadas…",
+    "purgingOrphans": "Eliminando ficheros huérfanos…"
   },
   "users": {
     "title": "Gestión de Usuarios",
@@ -1869,7 +1881,8 @@
     "freqDAILY": "Diaria",
     "freqWEEKLY": "Semanal",
     "freqMONTHLY": "Mensual",
-    "spaceUsed": "Espacio utilizado"
+    "spaceUsed": "Espacio utilizado",
+    "backupDeleted": "Copia {name} eliminada."
   },
   "announcements": {
     "gradEmerald": "Verde Esmeralda",
@@ -1971,7 +1984,8 @@
     "noEndDate": "Todos los Visitantes (Público + Registrados)",
     "audienceAll": "Solo Usuarios Registrados (Conectados)",
     "audienceRegistered": "Solo Invitados (No Conectados)",
-    "audienceGuests": "Solo Administradores (Modo Pruebas)"
+    "audienceGuests": "Solo Administradores (Modo Pruebas)",
+    "presetDeleted": "Plantilla \"{name}\" eliminada."
   },
   "setup": {
     "checkingInstaller": "Verificando estado del instalador...",

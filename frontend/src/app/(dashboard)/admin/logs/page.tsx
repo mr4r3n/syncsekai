@@ -26,7 +26,7 @@ import { CustomSelect } from '@/components/CustomSelect';
 export default function AdminLogsPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
   const [data, setData] = useState<any>(null);
   const [systemHealth, setSystemHealth] = useState<any>(null);
@@ -91,14 +91,21 @@ export default function AdminLogsPage() {
     }
   };
 
-  const handleDeleteDomain = async (id: string) => {
-    try {
-      await api.admin.deleteDomain(id);
-      showToast(t('admin.domainRemoved'), 'info');
-      loadData();
-    } catch (err: any) {
-      showToast('Error: ' + err.message, 'error');
-    }
+  const handleDeleteDomain = (id: string) => {
+    const dominio = (data?.domainPolicies || []).find((d: any) => d.id === id);
+    setData((prev: any) => prev ? { ...prev, domainPolicies: (prev.domainPolicies || []).filter((d: any) => d.id !== id) } : prev);
+    showUndoToast(t('common.deletingItem', { name: dominio?.domain || id }), {
+      alDeshacer: () => loadData(),
+      alExpirar: async () => {
+        try {
+          await api.admin.deleteDomain(id);
+          showToast(t('admin.domainRemoved'), 'info');
+        } catch (err: any) {
+          showToast('Error: ' + err.message, 'error');
+        }
+        loadData();
+      },
+    });
   };
 
   const domainPolicies = data?.domainPolicies || [];

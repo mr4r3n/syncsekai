@@ -101,7 +101,7 @@ const STATUS_STYLES: Record<string, { label: string; class: string; icon: any }>
 
 export default function AdminTicketsPage() {
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
 
   const [tickets, setTickets] = useState<AdminTicketItem[]>([]);
@@ -309,19 +309,26 @@ export default function AdminTicketsPage() {
     }
   };
 
-  const handleDeleteTicket = async () => {
+  const handleDeleteTicket = () => {
     if (!selectedTicketId) return;
-    if (!confirm(t('admin.confirmDeleteTicket'))) return;
-    try {
-      await api.admin.tickets.delete(selectedTicketId);
-      showToast(t('admin.ticketDeleted'), 'info');
-      setSelectedTicketId(null);
-      setActiveTicket(null);
-      loadStats();
-      loadTickets();
-    } catch (err: any) {
-      showToast(err.message || t('admin.deleteTicketError'), 'error');
-    }
+    const id = selectedTicketId;
+    const ticket = tickets.find((tk) => tk.id === id);
+    setSelectedTicketId(null);
+    setActiveTicket(null);
+    setTickets((prev) => prev.filter((tk) => tk.id !== id));
+    showUndoToast(t('common.deletingItem', { name: ticket?.subject || `#${id.slice(0, 8)}` }), {
+      alDeshacer: () => loadTickets(),
+      alExpirar: async () => {
+        try {
+          await api.admin.tickets.delete(id);
+          showToast(t('admin.ticketDeleted'), 'info');
+        } catch (err: any) {
+          showToast(err.message || t('admin.deleteTicketError'), 'error');
+        }
+        loadStats();
+        loadTickets();
+      },
+    });
   };
 
   const formatTimeAgo = (dateStr: string) => {

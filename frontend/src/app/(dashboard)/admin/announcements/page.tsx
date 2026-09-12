@@ -106,7 +106,7 @@ function formatReadableDate(t: Traductor, locale: string, isoStr?: string | null
 }
 
 export default function AdminAnnouncementsPage() {
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { isCollapsed } = useSidebar();
   const { t, locale } = useI18n();
   const [loading, setLoading] = useState(true);
@@ -326,19 +326,22 @@ export default function AdminAnnouncementsPage() {
     }
   };
 
-  const handleDeleteCustomPreset = async (id: string, name: string, e: React.MouseEvent) => {
+  const handleDeleteCustomPreset = (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm(`¿Estás seguro de eliminar la plantilla personalizada "${name}"?`)) {
-      return;
-    }
-
-    try {
-      await api.announcements.deleteCustomPreset(id);
-      showToast(`Plantilla "${name}" eliminada.`, 'info');
-      setCustomPresets((prev) => prev.filter((p) => p.id !== id));
-    } catch (err: any) {
-      showToast(err.message || t('announcements.saveTemplateError'), 'error');
-    }
+    const plantilla = customPresets.find((p) => p.id === id);
+    setCustomPresets((prev) => prev.filter((p) => p.id !== id));
+    showUndoToast(t('common.deletingItem', { name }), {
+      alDeshacer: () => setCustomPresets((prev) => (plantilla ? [...prev, plantilla] : prev)),
+      alExpirar: async () => {
+        try {
+          await api.announcements.deleteCustomPreset(id);
+          showToast(t('announcements.presetDeleted', { name }), 'info');
+        } catch (err: any) {
+          setCustomPresets((prev) => (plantilla ? [...prev, plantilla] : prev));
+          showToast(err.message || t('announcements.saveTemplateError'), 'error');
+        }
+      },
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

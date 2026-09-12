@@ -73,7 +73,7 @@ const PERMISOS_USUARIO = [
 export default function UsersManagementPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +103,6 @@ export default function UsersManagementPage() {
 
   // Estado para modal de eliminación
   const [deletingUser, setDeletingUser] = useState<any | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Semántica de diálogo y gestión de foco de los modales de esta vista.
   const { dialogProps: propsEditar } = useModalA11y(Boolean(editingUser), () => setEditingUser(null));
@@ -289,20 +288,25 @@ export default function UsersManagementPage() {
     }
   };
 
-  // Ejecutar eliminación
-  const handleConfirmDelete = async () => {
+  // La fila sale de la lista al confirmar; la petición se envía cuando expira
+  // la cuenta atrás, así que Deshacer solo tiene que devolver la fila.
+  const handleConfirmDelete = () => {
     if (!deletingUser) return;
-    try {
-      setIsDeleting(true);
-      await api.admin.deleteUser(deletingUser.id);
-      showToast(t('users.userDeleted', { username: deletingUser.username }), 'info');
-      setUsersList((prev) => prev.filter((u) => u.id !== deletingUser.id));
-      setDeletingUser(null);
-    } catch (err: any) {
-      showToast(`${t('users.deleteUserError')} ` + err.message, 'error');
-    } finally {
-      setIsDeleting(false);
-    }
+    const usuario = deletingUser;
+    setUsersList((prev) => prev.filter((u) => u.id !== usuario.id));
+    setDeletingUser(null);
+    showUndoToast(t('users.deletingUser', { username: usuario.username }), {
+      alDeshacer: () => setUsersList((prev) => [...prev, usuario]),
+      alExpirar: async () => {
+        try {
+          await api.admin.deleteUser(usuario.id);
+          showToast(t('users.userDeleted', { username: usuario.username }), 'info');
+        } catch (err: any) {
+          setUsersList((prev) => [...prev, usuario]);
+          showToast(`${t('users.deleteUserError')} ` + err.message, 'error');
+        }
+      },
+    });
   };
 
   // Filtros
@@ -1107,7 +1111,6 @@ export default function UsersManagementPage() {
         confirmText={t('users.deletePermanently')}
         cancelText={t('common.cancel')}
         variant="danger"
-        loading={isDeleting}
         onConfirm={handleConfirmDelete}
         onClose={() => setDeletingUser(null)}
       />

@@ -37,7 +37,8 @@
     "unsavedTitle": "Unsaved changes",
     "unsavedDesc": "You have pending modifications in this section. If you leave now, every setting you have not saved will be lost.",
     "closeModal": "Close dialog",
-    "saveAndExit": "Save and exit"
+    "saveAndExit": "Save and exit",
+    "undo": "Undo"
   },
   "navigation": {
     "userLibrary": "User Library",
@@ -1455,7 +1456,8 @@
     "saving": "Saving…",
     "roleAdmin": "ADMIN (administrator)",
     "reset2faShort": "Reset 2FA",
-    "noLinkedServices": "No linked services"
+    "noLinkedServices": "No linked services",
+    "deletingUser": "Deleting {username}…"
   },
   "tickets": {
     "title": "Help Center & Tickets",

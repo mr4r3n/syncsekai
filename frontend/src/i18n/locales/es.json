@@ -37,7 +37,8 @@
     "unsavedTitle": "Cambios sin guardar",
     "unsavedDesc": "Tienes modificaciones pendientes en este apartado. Si sales ahora, se perderán todos los ajustes que no hayas guardado.",
     "closeModal": "Cerrar modal",
-    "saveAndExit": "Guardar y Salir"
+    "saveAndExit": "Guardar y Salir",
+    "undo": "Deshacer"
   },
   "navigation": {
     "userLibrary": "Biblioteca de Usuario",
@@ -1455,7 +1456,8 @@
     "saving": "Guardando…",
     "roleAdmin": "ADMIN (administrador)",
     "reset2faShort": "Restablecer 2FA",
-    "noLinkedServices": "Sin servicios vinculados"
+    "noLinkedServices": "Sin servicios vinculados",
+    "deletingUser": "Eliminando a {username}…"
   },
   "tickets": {
     "title": "Centro de Ayuda & Tickets",

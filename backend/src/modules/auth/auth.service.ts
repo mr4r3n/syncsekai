@@ -166,11 +166,16 @@ export class AuthService implements OnModuleInit {
     return result;
   }
 
-  async register(dto: RegisterDto) {
+  /** Vale para el alta por correo y para la primera entrada con Google/Discord. */
+  private async comprobarRegistroAbierto() {
     const registro = await this.prisma.systemSetting.findUnique({ where: { key: 'REGISTRATION_OPEN' } });
     if (registro?.value === 'false') {
-      throw new ForbiddenException('El registro está cerrado en esta instancia.');
+      throw new ForbiddenException('Registration is closed on this instance. Contact the administrator if you need an account.');
     }
+  }
+
+  async register(dto: RegisterDto) {
+    await this.comprobarRegistroAbierto();
 
     const domainCheck = await this.checkDomain(dto.email);
     if (!domainCheck.isAllowed) {
@@ -1804,7 +1809,8 @@ export class AuthService implements OnModuleInit {
         });
       }
     } else {
-      // S05: Aplicar la política de admisión de dominios antes de crear la cuenta social
+      // Cuenta nueva: mismas puertas que el alta por correo.
+      await this.comprobarRegistroAbierto();
       const domainCheck = await this.checkDomain(email);
       if (!domainCheck.isAllowed) {
         throw new BadRequestException(domainCheck.message);

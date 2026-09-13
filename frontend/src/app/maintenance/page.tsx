@@ -177,7 +177,7 @@ export default function MaintenancePage() {
           <div>&copy; {new Date().getFullYear()} SyncSekai &bull; {t('maintenance.systemStatus')}</div>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">
-              Privacidad &amp; RGPD
+              {t('legal.privacyTitle')}
             </Link>
             <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">{t('legal.termsTitle')}</Link>
           </div>

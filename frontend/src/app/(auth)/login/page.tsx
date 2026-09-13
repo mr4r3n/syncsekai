@@ -489,7 +489,7 @@ export default function LoginPage() {
         <div className="w-full flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)] border-t border-[var(--border-subtle)] pt-4" suppressHydrationWarning>
           <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">{t('legal.termsTitle')}</Link>
           <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">
-            Privacidad &amp; RGPD
+            {t('legal.privacyTitle')}
           </Link>
         </div>
       </div>

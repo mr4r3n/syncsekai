@@ -158,7 +158,7 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono text-sky-400 bg-sky-500/10 border border-sky-500/20">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Registro Gratuito &bull; Sin Publicidad</span>
+              <span>{t('auth.registerAsideBadge')}</span>
             </div>
             <h2 className="text-3xl xl:text-4xl font-extrabold tracking-tight font-heading leading-tight text-[var(--text-primary)]">{t('auth.registerAsideTitle')}</h2>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{t('auth.registerAsideDesc')}</p>
@@ -193,7 +193,7 @@ export default function RegisterPage() {
           <span>&copy; {new Date().getFullYear()} SyncSekai Engine</span>
           <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
             <Shield className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Infraestructura segura &bull; Cumplimiento RGPD</span>
+            <span>{t('auth.asideFeatureNoTrackers')}</span>
           </span>
         </div>
       </div>
@@ -277,8 +277,8 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => handleSocialRegister('Google')}
-                    disabled={!!socialLoading || loading}
-                    className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
+                    disabled={!!socialLoading || loading || registroAbierto === false}
+                    className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
                     title={t('auth.signUpGoogle')}
                   >
                     <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -305,8 +305,8 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => handleSocialRegister('Discord')}
-                    disabled={!!socialLoading || loading}
-                    className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
+                    disabled={!!socialLoading || loading || registroAbierto === false}
+                    className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
                     title={t('auth.signUpDiscord')}
                   >
                     <svg className="w-4 h-4 shrink-0 fill-[var(--brand-discord)]" viewBox="0 0 24 24">
@@ -469,7 +469,7 @@ export default function RegisterPage() {
         <div className="w-full flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)] border-t border-[var(--border-subtle)] pt-4" suppressHydrationWarning>
           <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">{t('legal.termsTitle')}</Link>
           <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">
-            Privacidad &amp; RGPD
+            {t('legal.privacyTitle')}
           </Link>
         </div>
       </div>

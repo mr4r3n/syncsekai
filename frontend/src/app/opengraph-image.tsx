@@ -13,8 +13,7 @@ import { join } from 'node:path';
  * Se genera aquí en lugar de exportar un PNG para que la tarjeta siga al
  * producto: si cambia el titular o los servicios soportados, cambia con él.
  */
-export const alt =
-  'SyncSekai — Sincroniza tus episodios de anime de Plex con AniList, MyAnimeList y Kitsu';
+export const alt = 'SyncSekai — Sync anime from Plex, Jellyfin & Emby to AniList, MyAnimeList & Kitsu';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -52,10 +51,13 @@ async function comoDataUri(fichero: string, mime: string): Promise<string | null
 }
 
 export default async function OpengraphImage() {
-  const [negrita, media, plex, anilist, mal] = await Promise.all([
+  const [negrita, media, logo, plex, jellyfin, emby, anilist, mal] = await Promise.all([
     cargarOutfit(800),
     cargarOutfit(500),
+    comoDataUri('icon.png', 'image/png'),
     comoDataUri('plex.svg', 'image/svg+xml'),
+    comoDataUri('jellyfin.svg', 'image/svg+xml'),
+    comoDataUri('emby.svg', 'image/svg+xml'),
     comoDataUri('anilist.svg', 'image/svg+xml'),
     comoDataUri('mal.svg', 'image/svg+xml'),
   ]);
@@ -71,6 +73,8 @@ export default async function OpengraphImage() {
   // Mejor una pastilla coherente que un hueco o un logo de peor calidad.
   const servicios = [
     { nombre: 'Plex', icono: plex, color: '#E5A00D' },
+    { nombre: 'Jellyfin', icono: jellyfin, color: '#AA5CC3' },
+    { nombre: 'Emby', icono: emby, color: '#52B54B' },
     { nombre: 'AniList', icono: anilist, color: '#02A9FF' },
     { nombre: 'MyAnimeList', icono: mal, color: '#2E51A2' },
     { nombre: 'Kitsu', icono: null, color: '#FD755C' },
@@ -95,22 +99,11 @@ export default async function OpengraphImage() {
       >
         {/* Marca */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              background: '#FF634A',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 24,
-              fontWeight: 800,
-              color: '#141414',
-            }}
-          >
-            P
-          </div>
+          {logo ? (
+            <img src={logo} width={40} height={40} alt="" style={{ borderRadius: 10 }} />
+          ) : (
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: '#FF634A', display: 'flex' }} />
+          )}
           <div style={{ display: 'flex', fontSize: 32, fontWeight: 800, letterSpacing: '-0.5px' }}>
             SyncSekai
           </div>
@@ -126,7 +119,7 @@ export default async function OpengraphImage() {
               border: '1px solid rgba(255,255,255,0.14)',
             }}
           >
-            Scrobbler de anime
+            Anime scrobbler
           </div>
         </div>
 
@@ -142,7 +135,7 @@ export default async function OpengraphImage() {
               maxWidth: 940,
             }}
           >
-            Cada episodio que ves en Plex, ya contado en tus listas.
+            Every episode you watch, already on your lists.
           </div>
           <div
             style={{
@@ -154,7 +147,7 @@ export default async function OpengraphImage() {
               lineHeight: 1.35,
             }}
           >
-            Detecta la reproducción en tiempo real y actualiza tu progreso sin que toques nada.
+            Plex, Jellyfin and Emby to AniList, MyAnimeList and Kitsu, in real time. Nothing to install.
           </div>
         </div>
 
@@ -167,7 +160,7 @@ export default async function OpengraphImage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                padding: '11px 18px',
+                padding: '10px 16px',
                 borderRadius: 12,
                 background: 'rgba(255,255,255,0.05)',
                 border: `1px solid ${s.color}55`,
@@ -180,7 +173,7 @@ export default async function OpengraphImage() {
                   style={{ width: 24, height: 24, borderRadius: 5, background: s.color, display: 'flex' }}
                 />
               )}
-              <div style={{ display: 'flex', fontSize: 22, fontWeight: 500, color: '#E4E4E7' }}>
+              <div style={{ display: 'flex', fontSize: 21, fontWeight: 500, color: '#E4E4E7' }}>
                 {s.nombre}
               </div>
             </div>

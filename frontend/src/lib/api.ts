@@ -28,6 +28,14 @@ export interface RedSocial {
 }
 
 /** Enlace externo del pie: red social o sitio recomendado. */
+export interface SiteSettings {
+  siteName: string;
+  siteTitle: string;
+  siteDescription: string;
+  contactEmail: string;
+  registrationOpen: boolean;
+}
+
 export interface SiteLink {
   id: string;
   kind: 'SOCIAL' | 'FRIEND';
@@ -389,6 +397,12 @@ export const api = {
     },
     getChart: (timeframe: string) => request<any[]>(`/api/admin/chart?timeframe=${encodeURIComponent(timeframe)}`),
     getActivityHeatmap: () => request<any>('/api/admin/activity-heatmap'),
+    getSiteSettings: () => request<any>('/api/admin/site-settings'),
+    updateSiteSettings: (changes: Record<string, string>) =>
+      request<{ success: boolean; updated: string[] }>('/api/admin/site-settings', {
+        method: 'PUT',
+        body: JSON.stringify({ changes }),
+      }),
     getCredentials: () => request<any>('/api/admin/credentials'),
     updateCredentials: (currentPassword: string, changes: Record<string, string>) =>
       request<any>('/api/admin/credentials', {
@@ -651,6 +665,7 @@ export const api = {
   },
 
   setup: {
+    getSiteSettings: () => request<SiteSettings>('/api/setup/site-settings'),
     getSiteLinks: () =>
       request<{ social: SiteLink[]; friends: SiteLink[] }>('/api/setup/site-links'),
     getStatus: () =>

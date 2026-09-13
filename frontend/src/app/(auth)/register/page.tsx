@@ -39,6 +39,11 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  // null mientras carga: el formulario no se esconde por un fallo de red.
+  const [registroAbierto, setRegistroAbierto] = useState<boolean | null>(null);
+  useEffect(() => {
+    api.setup.getSiteSettings().then((s) => setRegistroAbierto(s.registrationOpen)).catch(() => setRegistroAbierto(true));
+  }, []);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [registeredSuccess, setRegisteredSuccess] = useState<any>(null);
 
@@ -318,8 +323,14 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {registroAbierto === false && (
+                <div className="p-4 rounded-[var(--radius-md)] bg-[var(--status-warning-bg)] border border-[var(--status-warning)]/30 text-sm text-[var(--text-primary)]">
+                  {t('auth.registrationClosed')}
+                </div>
+              )}
+
               {/* Formulario Tradicional */}
-              <form suppressHydrationWarning onSubmit={handleRegister} className="space-y-4">
+              <form suppressHydrationWarning onSubmit={handleRegister} className={`space-y-4 ${registroAbierto === false ? 'hidden' : ''}`}>
                 {formError && (
                   <div
                     role="alert"

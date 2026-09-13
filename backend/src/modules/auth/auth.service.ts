@@ -167,6 +167,11 @@ export class AuthService implements OnModuleInit {
   }
 
   async register(dto: RegisterDto) {
+    const registro = await this.prisma.systemSetting.findUnique({ where: { key: 'REGISTRATION_OPEN' } });
+    if (registro?.value === 'false') {
+      throw new ForbiddenException('El registro está cerrado en esta instancia.');
+    }
+
     const domainCheck = await this.checkDomain(dto.email);
     if (!domainCheck.isAllowed) {
       throw new BadRequestException(domainCheck.message);

@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Role, SiteLinkKind, SyncStatus } from '@prisma/client';
+import { AJUSTES_SITIO, buscarAjusteSitio, resolverAjustesSitio, validarAjusteSitio } from '../../common/security/ajustes-sitio';
 import { reencodearImagenCuadrada } from '../../common/security/image-file';
 import {
   normalizarDestinoEnlace,
@@ -87,6 +88,53 @@ export class AdminService {
    * no releer un client secret. Devolverlos convertiría cualquier XSS o sesión
    * robada en una fuga de credenciales, a cambio de nada.
    */
+  /** Ajustes públicos del sitio, con lo guardado y el valor por defecto de cada uno. */
+  async getSiteSettings() {
+    const filas = await this.prisma.systemSetting.findMany({
+      where: { key: { in: AJUSTES_SITIO.map((a) => a.clave) } },
+      select: { key: true, value: true, updatedAt: true },
+    });
+    const porClave = new Map(filas.map((f) => [f.key, f]));
+    return {
+      settings: AJUSTES_SITIO.map((a) => ({
+        key: a.clave,
+        field: a.campo,
+        value: porClave.get(a.clave)?.value || '',
+        defaultValue: a.porDefecto,
+        maxLength: a.maxLargo,
+        updatedAt: porClave.get(a.clave)?.updatedAt?.toISOString() || null,
+      })),
+      effective: resolverAjustesSitio(new Map(filas.map((f) => [f.key, f.value || '']))),
+    };
+  }
+
+  /** Un valor vacío vuelve al valor por defecto. Las claves fuera de la lista se ignoran. */
+  async updateSiteSettings(adminId: string, changes: Record<string, string>) {
+    const entradas = Object.entries(changes || {});
+    if (entradas.length === 0) throw new BadRequestException('No se ha enviado ningún cambio.');
+
+    const actualizadas: string[] = [];
+    for (const [clave, valorBruto] of entradas) {
+      const ajuste = buscarAjusteSitio(clave);
+      if (!ajuste) continue;
+      const valor = String(valorBruto ?? '').trim();
+      const motivo = validarAjusteSitio(ajuste, valor);
+      if (motivo) throw new BadRequestException(motivo);
+      await this.prisma.systemSetting.upsert({
+        where: { key: clave },
+        update: { value: valor, isSecret: false },
+        create: { key: clave, value: valor, isSecret: false },
+      });
+      actualizadas.push(clave);
+    }
+    if (actualizadas.length === 0) throw new BadRequestException('Ninguna de las claves enviadas se puede cambiar aquí.');
+
+    await this.prisma.auditLog
+      .create({ data: { level: 'INFO', service: 'ADMIN', message: `Ajustes del sitio actualizados: ${actualizadas.join(', ')}`, details: { adminId, keys: actualizadas } } })
+      .catch(() => {});
+    return { success: true, updated: actualizadas };
+  }
+
   async getSystemCredentials() {
     const filas = await this.prisma.systemSetting.findMany({
       where: { key: { in: CREDENCIALES_SISTEMA.map((c) => c.clave) } },

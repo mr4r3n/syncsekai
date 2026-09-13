@@ -74,7 +74,8 @@
     "collapseSidebar": "Minimizar barra lateral (solo iconos)",
     "siteLinks": "Enlaces del pie",
     "appearanceLanguage": "Apariencia e idioma",
-    "systemCredentials": "Credenciales"
+    "systemCredentials": "Credenciales",
+    "siteSettings": "Ajustes del sitio"
   },
   "topbar": {
     "connectionStatus": "Estado Conexiones",
@@ -246,7 +247,8 @@
     "authError": "Error en autenticación:",
     "socialSessionInvalid": "No se pudo validar la sesión social.",
     "verifyingSession": "Verificando sesión…",
-    "sessionExpiredRedirect": "Sesión expirada. Redirigiendo a inicio de sesión…"
+    "sessionExpiredRedirect": "Sesión expirada. Redirigiendo a inicio de sesión…",
+    "registrationClosed": "El registro está cerrado en esta instancia. Escribe al administrador si necesitas una cuenta."
   },
   "landing": {
     "ctaPrimary": "Comenzar Ahora",
@@ -2079,7 +2081,8 @@
   },
   "footer": {
     "community": "Comunidad",
-    "recommended": "Sitios recomendados"
+    "recommended": "Sitios recomendados",
+    "contact": "Contacto"
   },
   "adminLinks": {
     "title": "Enlaces del pie",
@@ -2130,5 +2133,36 @@
     "saved": "Credenciales actualizadas.",
     "noChanges": "No has cambiado nada.",
     "restartHint": "Los cambios se aplican en el siguiente inicio de sesión con ese proveedor. No hace falta reiniciar."
+  },
+  "siteSettings": {
+    "title": "Ajustes del sitio",
+    "subtitle": "Nombre, fragmento de búsqueda, contacto y registro. Sin tocar código.",
+    "save": "Guardar cambios",
+    "saved": "Ajustes guardados",
+    "hint": "Los cambios se aplican en la siguiente carga. Los buscadores los recogen en su próximo rastreo.",
+    "useDefault": "Usar el valor por defecto",
+    "usingDefault": "Con el valor por defecto",
+    "unsaved": "Sin guardar",
+    "changedOn": "Cambiado el {fecha}",
+    "empty": "Sin definir",
+    "registrationOpen": "Cualquiera puede crear una cuenta",
+    "registrationClosed": "Cerrado: sólo entran las cuentas que ya existen",
+    "group": {
+      "identidad": "Identidad",
+      "seo": "Búsqueda y compartir",
+      "registro": "Registro"
+    },
+    "groupHint": {
+      "identidad": "Cómo se llama el sitio y dónde te pueden escribir.",
+      "seo": "El título y la descripción que enseñan Google y las tarjetas de enlace.",
+      "registro": "Si se pueden crear cuentas nuevas."
+    },
+    "field": {
+      "SITE_NAME": "Nombre del sitio",
+      "SITE_CONTACT_EMAIL": "Correo de contacto",
+      "SITE_TITLE": "Título de la página",
+      "SITE_DESCRIPTION": "Descripción",
+      "REGISTRATION_OPEN": "Registros nuevos"
+    }
   }
 }

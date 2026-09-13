@@ -23,6 +23,11 @@ export class SetupController {
     return this.setupService.getMaintenanceStatus();
   }
 
+  @Get('site-settings')
+  async getSiteSettings() {
+    return this.setupService.getSiteSettings();
+  }
+
   @Get('site-links')
   async getSiteLinks() {
     return this.setupService.getSiteLinks();

@@ -53,6 +53,22 @@ export class AdminController {
    * `checkAdmin(user, req)` aplica ademas la restriccion de red que ya existe
    * para el resto del panel.
    */
+  @Get('site-settings')
+  async getSiteSettings(@CurrentUser() user: any, @Req() req: any) {
+    this.checkAdmin(user, req);
+    return this.adminService.getSiteSettings();
+  }
+
+  @Put('site-settings')
+  async updateSiteSettings(
+    @CurrentUser() user: any,
+    @Req() req: any,
+    @Body() body: { changes?: Record<string, string> },
+  ) {
+    this.checkAdmin(user, req);
+    return this.adminService.updateSiteSettings(user.id, body?.changes || {});
+  }
+
   @Get('credentials')
   async getCredentials(@CurrentUser() user: any, @Req() req: any) {
     this.checkAdmin(user, req);

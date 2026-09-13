@@ -74,7 +74,8 @@
     "collapseSidebar": "Collapse sidebar (icons only)",
     "siteLinks": "Footer links",
     "appearanceLanguage": "Appearance & language",
-    "systemCredentials": "Credentials"
+    "systemCredentials": "Credentials",
+    "siteSettings": "Site settings"
   },
   "topbar": {
     "connectionStatus": "Connection Status",
@@ -246,7 +247,8 @@
     "authError": "Authentication error:",
     "socialSessionInvalid": "The social session could not be validated.",
     "verifyingSession": "Verifying session…",
-    "sessionExpiredRedirect": "Session expired. Redirecting to sign in…"
+    "sessionExpiredRedirect": "Session expired. Redirecting to sign in…",
+    "registrationClosed": "Registration is closed on this instance. Contact the administrator if you need an account."
   },
   "landing": {
     "ctaPrimary": "Get Started",
@@ -2079,7 +2081,8 @@
   },
   "footer": {
     "community": "Community",
-    "recommended": "Recommended sites"
+    "recommended": "Recommended sites",
+    "contact": "Contact"
   },
   "adminLinks": {
     "title": "Footer links",
@@ -2130,5 +2133,36 @@
     "saved": "Credentials updated.",
     "noChanges": "Nothing changed.",
     "restartHint": "Changes apply on the next sign-in with that provider. No restart needed."
+  },
+  "siteSettings": {
+    "title": "Site settings",
+    "subtitle": "Name, search snippet, contact and registration. No code needed.",
+    "save": "Save changes",
+    "saved": "Settings saved",
+    "hint": "Changes apply on the next page load. Search engines pick them up when they next crawl.",
+    "useDefault": "Use default",
+    "usingDefault": "Using the default value",
+    "unsaved": "Not saved yet",
+    "changedOn": "Changed on {fecha}",
+    "empty": "Not set",
+    "registrationOpen": "Anyone can create an account",
+    "registrationClosed": "Closed: only existing accounts can sign in",
+    "group": {
+      "identidad": "Identity",
+      "seo": "Search and sharing",
+      "registro": "Registration"
+    },
+    "groupHint": {
+      "identidad": "What the site calls itself, and where people can write to you.",
+      "seo": "The title and description Google and link previews show.",
+      "registro": "Whether new accounts can be created."
+    },
+    "field": {
+      "SITE_NAME": "Site name",
+      "SITE_CONTACT_EMAIL": "Contact email",
+      "SITE_TITLE": "Page title",
+      "SITE_DESCRIPTION": "Description",
+      "REGISTRATION_OPEN": "New registrations"
+    }
   }
 }

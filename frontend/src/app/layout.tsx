@@ -40,21 +40,54 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
-export const metadata: Metadata = {
+/**
+ * Nombre, título y descripción salen de Ajustes del sitio (SystemSetting) y se
+ * leen en el servidor al generar la página. Si el backend no responde se usan
+ * los valores por defecto: la portada no debe caer por esto.
+ */
+async function leerAjustesSitio() {
+  const backend =
+    process.env.INTERNAL_BACKEND_URL ||
+    (process.env.NODE_ENV === 'production' ? 'http://backend:4000' : 'http://127.0.0.1:4000');
+  try {
+    const res = await fetch(`${backend}/api/setup/site-settings`, { next: { revalidate: 60 } });
+    if (!res.ok) return null;
+    return (await res.json()) as { siteName: string; siteTitle: string; siteDescription: string };
+  } catch {
+    return null;
+  }
+}
+
+// 56 y 143 caracteres: Google corta el título sobre los 60 y la descripción sobre los 155.
+const TITULO_POR_DEFECTO = 'SyncSekai — Plex, Jellyfin & Emby to AniList, MAL & Kitsu';
+const DESCRIPCION_POR_DEFECTO =
+  'Automatically sync anime from Plex, Jellyfin & Emby to AniList, MyAnimeList (MAL) and Kitsu. No install, works from any device.';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const ajustes = await leerAjustesSitio();
+  const nombre = ajustes?.siteName || 'SyncSekai';
+  const titulo = ajustes?.siteTitle || TITULO_POR_DEFECTO;
+  const descripcion = ajustes?.siteDescription || DESCRIPCION_POR_DEFECTO;
+  return {
+    ...META_BASE,
+    title: { default: titulo, template: `%s | ${nombre}` },
+    description: descripcion,
+    applicationName: nombre,
+    publisher: nombre,
+    openGraph: { ...META_BASE.openGraph, title: titulo, description: descripcion, siteName: nombre },
+    twitter: { ...META_BASE.twitter, title: titulo, description: descripcion },
+  };
+}
+
+const META_BASE: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://syncsekai.com'),
   // Los metadatos van en ingles, no en castellano, aunque la interfaz siga siendo
   // bilingue. El cambio de idioma es solo de cliente, asi que Google indexa una
   // unica version: conviene que sea la del publico que de verdad busca. Las
   // consultas que llegan estan en ingles y Estados Unidos aporta 32 de 53 visitas.
-  // Esto NO altera lo que ve el usuario: la deteccion por navegador sigue igual.
-  title: {
-    // 56 caracteres. Google corta sobre los 60.
-    default: 'SyncSekai — Plex, Jellyfin & Emby to AniList, MAL & Kitsu',
-    template: '%s | SyncSekai',
-  },
-  // 143 caracteres, por debajo del corte de ~155.
-  description:
-    'Automatically sync anime from Plex, Jellyfin & Emby to AniList, MyAnimeList (MAL) and Kitsu. No install, works from any device.',
+  // Esto NO altera lo que ve el usuario: la interfaz sigue siendo bilingue.
+  title: { default: TITULO_POR_DEFECTO, template: '%s | SyncSekai' },
+  description: DESCRIPCION_POR_DEFECTO,
   // Google ignora meta keywords desde 2009. Se mantiene la lista porque
   // no cuesta nada y algún buscador menor la lee, pero no esperes posición de aquí:
   // lo que posiciona son el title, la description y el texto visible de la página.

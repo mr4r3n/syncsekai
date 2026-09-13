@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { getRequiredSecret } from '../../common/security/required-secret';
 import { validateNetworkHost } from '../../common/security/network-target';
 import { buscarRed } from '../../common/security/redes-sociales';
+import { AJUSTES_SITIO, resolverAjustesSitio } from '../../common/security/ajustes-sitio';
 import { plantillaCorreo, escapar } from '../../common/email/plantilla-correo';
 import { isIP } from 'net';
 
@@ -152,6 +153,15 @@ export class SetupService {
       message: messageSetting?.value || 'Estamos optimizando los motores de sincronización de SyncSekai. Volveremos en breve.',
       estimatedEnd: endSetting?.value || null,
     };
+  }
+
+  /** Nombre, título, descripción, contacto y estado del registro. Todo público. */
+  async getSiteSettings() {
+    const filas = await this.prisma.systemSetting.findMany({
+      where: { key: { in: AJUSTES_SITIO.map((a) => a.clave) } },
+      select: { key: true, value: true },
+    });
+    return resolverAjustesSitio(new Map(filas.map((f) => [f.key, f.value || ''])));
   }
 
   /**

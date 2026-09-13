@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Code2, Cookie, ExternalLink, Mail } from 'lucide-react';
-import { api, type SiteLink } from '@/lib/api';
+import { api, type SiteLink, type SiteSettings } from '@/lib/api';
 import { BrandIcon } from './BrandIcon';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -107,6 +107,7 @@ export function SiteFooter({
   const { t } = useI18n();
   const [social, setSocial] = useState<SiteLink[]>([]);
   const [amigos, setAmigos] = useState<SiteLink[]>([]);
+  const [ajustes, setAjustes] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
     // Si falla, el pie se queda con lo de siempre. No es contenido crítico y no
@@ -118,6 +119,7 @@ export function SiteFooter({
         setAmigos(res.friends || []);
       })
       .catch(() => {});
+    api.setup.getSiteSettings().then(setAjustes).catch(() => {});
   }, []);
 
   const hayComunidad = social.length > 0 || amigos.length > 0;
@@ -159,7 +161,7 @@ export function SiteFooter({
           {nota ?? (
             <>
               <span className="font-bold text-[var(--text-primary)]" translate="no">
-                SyncSekai
+                {ajustes?.siteName || 'SyncSekai'}
               </span>
               <span>&bull;</span>
               <span>{t('landing.footerTagline')}</span>
@@ -177,6 +179,13 @@ export function SiteFooter({
               {enlace.label}
             </Link>
           ))}
+
+          {ajustes?.contactEmail && (
+            <a href={`mailto:${ajustes.contactEmail}`} className="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t('footer.contact')}</span>
+            </a>
+          )}
 
           {/* El codigo esta publicado y esa es la respuesta a "por que deberia
               fiarme de este servidor": no hace falta, montatelo tu. Conviene

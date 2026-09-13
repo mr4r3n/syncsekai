@@ -105,7 +105,9 @@ export class GeoVisitorMiddleware implements NestMiddleware {
 
   use(req: Request, _res: Response, next: NextFunction) {
     try {
-      const path = req.path || '';
+      // Montado con comodín, Express deja `req.path` en "/" y la ruta real en
+      // `originalUrl`; con `req.path` ninguna exclusión de abajo se cumplía.
+      const path = (req.originalUrl || req.url || '').split('?')[0];
       // Omitir endpoints de salud, métricas internas y polling del dashboard para evitar bucles
       if (
         path === '/health' ||

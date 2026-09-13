@@ -131,8 +131,9 @@
   --glass-bg-subtle: rgba(248, 249, 251, 0.92);
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-border-highlight: rgba(0, 0, 0, 0.15);
-  --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
-  --glass-shadow-lg: 0 14px 40px 0 rgba(0, 0, 0, 0.08);
+  /* Sin borde, la sombra es lo único que separa una tarjeta blanca del fondo blanco. */
+  --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.08);
+  --glass-shadow-lg: 0 14px 40px 0 rgba(0, 0, 0, 0.12);
   --glass-backdrop-blur: 16px;
 
   /* Estandarización de Botones (Light: Cinnabar #FF634A) */
@@ -475,6 +476,39 @@
   --btn-primary-bg: #01BCF3;
   /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
   --btn-primary-text: #0A0A0A;
+}
+
+/*
+ * Sin bordes marcados: las superficies se separan por fondo y sombra, no por
+ * línea. Se anulan los tokens aquí, después de todas las paletas, en vez de
+ * tocar las ~800 clases que los usan. Los bordes de estado (peligro, aviso,
+ * marca) y el de foco usan otros tokens y siguen dibujándose.
+ *
+ * Los discontinuos sí se ven: una zona de subida o un hueco vacío sin línea
+ * no se entiende. El elemento redefine los tokens para sí mismo, así que las
+ * clases de hover/activo que ponen otro color siguen ganando como siempre.
+ */
+:root, :root[data-theme], :root[data-palette], :root[data-palette][data-theme] {
+  --border-subtle: transparent;
+  --border-strong: transparent;
+  --glass-border: transparent;
+  --glass-border-highlight: transparent;
+  --btn-secondary-border: transparent;
+  --border-dashed: rgba(207, 207, 207, 0.22);
+}
+
+:root[data-theme="light"], :root[data-palette][data-theme="light"] {
+  --border-dashed: rgba(0, 0, 0, 0.16);
+}
+
+/* Los campos también: en claro, un input blanco sobre tarjeta blanca desaparece. */
+.border-dashed,
+input,
+textarea,
+select {
+  --border-subtle: var(--border-dashed);
+  --border-strong: var(--border-dashed);
+  --glass-border: var(--border-dashed);
 }
 
 * {

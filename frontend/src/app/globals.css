@@ -494,11 +494,14 @@
   --glass-border: transparent;
   --glass-border-highlight: transparent;
   --btn-secondary-border: transparent;
+  --nav-active-border: transparent;
   --border-dashed: rgba(207, 207, 207, 0.22);
 }
 
 :root[data-theme="light"], :root[data-palette][data-theme="light"] {
   --border-dashed: rgba(0, 0, 0, 0.16);
+  /* Era blanco puro: sin borde, una fila o un campo sobre una tarjeta blanca no se veía. */
+  --bg-surface: #F4F5F7;
 }
 
 /* Los campos también: en claro, un input blanco sobre tarjeta blanca desaparece. */

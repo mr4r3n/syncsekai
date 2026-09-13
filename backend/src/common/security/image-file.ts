@@ -14,6 +14,7 @@
 
 import { BadRequestException, Logger } from '@nestjs/common';
 import sharp from 'sharp';
+import * as path from 'path';
 
 export type TipoImagen = 'jpeg' | 'png' | 'webp';
 
@@ -63,6 +64,26 @@ const logger = new Logger('imagen');
  * justamente lo que se quiere de una comprobación de frontera; si cada módulo
  * tuviera la suya, arreglar una dejaría las otras abiertas sin que se note.
  */
+/** Variantes del icono del sitio: nombre de fichero y lado en píxeles. */
+export const VARIANTES_ICONO_SITIO = {
+  logo: { fichero: 'logo.webp', lado: 512 },
+  favicon: { fichero: 'favicon.png', lado: 64 },
+  apple: { fichero: 'apple-touch-icon.png', lado: 180 },
+} as const;
+
+/**
+ * Escribe las tres variantes del icono del sitio a partir de una subida.
+ * Pasa por `reencodearImagenCuadrada` para la primera (validación y reencodeo)
+ * y deriva las otras dos de ese WebP ya limpio.
+ */
+export async function reencodearIconoSitio(fileBuffer: Buffer, carpeta: string): Promise<void> {
+  const logo = path.join(carpeta, VARIANTES_ICONO_SITIO.logo.fichero);
+  await reencodearImagenCuadrada(fileBuffer, logo, VARIANTES_ICONO_SITIO.logo.lado);
+  for (const v of [VARIANTES_ICONO_SITIO.favicon, VARIANTES_ICONO_SITIO.apple]) {
+    await sharp(logo).resize(v.lado, v.lado).png().toFile(path.join(carpeta, v.fichero));
+  }
+}
+
 export async function reencodearImagenCuadrada(
   fileBuffer: Buffer,
   outputPath: string,

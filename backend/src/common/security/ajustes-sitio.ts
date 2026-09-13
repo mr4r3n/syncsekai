@@ -41,7 +41,12 @@ export type AjustesSitioPublicos = {
   siteDescription: string;
   contactEmail: string;
   registrationOpen: boolean;
+  /** Marca de tiempo de la última subida del icono, o null si se usa el de serie. */
+  iconVersion: string | null;
 };
+
+/** La escribe el servidor al subir el icono; no es editable a mano. */
+export const CLAVE_VERSION_ICONO = 'SITE_ICON_VERSION';
 
 /** Mezcla lo guardado con los valores por defecto; un valor vacío cuenta como no puesto. */
 export function resolverAjustesSitio(guardados: Map<string, string>): AjustesSitioPublicos {
@@ -53,6 +58,7 @@ export function resolverAjustesSitio(guardados: Map<string, string>): AjustesSit
     siteDescription: por.siteDescription,
     contactEmail: por.contactEmail,
     registrationOpen: por.registrationOpen !== 'false',
+    iconVersion: guardados.get(CLAVE_VERSION_ICONO) || null,
   };
 }
 

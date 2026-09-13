@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Loader2, Save, RotateCcw } from 'lucide-react';
+import { Globe, Loader2, Save, RotateCcw, Upload, Trash2 } from 'lucide-react';
 import { Topbar } from '@/components/Topbar';
 import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
@@ -36,6 +36,8 @@ export default function AjustesSitioPage() {
   const { t, locale } = useI18n();
 
   const [ajustes, setAjustes] = useState<Ajuste[]>([]);
+  const [iconVersion, setIconVersion] = useState<string | null>(null);
+  const [subiendoIcono, setSubiendoIcono] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   // Sólo lo tocado; un campo que no se toca no se manda.
@@ -53,6 +55,7 @@ export default function AjustesSitioPage() {
       }
       const res = await api.admin.getSiteSettings();
       setAjustes(res.settings || []);
+      setIconVersion(res.iconVersion || null);
     } catch (e: any) {
       showToast(e.message, 'error');
     } finally {
@@ -78,6 +81,32 @@ export default function AjustesSitioPage() {
       showToast(e.message, 'error');
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const subirIcono = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      setSubiendoIcono(true);
+      const fd = new FormData();
+      fd.append('icon', file);
+      const res = await api.admin.uploadSiteIcon(fd);
+      setIconVersion(res.iconVersion);
+      showToast(t('siteSettings.iconSaved'), 'success');
+    } catch (e: any) {
+      showToast(e.message, 'error');
+    } finally {
+      setSubiendoIcono(false);
+    }
+  };
+
+  const restablecerIcono = async () => {
+    try {
+      await api.admin.deleteSiteIcon();
+      setIconVersion(null);
+      showToast(t('siteSettings.iconReset'), 'info');
+    } catch (e: any) {
+      showToast(e.message, 'error');
     }
   };
 
@@ -137,6 +166,45 @@ export default function AjustesSitioPage() {
                     <h2 className="text-sm font-bold font-heading">{t(`siteSettings.group.${grupo}`)}</h2>
                     <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{t(`siteSettings.groupHint.${grupo}`)}</p>
                   </div>
+
+                  {grupo === 'identidad' && (
+                    <div className="flex items-center gap-4">
+                      {/* La versión en la URL fuerza al navegador a recargar tras subir. */}
+                      <img
+                        src={`/logo.webp?v=${iconVersion || 'serie'}`}
+                        alt=""
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] object-cover shrink-0"
+                      />
+                      <div className="min-w-0 space-y-1.5">
+                        <p className="text-xs font-medium text-[var(--text-secondary)]">{t('siteSettings.icon')}</p>
+                        <p className="text-[11px] text-[var(--text-muted)]">{t('siteSettings.iconHint')}</p>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <label className="btn-secondary text-xs cursor-pointer">
+                            {subiendoIcono ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Upload className="w-3.5 h-3.5" aria-hidden="true" />}
+                            <span>{t('siteSettings.iconUpload')}</span>
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp"
+                              className="sr-only"
+                              disabled={subiendoIcono}
+                              onChange={(e) => {
+                                subirIcono(e.target.files?.[0]);
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          {iconVersion && (
+                            <button type="button" onClick={restablecerIcono} className="btn-secondary text-xs text-[var(--status-danger)]">
+                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              <span>{t('siteSettings.iconReset')}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {delGrupo.map((a) => {
                     const campo = CAMPOS[a.key];

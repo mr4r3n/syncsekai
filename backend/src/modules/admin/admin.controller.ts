@@ -69,6 +69,21 @@ export class AdminController {
     return this.adminService.updateSiteSettings(user.id, body?.changes || {});
   }
 
+  @Post('site-settings/icon')
+  @UseInterceptors(FileInterceptor('icon', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  async uploadSiteIcon(@CurrentUser() user: any, @UploadedFile() file: Express.Multer.File, @Req() req: any) {
+    this.checkAdmin(user, req);
+    const subido = file || req.file;
+    if (!subido) throw new BadRequestException('Debes adjuntar un archivo de imagen válido.');
+    return this.adminService.subirIconoSitio(user.id, subido.buffer);
+  }
+
+  @Delete('site-settings/icon')
+  async deleteSiteIcon(@CurrentUser() user: any, @Req() req: any) {
+    this.checkAdmin(user, req);
+    return this.adminService.borrarIconoSitio(user.id);
+  }
+
   @Get('credentials')
   async getCredentials(@CurrentUser() user: any, @Req() req: any) {
     this.checkAdmin(user, req);

@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { getRequiredSecret } from '../../common/security/required-secret';
 import { validateNetworkHost } from '../../common/security/network-target';
 import { buscarRed } from '../../common/security/redes-sociales';
-import { AJUSTES_SITIO, resolverAjustesSitio } from '../../common/security/ajustes-sitio';
+import { AJUSTES_SITIO, CLAVE_VERSION_ICONO, resolverAjustesSitio } from '../../common/security/ajustes-sitio';
 import { plantillaCorreo, escapar } from '../../common/email/plantilla-correo';
 import { isIP } from 'net';
 
@@ -158,7 +158,7 @@ export class SetupService {
   /** Nombre, título, descripción, contacto y estado del registro. Todo público. */
   async getSiteSettings() {
     const filas = await this.prisma.systemSetting.findMany({
-      where: { key: { in: AJUSTES_SITIO.map((a) => a.clave) } },
+      where: { key: { in: [...AJUSTES_SITIO.map((a) => a.clave), CLAVE_VERSION_ICONO] } },
       select: { key: true, value: true },
     });
     return resolverAjustesSitio(new Map(filas.map((f) => [f.key, f.value || ''])));

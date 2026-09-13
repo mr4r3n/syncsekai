@@ -2163,6 +2163,11 @@
       "SITE_TITLE": "Page title",
       "SITE_DESCRIPTION": "Description",
       "REGISTRATION_OPEN": "New registrations"
-    }
+    },
+    "icon": "Site icon",
+    "iconHint": "Square image, PNG, JPEG or WebP. Used as logo, favicon and home-screen icon.",
+    "iconUpload": "Upload image",
+    "iconSaved": "Icon updated. Browsers may keep the old one for a few minutes.",
+    "iconReset": "Use default icon"
   }
 }

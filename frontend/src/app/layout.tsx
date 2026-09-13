@@ -52,7 +52,7 @@ async function leerAjustesSitio() {
   try {
     const res = await fetch(`${backend}/api/setup/site-settings`, { next: { revalidate: 60 } });
     if (!res.ok) return null;
-    return (await res.json()) as { siteName: string; siteTitle: string; siteDescription: string };
+    return (await res.json()) as { siteName: string; siteTitle: string; siteDescription: string; iconVersion: string | null };
   } catch {
     return null;
   }
@@ -68,8 +68,17 @@ export async function generateMetadata(): Promise<Metadata> {
   const nombre = ajustes?.siteName || 'SyncSekai';
   const titulo = ajustes?.siteTitle || TITULO_POR_DEFECTO;
   const descripcion = ajustes?.siteDescription || DESCRIPCION_POR_DEFECTO;
+  // La versión cambia la URL del icono al subir uno nuevo, para saltar la caché del navegador.
+  const v = ajustes?.iconVersion ? `?v=${ajustes.iconVersion}` : '';
   return {
     ...META_BASE,
+    // Sin icon.png ni favicon.ico en app/: esos generan sus propias etiquetas
+    // con un hash fijo y el navegador no se enteraría de un icono nuevo.
+    icons: {
+      icon: [{ url: `/icon.png${v}`, type: 'image/png' }],
+      shortcut: '/favicon.ico',
+      apple: `/apple-touch-icon.png${v}`,
+    },
     title: { default: titulo, template: `%s | ${nombre}` },
     description: descripcion,
     applicationName: nombre,

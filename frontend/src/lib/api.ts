@@ -34,6 +34,7 @@ export interface SiteSettings {
   siteDescription: string;
   contactEmail: string;
   registrationOpen: boolean;
+  iconVersion: string | null;
 }
 
 export interface SiteLink {
@@ -398,6 +399,10 @@ export const api = {
     getChart: (timeframe: string) => request<any[]>(`/api/admin/chart?timeframe=${encodeURIComponent(timeframe)}`),
     getActivityHeatmap: () => request<any>('/api/admin/activity-heatmap'),
     getSiteSettings: () => request<any>('/api/admin/site-settings'),
+    uploadSiteIcon: (formData: FormData) =>
+      request<{ success: boolean; iconVersion: string }>('/api/admin/site-settings/icon', { method: 'POST', body: formData }),
+    deleteSiteIcon: () =>
+      request<{ success: boolean; iconVersion: null }>('/api/admin/site-settings/icon', { method: 'DELETE' }),
     updateSiteSettings: (changes: Record<string, string>) =>
       request<{ success: boolean; updated: string[] }>('/api/admin/site-settings', {
         method: 'PUT',

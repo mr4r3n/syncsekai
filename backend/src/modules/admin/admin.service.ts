@@ -1,8 +1,8 @@
 import { Injectable, ForbiddenException, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Role, SiteLinkKind, SyncStatus } from '@prisma/client';
-import { AJUSTES_SITIO, buscarAjusteSitio, resolverAjustesSitio, validarAjusteSitio } from '../../common/security/ajustes-sitio';
-import { reencodearImagenCuadrada } from '../../common/security/image-file';
+import { AJUSTES_SITIO, CLAVE_VERSION_ICONO, buscarAjusteSitio, resolverAjustesSitio, validarAjusteSitio } from '../../common/security/ajustes-sitio';
+import { reencodearImagenCuadrada, reencodearIconoSitio, VARIANTES_ICONO_SITIO } from '../../common/security/image-file';
 import {
   normalizarDestinoEnlace,
   normalizarTextoEnlace,
@@ -105,7 +105,41 @@ export class AdminService {
         updatedAt: porClave.get(a.clave)?.updatedAt?.toISOString() || null,
       })),
       effective: resolverAjustesSitio(new Map(filas.map((f) => [f.key, f.value || '']))),
+      iconVersion: (await this.prisma.systemSetting.findUnique({ where: { key: CLAVE_VERSION_ICONO } }))?.value || null,
     };
+  }
+
+  private get carpetaIconoSitio() {
+    return path.join(process.cwd(), 'uploads', 'site');
+  }
+
+  /** Sustituye el icono del sitio. La versión cambia la URL para saltar la caché. */
+  async subirIconoSitio(adminId: string, fileBuffer: Buffer) {
+    fs.mkdirSync(this.carpetaIconoSitio, { recursive: true });
+    await reencodearIconoSitio(fileBuffer, this.carpetaIconoSitio);
+    const version = String(Date.now());
+    await this.prisma.systemSetting.upsert({
+      where: { key: CLAVE_VERSION_ICONO },
+      update: { value: version, isSecret: false },
+      create: { key: CLAVE_VERSION_ICONO, value: version, isSecret: false },
+    });
+    await this.prisma.auditLog
+      .create({ data: { level: 'INFO', service: 'ADMIN', message: 'Icono del sitio actualizado', details: { adminId } } })
+      .catch(() => {});
+    return { success: true, iconVersion: version };
+  }
+
+  /** Vuelve al icono de serie. */
+  async borrarIconoSitio(adminId: string) {
+    for (const v of Object.values(VARIANTES_ICONO_SITIO)) {
+      const enDisco = path.join(this.carpetaIconoSitio, v.fichero);
+      if (fs.existsSync(enDisco)) fs.unlinkSync(enDisco);
+    }
+    await this.prisma.systemSetting.deleteMany({ where: { key: CLAVE_VERSION_ICONO } });
+    await this.prisma.auditLog
+      .create({ data: { level: 'INFO', service: 'ADMIN', message: 'Icono del sitio restablecido', details: { adminId } } })
+      .catch(() => {});
+    return { success: true, iconVersion: null };
   }
 
   /** Un valor vacío vuelve al valor por defecto. Las claves fuera de la lista se ignoran. */

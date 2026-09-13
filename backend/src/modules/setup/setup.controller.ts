@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SetupService } from './setup.service';
 import { InitializeSetupDto, TestSmtpDto } from './setup.dto';
+import { VARIANTES_ICONO_SITIO } from '../../common/security/image-file';
 
 @Controller('api/setup')
 export class SetupController {
@@ -26,6 +27,18 @@ export class SetupController {
   @Get('site-settings')
   async getSiteSettings() {
     return this.setupService.getSiteSettings();
+  }
+
+  /** Icono subido desde Ajustes del sitio. 404 si no hay: el frontend sirve el de serie. */
+  @Get('site-icon/:variant')
+  async getSiteIcon(@Param('variant') variant: string, @Res() res: any) {
+    const v = VARIANTES_ICONO_SITIO[variant as keyof typeof VARIANTES_ICONO_SITIO];
+    if (!v) return res.status(404).send('Variante desconocida');
+    const filePath = path.join(process.cwd(), 'uploads', 'site', v.fichero);
+    if (!fs.existsSync(filePath)) return res.status(404).send('Sin icono personalizado');
+    res.setHeader('Content-Type', v.fichero.endsWith('.png') ? 'image/png' : 'image/webp');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    return res.sendFile(filePath);
   }
 
   @Get('site-links')

@@ -2163,6 +2163,11 @@
       "SITE_TITLE": "Título de la página",
       "SITE_DESCRIPTION": "Descripción",
       "REGISTRATION_OPEN": "Registros nuevos"
-    }
+    },
+    "icon": "Icono del sitio",
+    "iconHint": "Imagen cuadrada, PNG, JPEG o WebP. Se usa como logo, favicon e icono de pantalla de inicio.",
+    "iconUpload": "Subir imagen",
+    "iconSaved": "Icono actualizado. El navegador puede conservar el anterior unos minutos.",
+    "iconReset": "Usar el icono de serie"
   }
 }

@@ -36,7 +36,6 @@ import {
   Globe,
   LifeBuoy,
   AlertTriangle,
-  Link2 as LinkIcon,
 } from 'lucide-react';
 import { useModalA11y } from './useModalA11y';
 
@@ -172,7 +171,6 @@ export function Sidebar({
               { label: t('navigation.backups'), href: '/admin/backups', icon: HardDrive },
               { label: t('navigation.mediaManagement'), href: '/admin/media', icon: ImageIcon },
               { label: t('navigation.alertsAnnouncements'), href: '/admin/announcements', icon: Megaphone },
-              { label: t('navigation.siteLinks'), href: '/admin/links', icon: LinkIcon },
               { label: t('navigation.siteSettings'), href: '/admin/site', icon: Globe },
               { label: t('navigation.systemCredentials'), href: '/admin/credentials', icon: KeyRound },
               { label: t('navigation.ticketManagement'), href: '/admin/tickets', icon: LifeBuoy },

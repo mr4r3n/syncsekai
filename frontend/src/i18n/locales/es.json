@@ -72,7 +72,6 @@
     "logout": "Cerrar Sesión",
     "navMenu": "Menú de navegación",
     "collapseSidebar": "Minimizar barra lateral (solo iconos)",
-    "siteLinks": "Enlaces del pie",
     "appearanceLanguage": "Apariencia e idioma",
     "systemCredentials": "Credenciales",
     "siteSettings": "Ajustes del sitio"
@@ -2081,8 +2080,6 @@
     "contact": "Contacto"
   },
   "adminLinks": {
-    "title": "Enlaces del pie",
-    "subtitle": "Redes por las que te pueden contactar y sitios que quieras recomendar. Lo desactivado no aparece en la web.",
     "label": "Nombre",
     "labelPlaceholder": "AnimeThemes",
     "url": "Dirección",
@@ -2132,7 +2129,7 @@
   },
   "siteSettings": {
     "title": "Ajustes del sitio",
-    "subtitle": "Nombre, fragmento de búsqueda, contacto y registro. Sin tocar código.",
+    "subtitle": "Nombre, fragmento de búsqueda, contacto, registro y enlaces del pie.",
     "save": "Guardar cambios",
     "saved": "Ajustes guardados",
     "hint": "Los cambios se aplican en la siguiente carga. Los buscadores los recogen en su próximo rastreo.",

@@ -72,7 +72,6 @@
     "logout": "Log Out",
     "navMenu": "Navigation menu",
     "collapseSidebar": "Collapse sidebar (icons only)",
-    "siteLinks": "Footer links",
     "appearanceLanguage": "Appearance & language",
     "systemCredentials": "Credentials",
     "siteSettings": "Site settings"
@@ -2081,8 +2080,6 @@
     "contact": "Contact"
   },
   "adminLinks": {
-    "title": "Footer links",
-    "subtitle": "Places people can reach you, and sites you want to recommend. Anything disabled never reaches the site.",
     "label": "Name",
     "labelPlaceholder": "AnimeThemes",
     "url": "Address",
@@ -2132,7 +2129,7 @@
   },
   "siteSettings": {
     "title": "Site settings",
-    "subtitle": "Name, search snippet, contact and registration. No code needed.",
+    "subtitle": "Name, search snippet, contact, registration and footer links.",
     "save": "Save changes",
     "saved": "Settings saved",
     "hint": "Changes apply on the next page load. Search engines pick them up when they next crawl.",

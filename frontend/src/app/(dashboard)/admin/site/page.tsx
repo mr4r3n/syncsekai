@@ -7,6 +7,7 @@ import { Topbar } from '@/components/Topbar';
 import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
 import { useI18n } from '@/i18n/I18nProvider';
+import { FooterLinksPanel } from '@/components/FooterLinksPanel';
 import { api } from '@/lib/api';
 
 interface Ajuste {
@@ -287,6 +288,7 @@ export default function AjustesSitioPage() {
                 </section>
               );
             })}
+            <FooterLinksPanel />
           </div>
         )}
       </main>

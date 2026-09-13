@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { Globe, MapPin, Users, Zap, Maximize2 } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 export interface LocationPoint {
@@ -15,20 +14,16 @@ export interface LocationPoint {
 }
 
 interface WorldVisitorsMapProps {
-  totalVisits?: number;
   locations?: LocationPoint[];
 }
 
-export function WorldVisitorsMap({ totalVisits = 0, locations = [] }: WorldVisitorsMapProps) {
+export function WorldVisitorsMap({ locations = [] }: WorldVisitorsMapProps) {
   const { t } = useI18n();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
-  const [activeLocation, setActiveLocation] = useState<LocationPoint | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainerRef.current) return;
-
-    let isMounted = true;
 
     const initMap = async () => {
       const L = (await import('leaflet')).default;
@@ -123,10 +118,6 @@ export function WorldVisitorsMap({ totalVisits = 0, locations = [] }: WorldVisit
           closeButton: false,
           className: 'custom-leaflet-dark-popup',
         });
-
-        marker.on('click', () => {
-          if (isMounted) setActiveLocation(loc);
-        });
       });
 
       if (validPoints.length === 1) {
@@ -142,7 +133,6 @@ export function WorldVisitorsMap({ totalVisits = 0, locations = [] }: WorldVisit
     initMap();
 
     return () => {
-      isMounted = false;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -154,50 +144,17 @@ export function WorldVisitorsMap({ totalVisits = 0, locations = [] }: WorldVisit
   }, [locations, t]);
 
   return (
-    <div className="glass-card p-6 space-y-4 overflow-hidden relative">
-      {/* Header del Mapa */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[6px] bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border border-[var(--nav-active-border)] flex items-center justify-center">
-            <Globe className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 font-heading">
-              <span>{t('admin.worldMapTitle')}</span>
-              <span className="badge-status-success text-[10px]">{t('admin.oneIpPerDay')}</span>
-            </h3>
-            <p className="text-xs text-[var(--text-secondary)] font-mono">{t('admin.worldMapSubtitle')}</p>
-          </div>
+    <div className="relative w-full h-[480px] rounded-[6px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-app)]">
+      <div ref={mapContainerRef} className="w-full h-full z-10" />
+
+      {/* Leyenda flotante */}
+      <div className="absolute bottom-3 left-3 z-20 bg-[var(--glass-bg)] backdrop-blur-xl px-3.5 py-2 rounded-[6px] border border-[var(--glass-border)] text-[11px] font-mono flex items-center gap-4 shadow-lg text-[var(--text-primary)]">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-[0_0_6px_#38bdf8]" />
+          <span className="text-[var(--text-secondary)] font-semibold">{t('admin.activeAccessHubs')}</span>
         </div>
-
-        {/* Resumen rápido de ubicaciones */}
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-            <Users className="w-3.5 h-3.5 text-sky-400" />
-            <span className="text-[var(--text-primary)] font-bold">{totalVisits?.toLocaleString() || 0}</span>
-            <span className="text-[var(--text-muted)]">{t('admin.dedupedIps')}</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-[var(--text-primary)] font-bold">{locations.length}</span>
-            <span className="text-[var(--text-muted)]">{t('admin.activeNodes')}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Contenedor del Mapa Real Leaflet */}
-      <div className="relative w-full h-[360px] rounded-[6px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-app)]">
-        <div ref={mapContainerRef} className="w-full h-full z-10" />
-
-        {/* Leyenda flotante */}
-        <div className="absolute bottom-3 left-3 z-20 bg-[var(--glass-bg)] backdrop-blur-xl px-3.5 py-2 rounded-[6px] border border-[var(--glass-border)] text-[11px] font-mono flex items-center gap-4 shadow-lg text-[var(--text-primary)]">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-[0_0_6px_#38bdf8]" />
-            <span className="text-[var(--text-secondary)] font-semibold">{t('admin.activeAccessHubs')}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
-            <span>{t('admin.dragAndZoom')}</span>
-          </div>
+        <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
+          <span>{t('admin.dragAndZoom')}</span>
         </div>
       </div>
     </div>

@@ -217,17 +217,13 @@ export default function AdminGeoPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 border-b border-[var(--glass-border)]">
             <div className="flex items-center gap-2.5 min-w-0">
               <Globe className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
-              <h2 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('admin.interactiveWorldMap')}</h2>
+              <h2 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('admin.worldMapTitle')}</h2>
+              <span className="badge-status-success text-[10px]">{t('admin.oneIpPerDay')}</span>
             </div>
-            <span className="text-xs text-[var(--text-muted)] font-mono shrink-0">
-              {t('admin.liveGeoNodes', { n: mapLocations.length })}
-            </span>
+            <span className="text-xs text-[var(--text-muted)] font-mono shrink-0">{t('admin.worldMapSubtitle')}</span>
           </div>
 
-          <WorldVisitorsMap
-            totalVisits={totalVisits || mapLocations.length}
-            locations={mapLocations}
-          />
+          <WorldVisitorsMap locations={mapLocations} />
         </div>
 
         {/* TABLA DE TRÁFICO POR PAÍS Y CIUDAD */}

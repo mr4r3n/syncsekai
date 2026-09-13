@@ -155,6 +155,11 @@ export class SetupService {
     };
   }
 
+  async hayIconoPersonalizado(): Promise<boolean> {
+    const fila = await this.prisma.systemSetting.findUnique({ where: { key: CLAVE_VERSION_ICONO } });
+    return Boolean(fila?.value);
+  }
+
   /** Nombre, título, descripción, contacto y estado del registro. Todo público. */
   async getSiteSettings() {
     const filas = await this.prisma.systemSetting.findMany({

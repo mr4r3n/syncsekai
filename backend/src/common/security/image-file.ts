@@ -15,6 +15,7 @@
 import { BadRequestException, Logger } from '@nestjs/common';
 import sharp from 'sharp';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export type TipoImagen = 'jpeg' | 'png' | 'webp';
 
@@ -79,8 +80,11 @@ export const VARIANTES_ICONO_SITIO = {
 export async function reencodearIconoSitio(fileBuffer: Buffer, carpeta: string): Promise<void> {
   const logo = path.join(carpeta, VARIANTES_ICONO_SITIO.logo.fichero);
   await reencodearImagenCuadrada(fileBuffer, logo, VARIANTES_ICONO_SITIO.logo.lado);
+  // Desde memoria, no desde la ruta: libvips mantiene el fichero abierto y en
+  // Windows eso impide borrarlo después.
+  const limpio = await fs.promises.readFile(logo);
   for (const v of [VARIANTES_ICONO_SITIO.favicon, VARIANTES_ICONO_SITIO.apple]) {
-    await sharp(logo).resize(v.lado, v.lado).png().toFile(path.join(carpeta, v.fichero));
+    await sharp(limpio).resize(v.lado, v.lado).png().toFile(path.join(carpeta, v.fichero));
   }
 }
 

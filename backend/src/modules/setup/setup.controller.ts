@@ -35,7 +35,8 @@ export class SetupController {
     const v = VARIANTES_ICONO_SITIO[variant as keyof typeof VARIANTES_ICONO_SITIO];
     if (!v) return res.status(404).send('Variante desconocida');
     const filePath = path.join(process.cwd(), 'uploads', 'site', v.fichero);
-    if (!fs.existsSync(filePath)) return res.status(404).send('Sin icono personalizado');
+    const hayIcono = await this.setupService.hayIconoPersonalizado();
+    if (!hayIcono || !fs.existsSync(filePath)) return res.status(404).send('Sin icono personalizado');
     res.setHeader('Content-Type', v.fichero.endsWith('.png') ? 'image/png' : 'image/webp');
     res.setHeader('Cache-Control', 'public, max-age=300');
     return res.sendFile(filePath);

@@ -131,11 +131,17 @@ export class AdminService {
 
   /** Vuelve al icono de serie. */
   async borrarIconoSitio(adminId: string) {
+    // La versión en base de datos es lo que decide si se sirve; un fichero que
+    // no se deje borrar no se enseña.
+    await this.prisma.systemSetting.deleteMany({ where: { key: CLAVE_VERSION_ICONO } });
     for (const v of Object.values(VARIANTES_ICONO_SITIO)) {
       const enDisco = path.join(this.carpetaIconoSitio, v.fichero);
-      if (fs.existsSync(enDisco)) fs.unlinkSync(enDisco);
+      try {
+        if (fs.existsSync(enDisco)) fs.unlinkSync(enDisco);
+      } catch (err: any) {
+        this.logger.warn(`No se pudo borrar ${v.fichero}: ${err.message}`);
+      }
     }
-    await this.prisma.systemSetting.deleteMany({ where: { key: CLAVE_VERSION_ICONO } });
     await this.prisma.auditLog
       .create({ data: { level: 'INFO', service: 'ADMIN', message: 'Icono del sitio restablecido', details: { adminId } } })
       .catch(() => {});

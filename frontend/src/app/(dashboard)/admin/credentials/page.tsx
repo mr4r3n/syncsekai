@@ -28,6 +28,26 @@ interface Credencial {
  * `logo` es el SVG de `public/`, el mismo fichero que ya usan conexiones y el
  * inicio de sesión. SMTP no es una marca y no tiene: ahí va un icono de lucide.
  */
+/**
+ * Ancho de cada campo en la rejilla de seis columnas de su tarjeta. Un puerto
+ * no necesita el ancho entero; un client id y su secret caben en una fila.
+ * Lo que no esté aquí ocupa la fila completa.
+ */
+const COLUMNAS: Record<string, string> = {
+  SMTP_HOST: 'sm:col-span-4',
+  SMTP_PORT: 'sm:col-span-2',
+  SMTP_USER: 'sm:col-span-3',
+  SMTP_PASS: 'sm:col-span-3',
+  GOOGLE_CLIENT_ID: 'sm:col-span-3',
+  GOOGLE_CLIENT_SECRET: 'sm:col-span-3',
+  DISCORD_CLIENT_ID: 'sm:col-span-3',
+  DISCORD_CLIENT_SECRET: 'sm:col-span-3',
+  ANILIST_CLIENT_ID: 'sm:col-span-3',
+  ANILIST_CLIENT_SECRET: 'sm:col-span-3',
+  MAL_CLIENT_ID: 'sm:col-span-3',
+  MAL_CLIENT_SECRET: 'sm:col-span-3',
+};
+
 const GRUPOS: Array<{ id: string; nombre: string; pista: string; logo?: string }> = [
   { id: 'google', nombre: 'Google', logo: '/google.svg', pista: 'Cloud Console → Credentials → OAuth client' },
   { id: 'discord', nombre: 'Discord', logo: '/social/discord.svg', pista: 'Developer Portal → OAuth2 · Bot' },
@@ -177,9 +197,9 @@ export default function CredencialesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-6 gap-x-4 gap-y-4">
                     {delGrupo.map((cred) => (
-                      <div key={cred.key} className="space-y-1.5">
+                      <div key={cred.key} className={`space-y-1.5 min-w-0 ${COLUMNAS[cred.key] || 'sm:col-span-6'}`}>
                         <label
                           htmlFor={`cred-${cred.key}`}
                           className="block text-xs font-medium text-[var(--text-secondary)]"

@@ -277,7 +277,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => handleSocialRegister('Google')}
-                    disabled={!!socialLoading || loading || registroAbierto === false}
+                    disabled={!!socialLoading || loading || registroAbierto !== true}
                     className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
                     title={t('auth.signUpGoogle')}
                   >
@@ -305,7 +305,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => handleSocialRegister('Discord')}
-                    disabled={!!socialLoading || loading || registroAbierto === false}
+                    disabled={!!socialLoading || loading || registroAbierto !== true}
                     className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
                     title={t('auth.signUpDiscord')}
                   >
@@ -329,8 +329,8 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Formulario Tradicional */}
-              <form suppressHydrationWarning onSubmit={handleRegister} className={`space-y-4 ${registroAbierto === false ? 'hidden' : ''}`}>
+              {/* Oculto hasta saber si el registro está abierto: si no, parpadea antes del aviso. */}
+              <form suppressHydrationWarning onSubmit={handleRegister} className={`space-y-4 ${registroAbierto === true ? '' : 'hidden'}`}>
                 {formError && (
                   <div
                     role="alert"

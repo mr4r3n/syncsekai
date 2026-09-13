@@ -21,6 +21,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { CountryFlag } from '@/components/CountryFlag';
 import { Paginacion } from '@/components/Paginacion';
+import { nombreRegion } from '@/lib/region';
 
 // Import dinámico del componente de Mapa Leaflet
 const WorldVisitorsMap = dynamic(
@@ -46,7 +47,8 @@ export default function AdminGeoPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
   const { showToast } = useToast();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const pais = (code: string | undefined, fallback: string) => nombreRegion(code, locale, fallback);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -242,10 +244,10 @@ export default function AdminGeoPage() {
                 paisesVisibles.map((item: any, i: number) => (
                   <div key={i} className="p-3.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <CountryFlag code={item.code} countryName={item.country} size="md" />
+                      <CountryFlag code={item.code} countryName={pais(item.code, item.country)} size="md" />
                       <div>
                         <div className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                          <span>{item.country || t('admin.unknownCountry')}</span>
+                          <span>{pais(item.code, item.country) || t('admin.unknownCountry')}</span>
                           {item.code && item.code !== 'LAN' && item.code !== 'XX' && (
                             <span className="font-mono text-[10px] text-[var(--text-muted)] bg-[var(--bg-surface-elevated)] px-1.5 py-0.5 rounded-[4px] border border-[var(--border-subtle)]">
                               {item.code}
@@ -299,10 +301,10 @@ export default function AdminGeoPage() {
                 ipsVisibles.map((entry: any, i: number) => (
                   <div key={i} className="p-3.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1 flex items-start gap-2.5">
-                      <CountryFlag code={entry.code || entry.countryCode || entry.country} countryName={entry.country} size="sm" className="mt-0.5" />
+                      <CountryFlag code={entry.code || entry.countryCode || entry.country} countryName={pais(entry.code, entry.country)} size="sm" className="mt-0.5" />
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-[var(--text-primary)] truncate flex items-center gap-2">
-                          <span>{entry.city ? entry.city : entry.country || t('admin.unknownLocation')}</span>
+                          <span>{[entry.city, pais(entry.code, entry.country)].filter(Boolean).join(', ') || t('admin.unknownLocation')}</span>
                           {entry.username && (
                             <span className="text-[10px] font-mono text-[var(--accent-text)] bg-[var(--accent-primary)]/10 px-1.5 py-0.5 rounded-[4px]">
                               @{entry.username}

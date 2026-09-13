@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { useI18n } from '@/i18n/I18nProvider';
+import { nombreRegion } from '@/lib/region';
 
 export interface LocationPoint {
   city: string;
@@ -18,7 +19,7 @@ interface WorldVisitorsMapProps {
 }
 
 export function WorldVisitorsMap({ locations = [] }: WorldVisitorsMapProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
 
@@ -101,11 +102,11 @@ export function WorldVisitorsMap({ locations = [] }: WorldVisitorsMapProps) {
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px;">
               <div style="display: flex; align-items: center; font-weight: bold; font-size: 12px; color: #ffffff;">
                 ${flagImg}
-                <span>${loc.city || loc.country}</span>
+                <span>${loc.city || nombreRegion(loc.code, locale, loc.country)}</span>
               </div>
               <span style="font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #38bdf8; font-weight: bold;">${loc.code || 'LOC'}</span>
             </div>
-            <div style="font-size: 11px; color: #a1a1aa; margin-bottom: 6px;">${loc.country}</div>
+            <div style="font-size: 11px; color: #a1a1aa; margin-bottom: 6px;">${nombreRegion(loc.code, locale, loc.country)}</div>
             <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px;">
               <span style="color: #38bdf8; font-weight: bold;">${t('admin.ipsCount', { n: loc.visits })}</span>
               <span style="color: #10b981; font-weight: bold;">${t('admin.percentOfTotal', { p: loc.percentage })}</span>
@@ -141,7 +142,7 @@ export function WorldVisitorsMap({ locations = [] }: WorldVisitorsMapProps) {
     // `t` va en las dependencias porque el texto del globo se escribe una sola
     // vez, al montar el mapa: sin esto, cambiar de idioma dejaba los globos en
     // el anterior hasta que cambiaran las ubicaciones.
-  }, [locations, t]);
+  }, [locations, t, locale]);
 
   return (
     <div className="relative w-full h-[480px] rounded-[6px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-app)]">

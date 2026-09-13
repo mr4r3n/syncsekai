@@ -644,13 +644,9 @@ export class AdminService {
       .sort((a, b) => new Date(b.lastSeenAt || b.dateKey).getTime() - new Date(a.lastSeenAt || a.dateKey).getTime())
       .slice(0, 20)
       .map((item) => {
-        const locationLabel =
-          item.city.includes(item.country) || item.city === item.country
-            ? item.city
-            : `${item.city}, ${item.country}`;
         return {
           ip: item.ip,
-          city: locationLabel,
+          city: item.city === item.country ? '' : item.city,
           country: item.country,
           os: item.os,
           isp: item.isp,

@@ -2080,6 +2080,8 @@
     "contact": "Contact"
   },
   "adminLinks": {
+    "edit": "Edit",
+    "updated": "Link updated",
     "label": "Name",
     "labelPlaceholder": "AnimeThemes",
     "url": "Address",

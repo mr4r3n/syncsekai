@@ -10,6 +10,9 @@ import { api, type SiteLink, type RedSocial } from '@/lib/api';
 import {
   Plus,
   Trash2,
+  Pencil,
+  Check,
+  X,
   ImagePlus,
   ChevronUp,
   ChevronDown,
@@ -43,6 +46,9 @@ export function FooterLinksPanel() {
   const [loading, setLoading] = useState(true);
   const [aBorrar, setABorrar] = useState<SiteLink | null>(null);
   const [subiendoLogo, setSubiendoLogo] = useState<string | null>(null);
+  // Fila en edición; los campos viven aquí hasta guardar o cancelar.
+  const [edicion, setEdicion] = useState<{ id: string; label: string; url: string; description: string } | null>(null);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
 
   // Alta de red social
   const [redElegida, setRedElegida] = useState('');
@@ -189,8 +195,107 @@ export function FooterLinksPanel() {
     }
   };
 
-  /** Controles comunes a las dos listas: orden, visibilidad y borrado. */
-  const controles = (enlace: SiteLink, i: number, total: number) => (
+  const guardarEdicion = async () => {
+    if (!edicion) return;
+    const enlace = links.find((l) => l.id === edicion.id);
+    if (!enlace) return setEdicion(null);
+    // Una red social solo cambia de dirección: nombre e icono los pone el catálogo.
+    const cambios: Partial<SiteLink> =
+      enlace.kind === 'SOCIAL'
+        ? { url: edicion.url.trim() }
+        : { label: edicion.label.trim(), url: edicion.url.trim(), description: edicion.description.trim() };
+    setGuardandoEdicion(true);
+    try {
+      const res = await api.admin.updateSiteLink(enlace.id, cambios);
+      setLinks(res.links || []);
+      setEdicion(null);
+      showToast(t('adminLinks.updated'), 'success');
+    } catch (err: any) {
+      showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  };
+
+  const campoEdicion = (valor: string, onChange: (v: string) => void, extra: Record<string, unknown>) => (
+    <input
+      value={valor}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') guardarEdicion();
+        if (e.key === 'Escape') setEdicion(null);
+      }}
+      spellCheck={false}
+      autoComplete="off"
+      className="w-full px-2.5 py-1.5 rounded-[5px] border border-[var(--border-subtle)] bg-[var(--bg-app)] text-[var(--text-primary)] text-xs"
+      {...extra}
+    />
+  );
+
+  /** Texto de la fila, o sus campos cuando se está editando. */
+  const cuerpo = (enlace: SiteLink) => {
+    if (edicion?.id === enlace.id) {
+      const social = enlace.kind === 'SOCIAL';
+      return (
+        <div className="min-w-0 flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+          {social ? (
+            <div className="text-xs font-bold text-[var(--text-primary)] self-center truncate">{enlace.label}</div>
+          ) : (
+            campoEdicion(edicion.label, (v) => setEdicion({ ...edicion, label: v }), {
+              maxLength: 60,
+              placeholder: t('adminLinks.label'),
+              'aria-label': t('adminLinks.label'),
+            })
+          )}
+          {campoEdicion(edicion.url, (v) => setEdicion({ ...edicion, url: v }), {
+            type: 'url',
+            inputMode: 'url',
+            placeholder: t('adminLinks.url'),
+            'aria-label': t('adminLinks.url'),
+          })}
+          {!social &&
+            campoEdicion(edicion.description, (v) => setEdicion({ ...edicion, description: v }), {
+              maxLength: 160,
+              placeholder: t('adminLinks.description'),
+              'aria-label': t('adminLinks.description'),
+            })}
+        </div>
+      );
+    }
+    return (
+      <div className="min-w-0 flex-1">
+        <div className="text-xs font-bold text-[var(--text-primary)] truncate">{enlace.label}</div>
+        {enlaceUrl(enlace)}
+        {enlace.description ? (
+          <div className="text-[11px] text-[var(--text-secondary)] line-clamp-1">{enlace.description}</div>
+        ) : null}
+      </div>
+    );
+  };
+
+  /** Controles comunes a las dos listas: orden, visibilidad, edición y borrado. */
+  const controles = (enlace: SiteLink, i: number, total: number) =>
+    edicion?.id === enlace.id ? (
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          onClick={guardarEdicion}
+          disabled={guardandoEdicion}
+          aria-label={t('common.save')}
+          title={t('common.save')}
+          className="p-1.5 rounded-[5px] text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 cursor-pointer transition-colors"
+        >
+          {guardandoEdicion ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+        </button>
+        <button
+          onClick={() => setEdicion(null)}
+          aria-label={t('common.cancel')}
+          title={t('common.cancel')}
+          className="p-1.5 rounded-[5px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    ) : (
     <div className="flex items-center gap-1 shrink-0">
       <button
         onClick={() => mover(enlace, -1)}
@@ -224,6 +329,17 @@ export function FooterLinksPanel() {
       </label>
 
       <button
+        onClick={() =>
+          setEdicion({ id: enlace.id, label: enlace.label, url: enlace.url, description: enlace.description || '' })
+        }
+        aria-label={t('adminLinks.edit')}
+        title={t('adminLinks.edit')}
+        className="p-1.5 rounded-[5px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-colors"
+      >
+        <Pencil className="w-3.5 h-3.5" />
+      </button>
+
+      <button
         onClick={() => setABorrar(enlace)}
         aria-label={t('adminLinks.delete')}
         title={t('adminLinks.delete')}
@@ -232,7 +348,7 @@ export function FooterLinksPanel() {
         <Trash2 className="w-3.5 h-3.5" />
       </button>
     </div>
-  );
+    );
 
   const filaBase = (enlace: SiteLink) =>
     `flex items-center gap-3 p-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-opacity ${
@@ -356,12 +472,7 @@ export function FooterLinksPanel() {
                     </span>
 
                     {/* min-w-0: sin el, una URL larga empuja los botones fuera de la fila */}
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-bold text-[var(--text-primary)] truncate">
-                        {enlace.label}
-                      </div>
-                      {enlaceUrl(enlace)}
-                    </div>
+                    {cuerpo(enlace)}
 
                     {controles(enlace, i, sociales.length)}
                   </li>
@@ -497,17 +608,7 @@ export function FooterLinksPanel() {
                       </span>
                     </button>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-bold text-[var(--text-primary)] truncate">
-                        {enlace.label}
-                      </div>
-                      {enlaceUrl(enlace)}
-                      {enlace.description ? (
-                        <div className="text-[11px] text-[var(--text-secondary)] line-clamp-1">
-                          {enlace.description}
-                        </div>
-                      ) : null}
-                    </div>
+                    {cuerpo(enlace)}
 
                     {controles(enlace, i, sitios.length)}
                   </li>

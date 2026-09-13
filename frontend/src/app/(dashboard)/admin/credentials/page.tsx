@@ -207,7 +207,7 @@ export default function CredencialesPage() {
                           {cred.label}
                         </label>
 
-                        <div className="flex items-center gap-2">
+                        <div className="relative">
                           <input
                             id={`cred-${cred.key}`}
                             type={cred.isSecret ? 'password' : 'text'}
@@ -222,7 +222,7 @@ export default function CredencialesPage() {
                                 ? t('credentials.secretHidden')
                                 : t('credentials.leaveBlank')
                             }
-                            className="glass-input text-xs font-mono min-w-0 flex-1"
+                            className={`glass-input text-xs font-mono w-full ${cred.configured ? 'pr-9' : ''}`}
                           />
                           {cred.configured && (
                             <button
@@ -230,9 +230,9 @@ export default function CredencialesPage() {
                               onClick={() => setCambios((prev) => ({ ...prev, [cred.key]: '' }))}
                               title={t('credentials.clear')}
                               aria-label={`${t('credentials.clear')} — ${cred.label}`}
-                              className="btn-icon-sm shrink-0 hover:text-[var(--status-danger)]"
+                              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--status-danger)] hover:bg-[var(--status-danger-bg)] transition-colors cursor-pointer"
                             >
-                              <Trash2 aria-hidden="true" />
+                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                             </button>
                           )}
                         </div>

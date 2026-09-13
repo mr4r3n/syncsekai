@@ -19,8 +19,8 @@ import {
   BarChart3,
   Users,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
   X,
   User,
   Shield,
@@ -385,9 +385,9 @@ export function Sidebar({
             title={isCollapsed ? 'Expandir barra lateral' : t('navigation.collapseSidebar')}
           >
             {isCollapsed ? (
-              <ChevronRight className="w-3.5 h-3.5" />
+              <PanelLeftOpen className="w-3.5 h-3.5" />
             ) : (
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <PanelLeftClose className="w-3.5 h-3.5" />
             )}
           </button>
         )}

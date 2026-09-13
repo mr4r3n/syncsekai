@@ -1,7 +1,19 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
 import { isIP } from 'net';
-import { AdminService } from '../../modules/admin/admin.service';
+import { AdminService, type GeoHeaders } from '../../modules/admin/admin.service';
+
+/**
+ * Clientes automáticos que no son visitantes: buscadores, previsualizadores de
+ * enlaces, monitores y scripts. Sin User-Agent tampoco cuenta; ningún navegador
+ * lo omite. Lista corta a propósito: se cubren las familias que llegan de
+ * verdad y el resto se acepta como el coste de no mantener una lista larga.
+ */
+const UA_AUTOMATICO =
+  /bot|crawl|spider|slurp|headless|lighthouse|pingdom|uptime|monitor|curl\/|wget\/|python|go-http-client|java\/|okhttp|axios\/|node-fetch|undici|libwww|scrapy|externalhit|preview/i;
+
+/** Webhooks de los servidores multimedia: tráfico máquina a máquina, no visitas. */
+const RUTA_WEBHOOK = /^\/api\/(plex|jellyfin|emby)\/webhook\//;
 
 function normalizeIp(value: string): string {
   return value.replace(/^::ffff:/, '').trim();
@@ -101,32 +113,34 @@ export class GeoVisitorMiddleware implements NestMiddleware {
         path.startsWith('/api/admin/dashboard') ||
         path.startsWith('/api/admin/chart') ||
         path.startsWith('/api/admin/activity-heatmap') ||
-        path.startsWith('/api/covers/')
+        path.startsWith('/api/covers/') ||
+        RUTA_WEBHOOK.test(path)
       ) {
         return next();
       }
 
-      const clientIp = extractClientIp(req);
       const userAgent = req.headers['user-agent']
         ? String(req.headers['user-agent']).slice(0, 512)
         : undefined;
+      if (!userAgent || UA_AUTOMATICO.test(userAgent)) return next();
+
+      const clientIp = extractClientIp(req);
       const user = (req as any).user;
 
-      // Extraer cabeceras geo de Cloudflare o Reverse Proxy
-      const countryHeader = req.headers['cf-ipcountry']
-        ? String(req.headers['cf-ipcountry']).slice(0, 8).trim().toUpperCase()
-        : undefined;
-      const cityHeader = req.headers['cf-ipcity']
-        ? String(req.headers['cf-ipcity']).slice(0, 128).trim()
-        : undefined;
-      const regionHeader = req.headers['cf-region']
-        ? String(req.headers['cf-region']).slice(0, 128).trim()
-        : undefined;
+      // Cabeceras geo de Cloudflare. País viene siempre; ciudad, región y
+      // coordenadas solo con la transformación "visitor location headers" activa.
+      const cabecera = (nombre: string, largo: number) =>
+        req.headers[nombre] ? String(req.headers[nombre]).slice(0, largo).trim() : undefined;
+      const countryHeader = cabecera('cf-ipcountry', 8)?.toUpperCase();
+      const lat = Number(cabecera('cf-iplatitude', 24));
+      const lon = Number(cabecera('cf-iplongitude', 24));
 
-      const geoHeaders = {
+      const geoHeaders: GeoHeaders = {
         country: countryHeader && countryHeader !== 'XX' && countryHeader !== 'T1' ? countryHeader : undefined,
-        city: cityHeader,
-        region: regionHeader,
+        city: cabecera('cf-ipcity', 128),
+        region: cabecera('cf-region', 128),
+        lat: Number.isFinite(lat) && Number.isFinite(lon) && (lat !== 0 || lon !== 0) ? lat : undefined,
+        lon: Number.isFinite(lat) && Number.isFinite(lon) && (lat !== 0 || lon !== 0) ? lon : undefined,
       };
 
       const now = Date.now();

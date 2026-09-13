@@ -66,6 +66,15 @@ const ISO_COUNTRY_DATA: Record<string, { name: string; coords: [number, number] 
   NZ: { name: 'Nueva Zelanda', coords: [-40.9006, 174.886] },
 };
 
+/** Geolocalización que Cloudflare añade en el borde; el middleware la extrae de las cabeceras. */
+export interface GeoHeaders {
+  country?: string;
+  city?: string;
+  region?: string;
+  lat?: number;
+  lon?: number;
+}
+
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
@@ -1639,41 +1648,66 @@ export class AdminService {
 
   private ipGeoCache = new Map<string, any>();
 
-  async resolveGeoIp(ip: string, geoHeaders?: { country?: string; city?: string; region?: string }) {
+  /**
+   * Orden: Cloudflare con coordenadas → proveedores externos → Cloudflare solo
+   * país. Cloudflare resuelve en el borde con la IP real y sin límite de
+   * peticiones; los proveedores gratuitos cortan por cuota (ip-api: 45/min) y
+   * entonces la visita caía al centroide del país, que en el mapa parece una
+   * ciudad. Con las cabeceras completas activas no sale ninguna consulta.
+   */
+  async resolveGeoIp(ip: string, geoHeaders?: GeoHeaders) {
     if (this.ipGeoCache.has(ip)) {
       return this.ipGeoCache.get(ip);
     }
 
     let geoData: any = null;
 
-    // 1. Proveedor 1: ip-api.com
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-      const res = await fetch(
-        `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,as,query`,
-        { signal: controller.signal },
-      );
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.status === 'success') {
-          const code = (json.countryCode || 'XX').toUpperCase();
-          const isoInfo = ISO_COUNTRY_DATA[code];
-          geoData = {
-            city: json.city ? `${json.city} (${json.regionName || json.country || ''})` : json.regionName || json.country || 'Desconocida',
-            country: isoInfo?.name || json.country || 'Desconocido',
-            code,
-            region: json.regionName || '',
-            lat: Number(json.lat) || 0,
-            lon: Number(json.lon) || 0,
-            isp: json.isp || json.org || json.as || '',
-          };
-        }
-      }
-    } catch {}
+    // 1. Cloudflare con coordenadas (transformación "visitor location headers")
+    if (geoHeaders?.country && geoHeaders.lat !== undefined && geoHeaders.lon !== undefined) {
+      const code = geoHeaders.country.toUpperCase();
+      const isoInfo = ISO_COUNTRY_DATA[code];
+      const country = isoInfo?.name || code;
+      geoData = {
+        city: geoHeaders.city ? `${geoHeaders.city} (${geoHeaders.region || country})` : geoHeaders.region || country,
+        country,
+        code,
+        region: geoHeaders.region || '',
+        lat: geoHeaders.lat,
+        lon: geoHeaders.lon,
+        isp: '',
+      };
+    }
 
-    // 2. Proveedor 2: ipwho.is
+    // 2. Proveedor externo: ip-api.com
+    if (!geoData) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(
+          `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,as,query`,
+          { signal: controller.signal },
+        );
+        clearTimeout(timeoutId);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.status === 'success') {
+            const code = (json.countryCode || 'XX').toUpperCase();
+            const isoInfo = ISO_COUNTRY_DATA[code];
+            geoData = {
+              city: json.city ? `${json.city} (${json.regionName || json.country || ''})` : json.regionName || json.country || 'Desconocida',
+              country: isoInfo?.name || json.country || 'Desconocido',
+              code,
+              region: json.regionName || '',
+              lat: Number(json.lat) || 0,
+              lon: Number(json.lon) || 0,
+              isp: json.isp || json.org || json.as || '',
+            };
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Proveedor externo: ipwho.is
     if (!geoData) {
       try {
         const controller = new AbortController();
@@ -1701,7 +1735,7 @@ export class AdminService {
       } catch {}
     }
 
-    // 3. Proveedor 3: freeipapi.com
+    // 4. Proveedor externo: freeipapi.com
     if (!geoData) {
       try {
         const controller = new AbortController();
@@ -1729,7 +1763,7 @@ export class AdminService {
       } catch {}
     }
 
-    // 4. Proveedor 4: Cloudflare Edge Headers + Diccionario de Coordenadas ISO
+    // 5. Cloudflare solo país: coordenadas del centroide del país
     if (!geoData && geoHeaders?.country) {
       const code = geoHeaders.country.toUpperCase();
       const isoInfo = ISO_COUNTRY_DATA[code];
@@ -1867,12 +1901,7 @@ export class AdminService {
       .slice(0, 40);
   }
 
-  async recordVisitorIp(
-    rawIp: string,
-    username?: string,
-    userAgent?: string,
-    geoHeaders?: { country?: string; city?: string; region?: string },
-  ) {
+  async recordVisitorIp(rawIp: string, username?: string, userAgent?: string, geoHeaders?: GeoHeaders) {
     try {
       if (!rawIp) return;
       const ip = rawIp.replace(/^::ffff:/, '').trim();

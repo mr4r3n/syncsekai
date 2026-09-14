@@ -111,12 +111,7 @@ export class AdminController {
     @Query('timeframe') timeframe?: string,
   ) {
     this.checkAdmin(user);
-    const clientIp = String(req.ip || req.socket?.remoteAddress || '127.0.0.1')
-      .replace('::ffff:', '')
-      .trim();
-
-    const userAgent = req.headers['user-agent'] ? String(req.headers['user-agent']) : undefined;
-    return this.adminService.getDashboardMetrics(clientIp, (timeframe as any) || '7d', userAgent, user.username);
+    return this.adminService.getDashboardMetrics((timeframe as any) || '7d');
   }
 
   @Get('chart')

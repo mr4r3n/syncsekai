@@ -288,16 +288,7 @@ export class AdminService {
   /**
    * Métricas y estadísticas consolidadas 100% REALES del panel de administración
    */
-  async getDashboardMetrics(
-    clientIp?: string,
-    timeframe: '1d' | '7d' | '30d' | '1y' = '7d',
-    userAgent?: string,
-    username?: string,
-  ) {
-    if (clientIp) {
-      await this.recordVisitorIp(clientIp, username, userAgent).catch(() => {});
-    }
-
+  async getDashboardMetrics(timeframe: '1d' | '7d' | '30d' | '1y' = '7d') {
     const cacheKey = `metrics_${timeframe}`;
     const cached = this.dashboardMetricsCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {

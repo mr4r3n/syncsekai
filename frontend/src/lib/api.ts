@@ -56,6 +56,9 @@ export interface SiteLink {
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
+    // Marca de la propia app: el contador de visitas del backend ignora lo
+    // que no la lleve (escáneres que prueban /api/ con User-Agent de navegador).
+    'X-Requested-With': 'SyncSekai',
   };
 
   if (!(options.body instanceof FormData)) {

@@ -125,6 +125,10 @@ export class GeoVisitorMiddleware implements NestMiddleware {
         ? String(req.headers['user-agent']).slice(0, 512)
         : undefined;
       if (!userAgent || UA_AUTOMATICO.test(userAgent)) return next();
+      // Solo cuenta lo que manda la propia interfaz. Un escáner que recorre
+      // /api/ con User-Agent de Chrome no trae esta cabecera; un navegador
+      // ejecutando la app, siempre.
+      if (req.headers['x-requested-with'] !== 'SyncSekai') return next();
 
       const clientIp = extractClientIp(req);
       const user = (req as any).user;

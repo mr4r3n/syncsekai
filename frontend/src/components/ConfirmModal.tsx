@@ -110,7 +110,7 @@ export function ConfirmModal({
 
         {children}
 
-        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[var(--glass-border)]">
+        <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2 border-t border-[var(--glass-border)]">
           <button
             type="button"
             onClick={onClose}

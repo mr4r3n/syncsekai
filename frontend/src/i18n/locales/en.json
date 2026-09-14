@@ -793,7 +793,7 @@
     "viewOptionsAndStatus": "View options and status",
     "openScrobbleOptions": "Open scrobble options",
     "createMappingForAnime": "Create a mapping for this anime",
-    "revertScrobble": "Revert scrobble (subtract the episode on your trackers)",
+    "revertScrobble": "Revert scrobble",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
     "currentMonthNoFuture": "Current month (no future dates)",

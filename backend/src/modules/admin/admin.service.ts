@@ -2096,7 +2096,8 @@ export class AdminService {
         const fullPath = path.join(dir, file);
         try {
           const stats = fs.statSync(fullPath);
-          if (stats.isFile()) {
+          // aliases.json vive junto a las portadas y no es un medio.
+          if (stats.isFile() && /\.(webp|jpe?g|png|gif)$/i.test(file)) {
             rawFiles.push({ file, dir, category, urlPrefix, stats });
 
             if (category === 'Portadas de Anime') {

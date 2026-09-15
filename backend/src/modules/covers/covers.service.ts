@@ -21,12 +21,84 @@ export class CoversService {
   private readonly logger = new Logger(CoversService.name);
   private readonly coversDir = path.join(process.cwd(), 'uploads', 'covers');
   private memoryMap = new Map<string, string>(); // key -> relative web URL
+  /**
+   * Un mismo anime llega con hasta cuatro claves (al_, mal_, kitsu_, title_) según
+   * qué tracker o qué pantalla lo pida, y cada clave descargaba su propio fichero:
+   * la misma portada tres veces en disco. Aquí se apunta qué claves son el mismo
+   * anime; la descarga y la lectura pasan siempre por la canónica.
+   *
+   * Se persiste en un JSON junto a las portadas: en memoria se perdía en cada
+   * reinicio y los duplicados volvían.
+   */
   private aliasMap = new Map<string, string>(); // aliasKey -> canonicalKey
+  private readonly aliasFile = path.join(this.coversDir, 'aliases.json');
   private inFlightDownloads = new Map<string, Promise<string | null>>();
 
   constructor() {
     if (!fs.existsSync(this.coversDir)) {
       fs.mkdirSync(this.coversDir, { recursive: true });
+    }
+    try {
+      const guardado = JSON.parse(fs.readFileSync(this.aliasFile, 'utf8')) as Record<string, string>;
+      for (const [alias, canonica] of Object.entries(guardado)) this.aliasMap.set(alias, canonica);
+    } catch {
+      // Sin fichero aún, o ilegible: se empieza vacío y se regenera con el uso.
+    }
+  }
+
+  /** Orden de preferencia para nombrar el fichero: el ID de AniList es el más estable. */
+  private static prioridadClave(key: string): number {
+    if (key.startsWith('al_')) return 4;
+    if (key.startsWith('mal_')) return 3;
+    if (key.startsWith('kitsu_')) return 2;
+    return 1;
+  }
+
+  /** Clave bajo la que se guarda y se lee de verdad. */
+  clavecanonica(key: string): string {
+    const cleaned = this.getSafeKey(key);
+    return this.aliasMap.get(cleaned) || cleaned;
+  }
+
+  private ficheroDirecto(key: string): string | null {
+    for (const ext of ['.webp', '.jpg', '.png', '.jpeg']) {
+      const p = path.join(this.coversDir, `${key}${ext}`);
+      if (fs.existsSync(p)) return p;
+    }
+    return null;
+  }
+
+  /**
+   * Declara que dos claves son el mismo anime. Si ya hay fichero para las dos, se
+   * borra el del alias; si solo lo tiene el alias, se renombra a la canónica.
+   * Así los duplicados que ya existen desaparecen conforme se vuelve a usar el
+   * catálogo, sin una migración aparte.
+   */
+  registrarAlias(a: string, b: string): void {
+    let alias = this.clavecanonica(a);
+    let canonica = this.clavecanonica(b);
+    if (!alias || !canonica || alias === canonica) return;
+    if (CoversService.prioridadClave(alias) > CoversService.prioridadClave(canonica)) {
+      [alias, canonica] = [canonica, alias];
+    }
+    // Lo que apuntaba al alias pasa a apuntar a la canónica.
+    for (const [k, v] of this.aliasMap) if (v === alias) this.aliasMap.set(k, canonica);
+    this.aliasMap.set(alias, canonica);
+
+    const fa = this.ficheroDirecto(alias);
+    const fc = this.ficheroDirecto(canonica);
+    try {
+      if (fa && fc) fs.unlinkSync(fa);
+      else if (fa && !fc) fs.renameSync(fa, path.join(this.coversDir, `${canonica}${path.extname(fa)}`));
+    } catch (err: any) {
+      this.logger.warn(`No se pudo unificar la portada ${alias} -> ${canonica}: ${err.message}`);
+    }
+    this.memoryMap.delete(alias);
+
+    try {
+      fs.writeFileSync(this.aliasFile, JSON.stringify(Object.fromEntries(this.aliasMap)));
+    } catch (err: any) {
+      this.logger.warn(`No se pudo guardar aliases.json: ${err.message}`);
     }
   }
 
@@ -70,21 +142,7 @@ export class CoversService {
   }
 
   getFilePath(safeKey: string): string | null {
-    const cleaned = this.getSafeKey(safeKey);
-    const extensions = ['.webp', '.jpg', '.png', '.jpeg'];
-    for (const ext of extensions) {
-      const p = path.join(this.coversDir, `${cleaned}${ext}`);
-      if (fs.existsSync(p)) return p;
-    }
-    // Verificar alias en memoria (ej: title_hash -> al_id)
-    const aliased = this.aliasMap.get(cleaned);
-    if (aliased) {
-      for (const ext of extensions) {
-        const p = path.join(this.coversDir, `${aliased}${ext}`);
-        if (fs.existsSync(p)) return p;
-      }
-    }
-    return null;
+    return this.ficheroDirecto(this.clavecanonica(safeKey));
   }
 
   hasLocalCover(safeKey: string): boolean {
@@ -109,13 +167,9 @@ export class CoversService {
       this.logger.warn(`Portada rechazada: el origen no es un CDN autorizado (${remoteUrl.slice(0, 120)}).`);
       return null;
     }
-    const cleaned = this.getSafeKey(safeKey);
+    if (secondaryKey) this.registrarAlias(secondaryKey, safeKey);
+    const cleaned = this.clavecanonica(safeKey);
     if (!cleaned || cleaned.length > 96 || this.inFlightDownloads.size >= 80) return null;
-
-    if (secondaryKey) {
-      const secCleaned = this.getSafeKey(secondaryKey);
-      this.aliasMap.set(secCleaned, cleaned);
-    }
 
     const existing = this.getLocalCoverUrl(cleaned);
     if (existing) {
@@ -192,7 +246,7 @@ export class CoversService {
   }
 
   async fetchAndCacheOnDemand(key: string, titleHint?: string): Promise<string | null> {
-    const cleaned = this.getSafeKey(key);
+    const cleaned = this.clavecanonica(key);
     const existing = this.getFilePath(cleaned);
     if (existing) return existing;
 
@@ -292,6 +346,7 @@ export class CoversService {
           const query = `
             query ($idMal: Int) {
               Media(idMal: $idMal, type: ANIME) {
+                id
                 coverImage {
                   extraLarge
                   large
@@ -308,6 +363,7 @@ export class CoversService {
             res.data?.data?.Media?.coverImage?.extraLarge ||
             res.data?.data?.Media?.coverImage?.large ||
             null;
+          if (res.data?.data?.Media?.id) secondaryKey = `al_${res.data.data.Media.id}`;
         } catch {}
 
         if (!remoteUrl) {
@@ -573,6 +629,7 @@ export class CoversService {
               native: item.title?.native || '',
               malId: item.idMal || null,
             });
+            if (item.idMal) this.registrarAlias(`mal_${item.idMal}`, `al_${item.id}`);
           }
         } catch (e: any) {
           this.logger.warn(`Error en batchFetchAnimeMetadata (AniList): ${e.message}. Consultando Kitsu...`);
@@ -650,7 +707,7 @@ export class CoversService {
   }
 
   async forceRefreshCover(key: string, titleHint?: string): Promise<{ success: boolean; url?: string; error?: string }> {
-    const cleaned = this.getSafeKey(key);
+    const cleaned = this.clavecanonica(key);
     const extensions = ['.webp', '.jpg', '.png', '.jpeg'];
     for (const ext of extensions) {
       const p = path.join(this.coversDir, `${cleaned}${ext}`);

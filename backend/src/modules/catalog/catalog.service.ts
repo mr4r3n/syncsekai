@@ -110,6 +110,31 @@ export class CatalogService {
     return 1;
   }
 
+  /**
+   * Los mapeos guardan los tres IDs de un mismo anime: es la fuente para saber
+   * que `mal_X` y `al_Y` son la misma portada antes de descargar nada. Una
+   * consulta por catálogo; sin esto cada tracker guardaba su propia copia.
+   */
+  private async enlazarPortadasPorMapeos(
+    campo: 'malMediaId' | 'kitsuMediaId',
+    prefijo: 'mal_' | 'kitsu_',
+    ids: Array<number | undefined | null>,
+  ): Promise<void> {
+    const validos = [...new Set(ids.filter((id): id is number => typeof id === 'number' && id > 0))];
+    if (validos.length === 0) return;
+    try {
+      const mapeos = await this.prisma.titleMapping.findMany({
+        where: { [campo]: { in: validos }, anilistMediaId: { not: null } },
+        select: { anilistMediaId: true, [campo]: true },
+      });
+      for (const m of mapeos) {
+        this.coversService.registrarAlias(`${prefijo}${(m as any)[campo]}`, `al_${m.anilistMediaId}`);
+      }
+    } catch (err: any) {
+      this.logger.warn(`No se pudieron enlazar portadas por mapeos (${campo}): ${err.message}`);
+    }
+  }
+
   private extractBaseTitle(title?: string): string {
     if (!title) return '';
     return title
@@ -455,6 +480,7 @@ export class CatalogService {
 
         const dataEntries = malRes.data?.data || [];
         const fetchedItems: CatalogAnimeItem[] = [];
+        await this.enlazarPortadasPorMapeos('malMediaId', 'mal_', dataEntries.map((e: any) => e?.node?.id));
 
         const malStatusMap: Record<string, string> = {
           watching: 'CURRENT',
@@ -484,7 +510,7 @@ export class CatalogService {
           const remoteCover = node.main_picture?.large || node.main_picture?.medium || '';
           let coverUrl = remoteCover || '';
           if (node.id && remoteCover) {
-            const safeKey = `mal_${node.id}`;
+            const safeKey = this.coversService.clavecanonica(`mal_${node.id}`);
             this.coversService.downloadAndSaveCover(safeKey, remoteCover).catch(() => {});
             if (this.coversService.hasLocalCover(safeKey)) {
               coverUrl = `/api/covers/${safeKey}`;
@@ -571,9 +597,10 @@ export class CatalogService {
       // Consultar Kitsu JSON:API
       try {
         const kitsuItems = await this.kitsuService.getUserLibrary(userId);
+        await this.enlazarPortadasPorMapeos('kitsuMediaId', 'kitsu_', kitsuItems.map((i) => i.kitsuId));
         for (const item of kitsuItems) {
           if (item.kitsuId && item.coverUrl && !item.coverUrl.startsWith('/api/covers/')) {
-            const safeKey = `kitsu_${item.kitsuId}`;
+            const safeKey = this.coversService.clavecanonica(`kitsu_${item.kitsuId}`);
             this.coversService.downloadAndSaveCover(safeKey, item.coverUrl).catch(() => {});
             item.coverUrl = `/api/covers/${safeKey}`;
           }
@@ -753,7 +780,9 @@ export class CatalogService {
             let coverUrl = remoteCover || '';
             if (media.id && remoteCover) {
               const safeKey = `al_${media.id}`;
-              this.coversService.downloadAndSaveCover(safeKey, remoteCover).catch(() => {});
+              this.coversService
+                .downloadAndSaveCover(safeKey, remoteCover, media.idMal ? `mal_${media.idMal}` : undefined)
+                .catch(() => {});
               if (this.coversService.hasLocalCover(safeKey)) {
                 coverUrl = `/api/covers/${safeKey}`;
               } else {

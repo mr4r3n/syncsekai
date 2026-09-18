@@ -267,21 +267,6 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/*
-          Aplica el tema guardado ANTES del primer pintado.
-          El servidor emite siempre data-theme="dark", así que sin esto quien usa
-          el tema claro veía un destello oscuro en cada carga hasta que hidrataba
-          React. Va con el nonce de la CSP, como el resto de scripts en línea.
-        */}
-        <Script
-          id="theme-initializer"
-          strategy="beforeInteractive"
-          nonce={nonce}
-          dangerouslySetInnerHTML={{
-            __html:
-              "try{var s=localStorage.getItem('plexsync_selected_theme');var t=s==='claro'?'light':(localStorage.getItem('plexsync_theme')||'dark');document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('plexsync_locale');if(l==='es'||l==='en'){document.documentElement.lang=l;}}catch(e){}",
-          }}
-        />
         <script
           type="application/ld+json"
           nonce={nonce}
@@ -307,6 +292,23 @@ export default async function RootLayout({
             </SidebarProvider>
           </ToastProvider>
         </I18nProvider>
+        {/*
+          Aplica el tema guardado ANTES del primer pintado. El servidor emite
+          siempre data-theme="dark", así que sin esto quien usa el tema claro veía
+          un destello oscuro hasta que hidrataba React. Va con el nonce de la CSP.
+          Al final de <body>, como en la documentación de Next: en <head> React
+          avisa de que el script no se ejecuta al renderizar en cliente, y como
+          hijo directo de <html> no es HTML válido.
+        */}
+        <Script
+          id="theme-initializer"
+          strategy="beforeInteractive"
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var s=localStorage.getItem('plexsync_selected_theme');var t=s==='claro'?'light':(localStorage.getItem('plexsync_theme')||'dark');document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('plexsync_locale');if(l==='es'||l==='en'){document.documentElement.lang=l;}}catch(e){}",
+          }}
+        />
       </body>
     </html>
   );

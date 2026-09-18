@@ -960,12 +960,15 @@ export class AdminService {
     ]);
 
     const activityMap: Record<string, { scrobbles: number; mappings: number; total: number }> = {};
+    // Día de la semana × hora, en UTC: el navegador lo desplaza a su zona horaria.
+    const hourly: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
 
     scrobbles.forEach((s) => {
       const d = s.createdAt.toISOString().split('T')[0];
       if (!activityMap[d]) activityMap[d] = { scrobbles: 0, mappings: 0, total: 0 };
       activityMap[d].scrobbles++;
       activityMap[d].total++;
+      hourly[s.createdAt.getUTCDay()][s.createdAt.getUTCHours()]++;
     });
 
     mappings.forEach((m) => {
@@ -973,6 +976,7 @@ export class AdminService {
       if (!activityMap[d]) activityMap[d] = { scrobbles: 0, mappings: 0, total: 0 };
       activityMap[d].mappings++;
       activityMap[d].total++;
+      hourly[m.createdAt.getUTCDay()][m.createdAt.getUTCHours()]++;
     });
 
     const days: any[] = [];
@@ -1031,6 +1035,7 @@ export class AdminService {
       startDate: startDate.toISOString().split('T')[0],
       endDate: now.toISOString().split('T')[0],
       days,
+      hourly,
     };
   }
 

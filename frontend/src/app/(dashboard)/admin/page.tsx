@@ -384,6 +384,7 @@ export default function AdminOverviewPage() {
             {/* MATRIZ DE ACTIVIDAD ANUAL (ESTILO GITHUB & ANILIST) */}
             <ActivityHeatmap
               days={data?.activityHeatmap?.days || []}
+              hourly={data?.activityHeatmap?.hourly}
               totalYearActivity={data?.activityHeatmap?.totalYearActivity || 0}
               currentStreak={data?.activityHeatmap?.currentStreak || 0}
               maxStreak={data?.activityHeatmap?.maxStreak || 0}

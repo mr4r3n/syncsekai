@@ -52,7 +52,7 @@ export function Switch({
       className={`relative inline-flex ${trackWidth} shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-app)] select-none disabled:opacity-40 disabled:cursor-not-allowed ${
         checked
           ? 'bg-[var(--accent-primary)]'
-          : 'bg-[var(--border-strong)]'
+          : 'bg-[var(--text-muted)]/35'
       }`}
     >
       <span

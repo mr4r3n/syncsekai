@@ -138,17 +138,17 @@
 
   /* Estandarización de Botones (Light: Cinnabar #FF634A) */
   --btn-primary-bg: #FF634A;
-  /* Texto oscuro sobre el coral: en blanco daba 2,94:1 y la referencia AA
-     para este tamano es 4,5:1. Asi son 6,7:1 y el color de marca no cambia,
-     que es lo mismo que ya hacia el tema Plex con su ambar. */
-  --btn-primary-text: #0A0A0A;
+  /* Blanco sobre el coral por decisión de diseño: da 2,9:1, por debajo del
+     4,5:1 de AA para texto pequeño; se compensa con peso semibold. */
+  --btn-primary-text: #FFFFFF;
   --btn-primary-hover: #E5533D;
   --btn-primary-glow: rgba(255, 99, 74, 0.25);
 
-  --btn-secondary-bg: #F4F4F6;
+  /* Un gris con cuerpo: en #F4F4F6 el botón se fundía con la tarjeta blanca. */
+  --btn-secondary-bg: #E4E4E7;
   --btn-secondary-border: rgba(0, 0, 0, 0.10);
   --btn-secondary-text: #18181B;
-  --btn-secondary-hover: #EAEAEF;
+  --btn-secondary-hover: #D4D4D8;
 
   /* Menú Lateral Activo (Light: Cinnabar) */
   --nav-active-bg: rgba(255, 99, 74, 0.10);

@@ -1222,6 +1222,8 @@ export class AdminService {
             titleMappings: true,
           },
         },
+        // Solo la sesión más reciente: es lo que responde "¿cuándo entró por última vez?".
+        sessions: { select: { lastActiveAt: true }, orderBy: { lastActiveAt: 'desc' }, take: 1 },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -1236,6 +1238,7 @@ export class AdminService {
       twoFactorEnabled: u.twoFactorEnabled,
       twoFactorType: u.twoFactorType,
       createdAt: u.createdAt,
+      lastActiveAt: u.sessions[0]?.lastActiveAt ?? null,
       totalScrobbles: u._count.scrobbleHistory,
       totalMappings: u._count.titleMappings,
       permissions: {

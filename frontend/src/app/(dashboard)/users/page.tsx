@@ -36,6 +36,12 @@ import {
   MoreVertical,
   Crown,
   Loader2,
+  ChevronsUpDown,
+  ChevronUp,
+  ChevronDown,
+  LayoutGrid,
+  List,
+  ArrowUpDown,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CustomSelect } from '@/components/CustomSelect';
@@ -43,6 +49,7 @@ import { BottomSheet } from '@/components/BottomSheet';
 import { useModalA11y } from '@/components/useModalA11y';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { Switch } from '@/components/Switch';
+import { Paginacion } from '@/components/Paginacion';
 
 /**
  * Los seis servicios que puede tener vinculados una cuenta.
@@ -87,7 +94,40 @@ export default function UsersManagementPage() {
     const buscado = new URLSearchParams(window.location.search).get('search');
     if (buscado) setSearchQuery(buscado);
   }, []);
-  const [filterType, setFilterType] = useState<'ALL' | 'ADMIN' | 'ACTIVE' | 'SUSPENDED' | 'NEW'>('ALL');
+  const [filtroRol, setFiltroRol] = useState<'ALL' | 'ADMIN' | 'USER'>('ALL');
+  const [filtroEstado, setFiltroEstado] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED' | 'NEW'>('ALL');
+  // La vista se recuerda por navegador: es una preferencia, no un dato.
+  const [vista, setVista] = useState<'lista' | 'tarjetas'>('lista');
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('plexsync_users_view') === 'tarjetas') setVista('tarjetas');
+    } catch {}
+  }, []);
+  const abrirOpciones = (u: any) => {
+    if (window.matchMedia('(min-width: 1024px)').matches) handleOpenEdit(u);
+    else setActiveUserMenuId(u.id);
+  };
+  const cambiarVista = (v: 'lista' | 'tarjetas') => {
+    setVista(v);
+    try {
+      localStorage.setItem('plexsync_users_view', v);
+    } catch {}
+  };
+  type CampoOrden = 'username' | 'status' | 'role' | 'createdAt' | 'lastActiveAt';
+  const [orden, setOrden] = useState<{ campo: CampoOrden; asc: boolean }>({ campo: 'createdAt', asc: false });
+  const [porPagina, setPorPagina] = useState(10);
+  const [pagina, setPagina] = useState(1);
+  const ordenarPor = (campo: CampoOrden) =>
+    setOrden((prev) => ({ campo, asc: prev.campo === campo ? !prev.asc : campo === 'username' }));
+  const haceCuanto = (iso?: string | null) => {
+    if (!iso) return t('users.never');
+    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return t('topbar.momentAgo');
+    if (mins < 60) return t('topbar.minutesAgo', { mins });
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return t('topbar.hoursAgo', { hours });
+    return t('topbar.daysAgo', { days: Math.floor(hours / 24) });
+  };
   const [activeUserMenuId, setActiveUserMenuId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -325,12 +365,42 @@ export default function UsersManagementPage() {
       u.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const isSuspended = u.permissions?.isSuspended;
-    if (filterType === 'ADMIN') return matchesSearch && u.role === 'ADMIN';
-    if (filterType === 'ACTIVE') return matchesSearch && !isSuspended;
-    if (filterType === 'SUSPENDED') return matchesSearch && isSuspended;
-    if (filterType === 'NEW') return matchesSearch && esReciente(u.createdAt);
-    return matchesSearch;
+    const rolOk = filtroRol === 'ALL' || u.role === filtroRol;
+    const estadoOk =
+      filtroEstado === 'ALL' ||
+      (filtroEstado === 'ACTIVE' && !isSuspended) ||
+      (filtroEstado === 'SUSPENDED' && isSuspended) ||
+      (filtroEstado === 'NEW' && esReciente(u.createdAt));
+    return matchesSearch && rolOk && estadoOk;
   });
+
+  // Orden estable: el desempate es el nombre, para que dos filas iguales no bailen.
+  const valorOrden = (u: any): string | number => {
+    switch (orden.campo) {
+      case 'status': return u.permissions?.isSuspended ? 1 : 0;
+      case 'role': return u.role === 'ADMIN' ? 0 : 1;
+      case 'createdAt': return new Date(u.createdAt).getTime();
+      case 'lastActiveAt': return u.lastActiveAt ? new Date(u.lastActiveAt).getTime() : 0;
+      default: return (u.username || '').toLowerCase();
+    }
+  };
+  const usuariosOrdenados = [...filteredUsers].sort((a, b) => {
+    const va = valorOrden(a);
+    const vb = valorOrden(b);
+    const cmp = va < vb ? -1 : va > vb ? 1 : a.username.localeCompare(b.username);
+    return orden.asc ? cmp : -cmp;
+  });
+  const totalPaginas = Math.max(1, Math.ceil(usuariosOrdenados.length / porPagina));
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const usuariosPagina = usuariosOrdenados.slice((paginaActual - 1) * porPagina, paginaActual * porPagina);
+  const ORDENES: Array<{ value: string; label: string; campo: CampoOrden; asc: boolean }> = [
+    { value: 'newest', label: t('users.sortNewest'), campo: 'createdAt', asc: false },
+    { value: 'oldest', label: t('users.sortOldest'), campo: 'createdAt', asc: true },
+    { value: 'name-asc', label: t('users.sortNameAsc'), campo: 'username', asc: true },
+    { value: 'name-desc', label: t('users.sortNameDesc'), campo: 'username', asc: false },
+    { value: 'active', label: t('users.sortLastActive'), campo: 'lastActiveAt', asc: false },
+  ];
+  const ordenActual = ORDENES.find((o) => o.campo === orden.campo && o.asc === orden.asc)?.value || '';
 
   const totalUsersCount = usersList.length;
   const adminUsersCount = usersList.filter((u) => u.role === 'ADMIN').length;
@@ -380,35 +450,76 @@ export default function UsersManagementPage() {
             </div>
           </div>
 
-          {/* Buscar primero y filtrar despues, que es el orden en que se
-              usan; y los filtros en una tira que se desplaza en vez de
-              partirse en dos lineas. */}
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-[var(--glass-border)]">
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap">
-              <button
-                onClick={() => setFilterType('ALL')}
-                className={`shrink-0 ${filterType === 'ALL' ? 'filter-tab-active' : 'filter-tab'}`}
-              >
-                {t('users.filterAll')} ({totalUsersCount})
-              </button>
-              <button
-                onClick={() => setFilterType('ACTIVE')}
-                className={`shrink-0 ${filterType === 'ACTIVE' ? 'filter-tab-active text-emerald-400 border-emerald-500/30' : 'filter-tab'}`}
-              >
-                {t('users.filterActive')} ({activeUsersCount})
-              </button>
-              <button
-                onClick={() => setFilterType('SUSPENDED')}
-                className={`shrink-0 ${filterType === 'SUSPENDED' ? 'filter-tab-active text-rose-400 border-rose-500/30' : 'filter-tab'}`}
-              >
-                {t('users.filterSuspended')} ({suspendedUsersCount})
-              </button>
-              <button
-                onClick={() => setFilterType('NEW')}
-                className={`shrink-0 ${filterType === 'NEW' ? 'filter-tab-active text-sky-400 border-sky-500/30' : 'filter-tab'}`}
-              >
-                {t('users.filterNew')} ({newUsersCount})
-              </button>
+          {/* Desplegables de filtro y de orden; la busqueda a la derecha. */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-[var(--glass-border)]">
+            {/* En móvil, dos columnas y el orden a todo el ancho; en escritorio, una tira. */}
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:flex-wrap">
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-muted)]">
+                <Filter className="w-3.5 h-3.5" aria-hidden="true" />
+                {t('users.filtersLabel')}
+              </span>
+              <CustomSelect
+                value={filtroRol}
+                onChange={(v) => {
+                  setFiltroRol(v as typeof filtroRol);
+                  setPagina(1);
+                }}
+                className="!w-full sm:!w-44 shrink-0" triggerClassName="!h-8 text-xs"
+                options={[
+                  { value: 'ALL', label: `${t('users.allRoles')} (${totalUsersCount})` },
+                  { value: 'ADMIN', label: `${t('users.filterAdmins')} (${adminUsersCount})` },
+                  { value: 'USER', label: `${t('users.roleUsers')} (${totalUsersCount - adminUsersCount})` },
+                ]}
+              />
+              <CustomSelect
+                value={filtroEstado}
+                onChange={(v) => {
+                  setFiltroEstado(v as typeof filtroEstado);
+                  setPagina(1);
+                }}
+                className="!w-full sm:!w-44 shrink-0" triggerClassName="!h-8 text-xs"
+                options={[
+                  { value: 'ALL', label: t('users.allStatus') },
+                  { value: 'ACTIVE', label: `${t('users.filterActive')} (${activeUsersCount})` },
+                  { value: 'SUSPENDED', label: `${t('users.filterSuspended')} (${suspendedUsersCount})` },
+                  { value: 'NEW', label: `${t('users.filterNew')} (${newUsersCount})` },
+                ]}
+              />
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-muted)] sm:ml-2">
+                <ArrowUpDown className="w-3.5 h-3.5" aria-hidden="true" />
+              </span>
+              <CustomSelect
+                value={ordenActual}
+                onChange={(v) => {
+                  const o = ORDENES.find((x) => x.value === v);
+                  if (o) setOrden({ campo: o.campo, asc: o.asc });
+                }}
+                placeholder={t('users.sortCustom')}
+                className="!w-full sm:!w-44 shrink-0 col-span-2 sm:col-span-1" triggerClassName="!h-8 text-xs"
+                options={ORDENES.map(({ value, label }) => ({ value, label }))}
+              />
+              <div className="hidden lg:inline-flex items-center rounded-[6px] bg-[var(--bg-surface)] p-0.5 sm:ml-2" role="group" aria-label={t('users.viewLabel')}>
+                {(
+                  [
+                    ['lista', List, t('users.viewList')],
+                    ['tarjetas', LayoutGrid, t('users.viewCards')],
+                  ] as Array<['lista' | 'tarjetas', typeof List, string]>
+                ).map(([v, Icono, etiqueta]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => cambiarVista(v)}
+                    aria-pressed={vista === v}
+                    title={etiqueta}
+                    aria-label={etiqueta}
+                    className={`p-1.5 rounded-[5px] cursor-pointer transition-colors ${
+                      vista === v ? 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    <Icono className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="relative w-full sm:w-64">
@@ -416,7 +527,10 @@ export default function UsersManagementPage() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPagina(1);
+                }}
                 placeholder={t('users.searchPlaceholder')}
                 suppressHydrationWarning
                 autoComplete="off"
@@ -430,234 +544,193 @@ export default function UsersManagementPage() {
       {/* CONTENIDO PRINCIPAL */}
       <main className="w-full px-4 sm:px-6 md:px-8 py-8 space-y-6 min-w-0">
         {/* TABLA DESKTOP (PANTALLAS GRANDES >= 1024px) */}
-        <div className="hidden lg:block glass-card overflow-hidden">
+        <div className={`${vista === 'lista' ? 'hidden lg:block' : 'hidden'} glass-card overflow-hidden`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-[var(--glass-border)] bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] font-mono uppercase text-[10.5px]">
+              <thead className="bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] font-mono uppercase text-[10.5px]">
                 <tr>
-                  <th scope="col" className="py-3.5 px-4">Usuario &amp; Cuenta</th>
-                  <th scope="col" className="py-3.5 px-4">Rol &amp; Estado</th>
-                  <th scope="col" className="py-3.5 px-4">Servidores</th>
-                  <th scope="col" className="py-3.5 px-4">Trackers</th>
-                  <th scope="col" className="py-3.5 px-4 text-center">Permisos</th>
-                  <th scope="col" className="py-3.5 px-4 text-right">{t('users.adminActions')}</th>
+                  {(
+                    [
+                      ['username', 'users.colUser', ''],
+                      ['status', 'users.colStatus', ''],
+                      ['role', 'users.colRole', ''],
+                      [null, 'users.colServices', ''],
+                      ['createdAt', 'users.colJoined', ''],
+                      ['lastActiveAt', 'users.colLastActive', ''],
+                      [null, 'users.adminActions', 'text-right'],
+                    ] as Array<[CampoOrden | null, string, string]>
+                  ).map(([campo, clave, extra]) => (
+                    <th key={clave} scope="col" className={`py-3 px-4 font-semibold ${extra}`}>
+                      {campo ? (
+                        <button
+                          type="button"
+                          onClick={() => ordenarPor(campo)}
+                          className="inline-flex items-center gap-1 uppercase hover:text-[var(--text-primary)] cursor-pointer"
+                        >
+                          {t(clave)}
+                          {orden.campo === campo ? (
+                            orden.asc ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                          ) : (
+                            <ChevronsUpDown className="w-3 h-3 opacity-40" />
+                          )}
+                        </button>
+                      ) : (
+                        t(clave)
+                      )}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--glass-border)]">
                 {loading ? (
-                  [...Array(4)].map((_, i) => (
+                  [...Array(5)].map((_, i) => (
                     <tr key={i} className="animate-in fade-in">
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="skeleton w-9 h-9 rounded-[6px] shrink-0" />
+                          <div className="skeleton w-9 h-9 rounded-full shrink-0" />
                           <div className="space-y-1.5 flex-1 min-w-0">
                             <div className="skeleton h-3.5 w-28 rounded" />
                             <div className="skeleton h-2.5 w-36 rounded" />
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-4"><div className="skeleton h-6 w-24 rounded-[6px]" /></td>
-                      <td className="py-4 px-4"><div className="skeleton h-6 w-20 rounded-[6px]" /></td>
-                      <td className="py-4 px-4"><div className="skeleton h-6 w-24 rounded-[6px]" /></td>
-                      <td className="py-4 px-4 text-center"><div className="skeleton h-6 w-24 mx-auto rounded-[6px]" /></td>
-                      <td className="py-4 px-4 text-right"><div className="skeleton h-7 w-24 ml-auto rounded-[6px]" /></td>
+                      {[...Array(5)].map((_, j) => (
+                        <td key={j} className="py-3.5 px-4"><div className="skeleton h-5 w-20 rounded-[6px]" /></td>
+                      ))}
+                      <td className="py-3.5 px-4 text-right"><div className="skeleton h-7 w-24 ml-auto rounded-[6px]" /></td>
                     </tr>
                   ))
-                ) : filteredUsers.length === 0 ? (
+                ) : usuariosPagina.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-[var(--text-muted)] font-mono">{t('users.noUsersFound')}</td>
+                    <td colSpan={7} className="py-12 text-center text-[var(--text-muted)] font-mono">{t('users.noUsersFound')}</td>
                   </tr>
                 ) : (
-                  filteredUsers.map((u) => {
+                  usuariosPagina.map((u, i) => {
                     const isSuspended = u.permissions?.isSuspended;
                     const avatarSrc = getAvatarSrc(u.avatarUrl);
-
-                    // Conteo unificado de permisos
-                    let activePermCount = 0;
-                    if (u.permissions?.canScrobble ?? true) activePermCount++;
-                    if (u.permissions?.canAccessCatalog ?? true) activePermCount++;
-                    if (u.permissions?.canEditMappings ?? true) activePermCount++;
-                    if (u.permissions?.canSyncAnilist ?? true) activePermCount++;
-                    if (u.permissions?.canSyncMal ?? true) activePermCount++;
-                    if (u.permissions?.canSyncKitsu ?? true) activePermCount++;
+                    const vinculados = SERVICIOS_USUARIO.filter((sv) => !!u.connections?.[sv.id]);
 
                     return (
-                      <tr key={u.id} className="hover:bg-[var(--bg-surface-hover)] transition-colors">
-                        {/* 1. USUARIO & CUENTA */}
-                        <td className="py-4 px-4">
+                      <tr
+                        key={u.id}
+                        className={`transition-colors hover:bg-[var(--bg-surface-hover)] ${i % 2 === 1 ? 'bg-[var(--bg-surface)]/40' : ''}`}
+                      >
+                        {/* Usuario */}
+                        <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             {avatarSrc ? (
-                              <img
-                                src={avatarSrc}
-                                alt={u.username}
-                                className="w-9 h-9 rounded-[6px] object-cover border border-[var(--border-subtle)] shrink-0 shadow-sm bg-[var(--bg-app)]"
-                              />
+                              <img src={avatarSrc} alt="" className="w-9 h-9 rounded-full object-cover shrink-0 bg-[var(--bg-app)]" />
                             ) : (
-                              <div className="w-9 h-9 rounded-[6px] bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] flex items-center justify-center font-bold text-xs shrink-0 border border-[var(--nav-active-border)] shadow-sm">
+                              <div className="w-9 h-9 rounded-full bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] flex items-center justify-center font-bold text-xs shrink-0">
                                 {u.username?.[0]?.toUpperCase() || 'U'}
                               </div>
                             )}
-
                             <div className="min-w-0">
-                              <div className="font-bold text-[var(--text-primary)] truncate flex items-center gap-1.5 leading-snug">
-                                <span>{u.username}</span>
+                              <div className="font-bold text-[13px] text-[var(--text-primary)] truncate flex items-center gap-1.5 leading-snug">
+                                <span className="truncate">{u.username}</span>
                                 {u.role === 'ADMIN' && (
-                                  <span title="Administrador" className="inline-flex items-center justify-center shrink-0 -translate-y-[1px]">
-                                    <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                                  </span>
+                                  <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" aria-label={t('users.administrator')} />
+                                )}
+                                {esReciente(u.createdAt) && (
+                                  <span className="text-[9.5px] font-mono font-bold text-sky-400 bg-sky-500/10 px-1.5 py-px rounded-[4px] shrink-0">{t('users.newBadge')}</span>
                                 )}
                               </div>
                               <div className="text-[11px] text-[var(--text-muted)] truncate font-mono">{u.email}</div>
-                              <div className="text-[10.5px] text-[var(--text-muted)] font-mono">
-                                {t('users.joinedOn', { fecha: fechaAlta(u.createdAt) })}
-                                {esReciente(u.createdAt) && <span className="ml-1.5 text-sky-400">{t('users.newBadge')}</span>}
-                              </div>
                             </div>
                           </div>
                         </td>
 
-                        {/* 2. ROL & ESTADO */}
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleRole(u.id, u.role)}
-                              className={`px-2 py-0.5 rounded-[4px] text-[10.5px] font-mono font-bold cursor-pointer border transition-colors ${
-                                u.role === 'ADMIN'
-                                  ? 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30'
-                                  : 'badge-pill hover:border-[var(--border-strong)]'
-                              }`}
-                              title={t('users.toggleAdminUser')}
-                            >
-                              {u.role}
-                            </button>
-                            <span
-                              className={isSuspended ? 'badge-status-danger' : 'badge-status-success'}
-                            >
-                              {isSuspended ? 'BLOQUEADO' : 'ACTIVO'}
+                        {/* Estado */}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={!isSuspended}
+                              onChange={() => handleToggleBlock(u.id, isSuspended, u.username)}
+                              ariaLabel={isSuspended ? t('users.unblockAndReactivate') : t('users.blockAccountAccess')}
+                            />
+                            {/* Ancho fijo: ACTIVE y BLOCKED miden distinto y movían lo de al lado. */}
+                            <span className={`min-w-[4.75rem] justify-center ${isSuspended ? 'badge-status-danger' : 'badge-status-success'}`}>
+                              {isSuspended ? t('users.stateBlocked') : t('users.stateActive')}
                             </span>
                             {u.twoFactorEnabled && (
-                              <span className="badge-status-success text-[10px] font-mono" title="2FA Activo">
-                                2FA
-                              </span>
+                              <span className="badge-pill text-[10px] font-mono" title="2FA">2FA</span>
                             )}
                           </div>
                         </td>
 
-                        {/* 3. SERVIDORES MULTIMEDIA (SEPARADO) */}
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                            <span
-                              className={`h-6 px-2.5 rounded-[4px] inline-flex items-center justify-center font-bold transition-all ${
-                                u.connections?.plex
-                                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-xs'
-                                  : 'text-[var(--text-muted)] opacity-35 border border-dashed border-[var(--border-subtle)]'
-                              }`}
-                              title={u.connections?.plex ? `Plex: ${u.connections.plexServer || 'Conectado'}` : 'Plex: No vinculado'}
-                            >
-                              PLEX
-                            </span>
-                            <span
-                              className={`h-6 px-2.5 rounded-[4px] inline-flex items-center justify-center font-bold transition-all ${
-                                u.connections?.jellyfin
-                                  ? 'bg-[#00a4dc]/15 text-[#00a4dc] border border-[#00a4dc]/30 shadow-xs'
-                                  : 'text-[var(--text-muted)] opacity-35 border border-dashed border-[var(--border-subtle)]'
-                              }`}
-                              title={u.connections?.jellyfin ? `Jellyfin: ${u.connections.jellyfinServer || 'Conectado'}` : 'Jellyfin: No vinculado'}
-                            >
-                              JF
-                            </span>
-                            <span
-                              className={`h-6 px-2.5 rounded-[4px] inline-flex items-center justify-center font-bold transition-all ${
-                                u.connections?.emby
-                                  ? 'bg-[#52b54b]/15 text-[#52b54b] border border-[#52b54b]/30 shadow-xs'
-                                  : 'text-[var(--text-muted)] opacity-35 border border-dashed border-[var(--border-subtle)]'
-                              }`}
-                              title={u.connections?.emby ? `Emby: ${u.connections.embyServer || 'Conectado'}` : 'Emby: No vinculado'}
-                            >
-                              EM
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* 4. TRACKERS DE ANIME (SEPARADO) */}
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                            <span
-                              className={`h-6 px-2 rounded-[4px] inline-flex items-center justify-center font-bold transition-all ${
-                                u.connections?.anilist
-                                  ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-xs'
-                                  : 'text-[var(--text-muted)] opacity-35 border border-dashed border-[var(--border-subtle)]'
-                              }`}
-                              title={u.connections?.anilist ? `AniList: ${u.connections.anilistUser || 'Conectado'}` : 'AniList: No vinculado'}
-                            >
-                              AL
-                            </span>
-                            <span
-                              className={`h-6 px-2 rounded-[4px] inline-flex items-center justify-center font-bold transition-all ${
-                                u.connections?.mal
-                                  ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30 shadow-xs'
-                                  : 'text-[var(--text-muted)] opacity-35 border border-dashed border-[var(--border-subtle)]'
-                              }`}
-                              title={u.connections?.mal ? `MyAnimeList: ${u.connections.malUser || 'Conectado'}` : 'MyAnimeList: No vinculado'}
-                            >
-                              MAL
-                            </span>
-                            <span
-                              className={`h-6 px-2 rounded-[4px] inline-flex items-center justify-center font-bold transition-all ${
-                                u.connections?.kitsu
-                                  ? 'bg-[#fd755c]/15 text-[#fd755c] border border-[#fd755c]/30 shadow-xs'
-                                  : 'text-[var(--text-muted)] opacity-35 border border-dashed border-[var(--border-subtle)]'
-                              }`}
-                              title={u.connections?.kitsu ? `Kitsu: ${u.connections.kitsuUser || 'Conectado'}` : 'Kitsu: No vinculado'}
-                            >
-                              KT
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* 5. PERMISOS UNIFICADOS */}
-                        <td className="py-4 px-4 text-center">
+                        {/* Rol */}
+                        <td className="py-3 px-4">
                           <button
                             type="button"
-                            onClick={() => handleOpenEdit(u)}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm,4px)] text-[11px] font-mono font-medium cursor-pointer transition-all hover:scale-105 select-none ${
-                              activePermCount === 6
-                                ? 'bg-emerald-500/12 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-amber-500/12 text-amber-300 border border-amber-500/30'
+                            onClick={() => handleToggleRole(u.id, u.role)}
+                            className={`px-2 py-0.5 rounded-[4px] text-[10.5px] font-mono font-bold cursor-pointer transition-colors ${
+                              u.role === 'ADMIN'
+                                ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                                : 'badge-pill hover:text-[var(--text-primary)]'
                             }`}
-                            title={`${activePermCount} de 6 permisos habilitados. Haz clic para configurar permisos detallados.`}
+                            title={t('users.toggleAdminUser')}
                           >
-                            <Sliders className="w-3 h-3 shrink-0" />
-                            <span>{activePermCount}/6 Activos</span>
+                            {u.role}
                           </button>
                         </td>
 
-                        {/* 6. ACCIONES */}
-                        <td className="py-4 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        {/* Servicios vinculados */}
+                        <td className="py-3 px-4">
+                          {vinculados.length === 0 ? (
+                            <span className="text-[var(--text-muted)] font-mono">—</span>
+                          ) : (
+                            <div className="flex items-center gap-1 font-mono text-[10.5px]">
+                              {vinculados.map(({ id, corto, nombre, color }) => {
+                                const detalle = u.connections?.[`${id}Server`] || u.connections?.[`${id}User`];
+                                return (
+                                  <span
+                                    key={id}
+                                    title={t('users.linkedTo', { service: nombre, detail: detalle || t('users.connected') })}
+                                    className="h-5 px-1.5 rounded-[4px] inline-flex items-center justify-center font-bold bg-current/10"
+                                    style={{ color: `var(${color})` }}
+                                  >
+                                    {corto}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Alta */}
+                        <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{fechaAlta(u.createdAt)}</td>
+
+                        {/* Última actividad */}
+                        <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{haceCuanto(u.lastActiveAt)}</td>
+
+                        {/* Acciones */}
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => handleOpenEdit(u)}
-                              className="btn-secondary btn-icon-sm"
+                              className="p-1.5 rounded-[5px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-colors"
                               title={t('users.editUserAndCredentials')}
+                              aria-label={t('users.editUserAndCredentials')}
                             >
-                              <Edit3 className="w-4 h-4 text-[var(--accent-text)]" />
+                              <Edit3 className="w-4 h-4" />
                             </button>
-
                             <button
                               onClick={() => handleToggleBlock(u.id, isSuspended, u.username)}
-                              className={isSuspended ? 'btn-danger btn-icon-sm' : 'btn-secondary btn-icon-sm'}
+                              className={`p-1.5 rounded-[5px] cursor-pointer transition-colors ${
+                                isSuspended ? 'text-rose-400 hover:bg-rose-500/10' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]'
+                              }`}
                               title={isSuspended ? t('users.unblockAndReactivate') : t('users.blockAccountAccess')}
+                              aria-label={isSuspended ? t('users.unblockAndReactivate') : t('users.blockAccountAccess')}
                             >
-                              {isSuspended ? <Lock className="w-4 h-4 text-rose-400" /> : <Unlock className="w-4 h-4 text-[var(--text-secondary)]" />}
+                              {isSuspended ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
                             </button>
-
                             <button
                               onClick={() => setDeletingUser(u)}
-                              className="btn-danger btn-icon-sm"
+                              className="p-1.5 rounded-[5px] text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-colors"
                               title={t('users.deleteUserPermanently')}
+                              aria-label={t('users.deleteUserPermanently')}
                             >
-                              <Trash2 className="w-4 h-4 text-rose-400" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -668,6 +741,43 @@ export default function UsersManagementPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pie: filas por página y paginación */}
+          {!loading && usuariosOrdenados.length > 0 && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-[var(--glass-border)] text-[11px] font-mono text-[var(--text-muted)]">
+              <div className="flex items-center gap-2">
+                <span>{t('users.rowsPerPage')}</span>
+                <select
+                  value={porPagina}
+                  onChange={(e) => {
+                    setPorPagina(Number(e.target.value));
+                    setPagina(1);
+                  }}
+                  className="glass-input !h-7 !w-auto !px-2 text-[11px]"
+                  aria-label={t('users.rowsPerPage')}
+                >
+                  {[10, 25, 50].map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+                <span>
+                  {t('users.showingRange', {
+                    from: (paginaActual - 1) * porPagina + 1,
+                    to: Math.min(paginaActual * porPagina, usuariosOrdenados.length),
+                    total: usuariosOrdenados.length,
+                  })}
+                </span>
+              </div>
+              <Paginacion
+                pagina={paginaActual}
+                totalPaginas={totalPaginas}
+                onCambio={setPagina}
+                resumen={t('common.page', { page: paginaActual, total: totalPaginas })}
+                etiquetaAnterior={t('common.previous')}
+                etiquetaSiguiente={t('common.next')}
+              />
+            </div>
+          )}
         </div>
 
         {/* Tarjeta de movil, en tres lineas en vez de cinco.
@@ -682,13 +792,13 @@ export default function UsersManagementPage() {
             Los seis servicios caben de sobra en una sola linea (unos 230 px de
             los 343 disponibles), y lo que valia la pena de los rotulos -saber
             que es cada pastilla- ya estaba en su title. */}
-        <div className="block lg:hidden space-y-2.5">
+        <div className={vista === 'tarjetas' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3' : 'block lg:hidden space-y-2.5'}>
           {loading ? (
-            <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card">{t('users.loadingUsers')}</div>
+            <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card lg:col-span-full">{t('users.loadingUsers')}</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card">{t('users.noUsersFound')}</div>
+            <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card lg:col-span-full">{t('users.noUsersFound')}</div>
           ) : (
-            filteredUsers.map((u) => {
+            usuariosPagina.map((u) => {
               const isSuspended = u.permissions?.isSuspended;
               const avatarSrc = getAvatarSrc(u.avatarUrl);
               const perms = u.permissions || {};
@@ -704,7 +814,17 @@ export default function UsersManagementPage() {
               return (
                 <div
                   key={u.id}
-                  className={`glass-card p-3.5 space-y-2.5 border ${
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => abrirOpciones(u)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      abrirOpciones(u);
+                    }
+                  }}
+                  aria-label={t('users.userOptions')}
+                  className={`glass-card p-3.5 space-y-2.5 border cursor-pointer hover:bg-[var(--bg-surface-hover)] transition-colors ${
                     isSuspended ? 'border-[var(--status-danger)]/25' : 'border-[var(--border-subtle)]'
                   }`}
                 >
@@ -733,20 +853,61 @@ export default function UsersManagementPage() {
                         )}
                       </div>
                       <div className="text-[11px] text-[var(--text-muted)] truncate font-mono">{u.email}</div>
-                              <div className="text-[10.5px] text-[var(--text-muted)] font-mono">
-                                {t('users.joinedOn', { fecha: fechaAlta(u.createdAt) })}
-                                {esReciente(u.createdAt) && <span className="ml-1.5 text-sky-400">{t('users.newBadge')}</span>}
-                              </div>
+                      <div className="text-[10.5px] text-[var(--text-muted)] font-mono">
+                        {t('users.joinedOn', { fecha: fechaAlta(u.createdAt) })} · {haceCuanto(u.lastActiveAt)}
+                        {esReciente(u.createdAt) && <span className="ml-1.5 text-sky-400">{t('users.newBadge')}</span>}
+                      </div>
                     </div>
 
                     <button
-                      onClick={() => setActiveUserMenuId(u.id)}
-                      className="p-2 rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors shrink-0 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveUserMenuId(u.id);
+                      }}
+                      className="lg:hidden p-2 rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors shrink-0 cursor-pointer"
                       title={t('users.userOptions')}
                       aria-label={t('users.openOptionsMenu')}
                     >
                       <MoreVertical className="w-4 h-4" aria-hidden="true" />
                     </button>
+                    {/* En escritorio, las mismas tres acciones que la lista. */}
+                    <div className="hidden lg:flex items-center gap-0.5 shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEdit(u);
+                        }}
+                        className="p-1.5 rounded-[5px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-colors"
+                        title={t('users.editUserAndCredentials')}
+                        aria-label={t('users.editUserAndCredentials')}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleBlock(u.id, isSuspended, u.username);
+                        }}
+                        className={`p-1.5 rounded-[5px] cursor-pointer transition-colors ${
+                          isSuspended ? 'text-rose-400 hover:bg-rose-500/10' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]'
+                        }`}
+                        title={isSuspended ? t('users.unblockAndReactivate') : t('users.blockAccountAccess')}
+                        aria-label={isSuspended ? t('users.unblockAndReactivate') : t('users.blockAccountAccess')}
+                      >
+                        {isSuspended ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingUser(u);
+                        }}
+                        className="p-1.5 rounded-[5px] text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                        title={t('users.deleteUserPermanently')}
+                        aria-label={t('users.deleteUserPermanently')}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* 2. Todo lo demas en una sola linea que envuelve.
@@ -799,7 +960,10 @@ export default function UsersManagementPage() {
 
                     <button
                       type="button"
-                      onClick={() => handleOpenEdit(u)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenEdit(u);
+                      }}
                       className={`ml-auto inline-flex items-center gap-1.5 px-2 h-6 rounded-[var(--radius-xs)] font-medium cursor-pointer transition-colors border active:scale-95 ${
                         activePermCount === 6
                           ? 'bg-emerald-500/12 text-emerald-400 border-emerald-500/30'
@@ -814,6 +978,17 @@ export default function UsersManagementPage() {
                 </div>
               );
             })
+          )}
+          {!loading && totalPaginas > 1 && (
+            <Paginacion
+              pagina={paginaActual}
+              totalPaginas={totalPaginas}
+              onCambio={setPagina}
+              resumen={t('common.page', { page: paginaActual, total: totalPaginas })}
+              etiquetaAnterior={t('common.previous')}
+              etiquetaSiguiente={t('common.next')}
+              className="pt-1 lg:col-span-full"
+            />
           )}
         </div>
 
@@ -863,7 +1038,7 @@ export default function UsersManagementPage() {
                   onClick: () => handleOpenEdit(selectedUser),
                 },
                 {
-                  label: `Cambiar a rol ${selectedUser.role === 'ADMIN' ? 'USER' : 'ADMIN'}`,
+                  label: t('users.changeRoleTo', { role: selectedUser.role === 'ADMIN' ? 'USER' : 'ADMIN' }),
                   sublabel:
                     selectedUser.role === 'ADMIN'
                       ? t('users.revokeAdmin')
@@ -873,7 +1048,7 @@ export default function UsersManagementPage() {
                   onClick: () => handleToggleRole(selectedUser.id, selectedUser.role),
                 },
                 {
-                  label: isSuspended ? t('users.unblockAccount') : t('users.blockAccess'),
+                  label: isSuspended ? t('users.unblockAccount') : t('users.blockAccountAccess'),
                   sublabel: isSuspended
                     ? t('users.restoreLoginAndSync')
                     : t('users.suspendAccessNow'),

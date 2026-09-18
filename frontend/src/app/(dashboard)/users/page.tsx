@@ -79,6 +79,11 @@ export default function UsersManagementPage() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  // ?search= llega desde la notificación de "nuevo usuario" de la campana.
+  useEffect(() => {
+    const buscado = new URLSearchParams(window.location.search).get('search');
+    if (buscado) setSearchQuery(buscado);
+  }, []);
   const [filterType, setFilterType] = useState<'ALL' | 'ADMIN' | 'ACTIVE' | 'SUSPENDED'>('ALL');
   const [activeUserMenuId, setActiveUserMenuId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);

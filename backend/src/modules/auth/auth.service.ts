@@ -174,6 +174,29 @@ export class AuthService implements OnModuleInit {
     }
   }
 
+  /**
+   * Aviso en la campana de cada administrador cuando entra alguien nuevo, sea
+   * por correo o por Google/Discord. Nunca bloquea el alta: si falla, se pierde
+   * el aviso, no el usuario.
+   */
+  private async avisarAdminsNuevoUsuario(usuario: { id: string; username: string; email: string }, via: string) {
+    try {
+      const admins = await this.prisma.user.findMany({ where: { role: Role.ADMIN, isActive: true }, select: { id: true } });
+      if (admins.length === 0) return;
+      await this.prisma.notification.createMany({
+        data: admins.map((a) => ({
+          userId: a.id,
+          type: 'NEW_USER',
+          title: `New user: ${usuario.username}`,
+          message: `${usuario.email} signed up via ${via}.`,
+          metadata: { userId: usuario.id, username: usuario.username, via },
+        })),
+      });
+    } catch (e: any) {
+      this.logger.warn(`No se pudo avisar a los administradores del alta de ${usuario.username}: ${e.message}`);
+    }
+  }
+
   async register(dto: RegisterDto) {
     await this.comprobarRegistroAbierto();
 
@@ -235,6 +258,8 @@ export class AuthService implements OnModuleInit {
         activationExpiresAt: true,
       },
     });
+
+    await this.avisarAdminsNuevoUsuario(user, 'email');
 
     const frontendUrl = await this.getFrontendUrl();
     const activationLink = `${frontendUrl}/activate/${activationToken}`;
@@ -1855,6 +1880,7 @@ export class AuthService implements OnModuleInit {
         },
         include: { settings: true },
       });
+      await this.avisarAdminsNuevoUsuario(user, data.provider);
     }
 
     // Registrar sesión activa

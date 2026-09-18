@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
-import { BookOpen, Radio, Menu, Bell, Check, Trash2, ExternalLink, AlertTriangle, Info, CheckCheck, Loader2, TreePine, Sparkles, Ghost, Flame, Heart } from 'lucide-react';
+import { BookOpen, Radio, Menu, Bell, Check, Trash2, ExternalLink, AlertTriangle, Info, UserPlus, CheckCheck, Loader2, TreePine, Sparkles, Ghost, Flame, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from '@/components/SidebarProvider';
@@ -304,7 +304,17 @@ export function Topbar({
                       n.type === 'UNMAPPED_ANIME' || n.type === 'UNMAPPED_ITEM';
                     // Si lleva a algun sitio, la notificacion entera lleva; un
                     // enlace de 90 px dentro de una tarjeta pulsable no se ve.
-                    const puedeNavegar = isUnmapped && !!n.metadata?.showTitle;
+                    const esNuevoUsuario = n.type === 'NEW_USER';
+                    const puedeNavegar = (isUnmapped && !!n.metadata?.showTitle) || esNuevoUsuario;
+                    const navegar = () => {
+                      if (esNuevoUsuario) {
+                        setIsOpen(false);
+                        handleMarkAsRead(n.id);
+                        router.push(`/users?search=${encodeURIComponent(n.metadata?.username || '')}`);
+                      } else {
+                        handleNavigateToMapping(n);
+                      }
+                    };
                     return (
                       <div
                         key={n.id}
@@ -313,12 +323,10 @@ export function Topbar({
                         onKeyDown={(e) => {
                           if (puedeNavegar && (e.key === 'Enter' || e.key === ' ')) {
                             e.preventDefault();
-                            handleNavigateToMapping(n);
+                            navegar();
                           }
                         }}
-                        onClick={() =>
-                          puedeNavegar ? handleNavigateToMapping(n) : handleMarkAsRead(n.id)
-                        }
+                        onClick={() => (puedeNavegar ? navegar() : handleMarkAsRead(n.id))}
                         className={`p-3.5 text-xs transition-colors hover:bg-[var(--popover-solid-hover)] cursor-pointer flex flex-col gap-1.5 ${
                           !n.isRead ? 'bg-[var(--color-brand-primary)]/5 font-medium' : 'opacity-85'
                         }`}
@@ -327,6 +335,8 @@ export function Topbar({
                           <div className="flex items-center gap-2 min-w-0">
                             {isUnmapped ? (
                               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                            ) : esNuevoUsuario ? (
+                              <UserPlus className="w-4 h-4 text-emerald-400 shrink-0" />
                             ) : (
                               <Info className="w-4 h-4 text-blue-400 shrink-0" />
                             )}

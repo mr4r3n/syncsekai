@@ -189,7 +189,7 @@ export class AuthService implements OnModuleInit {
           type: 'NEW_USER',
           title: `New user: ${usuario.username}`,
           message: `${usuario.email} signed up via ${via}.`,
-          metadata: { userId: usuario.id, username: usuario.username, via },
+          metadata: { userId: usuario.id, username: usuario.username, email: usuario.email, via },
         })),
       });
     } catch (e: any) {

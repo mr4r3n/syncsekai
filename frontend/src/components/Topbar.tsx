@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
-import { BookOpen, Radio, Menu, Bell, Check, Trash2, ExternalLink, AlertTriangle, Info, UserPlus, CheckCheck, Loader2, TreePine, Sparkles, Ghost, Flame, Heart } from 'lucide-react';
+import { BookOpen, Radio, Menu, Bell, Check, Trash2, ExternalLink, AlertTriangle, Info, UserPlus, LifeBuoy, X, History, CheckCheck, Loader2, TreePine, Sparkles, Ghost, Flame, Heart } from 'lucide-react';
+import { describirNotificacion } from '@/lib/notificaciones';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from '@/components/SidebarProvider';
@@ -117,34 +118,25 @@ export function Topbar({
     }
   };
 
-  const handleDeleteNotification = (id: string, e: React.MouseEvent) => {
+  /** Quita el aviso de la campana; sigue en /notifications hasta que se borre allí. */
+  const handleDismiss = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const aviso = notifications.find((n: any) => n.id === id);
     setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== id));
     if (aviso && !aviso.isRead) setUnreadCount((prev: number) => Math.max(0, prev - 1));
-    showUndoToast(t('common.deletingItem', { name: aviso?.title || t('topbar.notification') }), {
-      alDeshacer: () => {
-        if (!aviso) return;
-        setNotifications((prev: any[]) => [aviso, ...prev]);
-        if (!aviso.isRead) setUnreadCount((prev: number) => prev + 1);
-      },
-      alExpirar: async () => {
-        try {
-          await api.notifications.delete(id);
-        } catch (err) {
-          console.warn('Error al eliminar notificación:', err);
-        }
-      },
-    });
+    api.notifications.dismiss(id).catch((err) => console.warn('Error al quitar la notificación:', err));
   };
 
-  const handleNavigateToMapping = (n: any) => {
-    const meta = n.metadata || {};
-    const search = meta.showTitle || '';
-    const season = meta.seasonNumber || 1;
+  const handleDismissAll = async () => {
+    setNotifications([]);
+    setUnreadCount(0);
+    await api.notifications.dismissAll().catch((err) => console.warn('Error al vaciar la campana:', err));
+  };
+
+  const irA = (n: any, href: string) => {
     setIsOpen(false);
-    handleMarkAsRead(n.id);
-    router.push(`/mappings?search=${encodeURIComponent(search)}&season=${season}`);
+    if (!n.isRead) handleMarkAsRead(n.id);
+    router.push(href);
   };
 
   const handleLinkClick = (href: string, e: React.MouseEvent) => {
@@ -267,6 +259,15 @@ export function Topbar({
                       <span>{t('topbar.markAllRead')}</span>
                     </button>
                   )}
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={handleDismissAll}
+                      className="text-[11px] px-2 py-1 rounded-[4px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
+                      title={t('topbar.clearBellLong')}
+                    >
+                      {t('topbar.clearBell')}
+                    </button>
+                  )}
                   <Link
                     href="/settings/notifications"
                     onClick={() => setIsOpen(false)}
@@ -292,29 +293,12 @@ export function Topbar({
                   </div>
                 ) : (
                   notifications.map((n) => {
-                    /*
-                     * El backend las crea con type 'UNMAPPED_ANIME' y aqui se
-                     * comparaba con 'UNMAPPED_ITEM'. Nunca coincidia, asi que el
-                     * boton para ir al mapeo no se pintaba jamas y pulsar la
-                     * notificacion solo la marcaba como leida: no llevaba a
-                     * ningun lado. Y el propio texto dice "Haz clic para crear el
-                     * mapeo".
-                     */
-                    const isUnmapped =
-                      n.type === 'UNMAPPED_ANIME' || n.type === 'UNMAPPED_ITEM';
-                    // Si lleva a algun sitio, la notificacion entera lleva; un
-                    // enlace de 90 px dentro de una tarjeta pulsable no se ve.
-                    const esNuevoUsuario = n.type === 'NEW_USER';
-                    const puedeNavegar = (isUnmapped && !!n.metadata?.showTitle) || esNuevoUsuario;
-                    const navegar = () => {
-                      if (esNuevoUsuario) {
-                        setIsOpen(false);
-                        handleMarkAsRead(n.id);
-                        router.push(`/users?search=${encodeURIComponent(n.metadata?.username || '')}`);
-                      } else {
-                        handleNavigateToMapping(n);
-                      }
-                    };
+                    const d = describirNotificacion(n, t, isAdmin);
+                    const Icono =
+                      d.icono === 'alerta' ? AlertTriangle : d.icono === 'usuario' ? UserPlus : d.icono === 'ticket' ? LifeBuoy : Info;
+                    const colorIcono =
+                      d.icono === 'alerta' ? 'text-amber-400' : d.icono === 'usuario' ? 'text-emerald-400' : d.icono === 'ticket' ? 'text-sky-400' : 'text-blue-400';
+                    const puedeNavegar = !!d.accion;
                     return (
                       <div
                         key={n.id}
@@ -323,48 +307,45 @@ export function Topbar({
                         onKeyDown={(e) => {
                           if (puedeNavegar && (e.key === 'Enter' || e.key === ' ')) {
                             e.preventDefault();
-                            navegar();
+                            irA(n, d.accion!.href);
                           }
                         }}
-                        onClick={() => (puedeNavegar ? navegar() : handleMarkAsRead(n.id))}
-                        className={`p-3.5 text-xs transition-colors hover:bg-[var(--popover-solid-hover)] cursor-pointer flex flex-col gap-1.5 ${
+                        onClick={() => (puedeNavegar ? irA(n, d.accion!.href) : handleMarkAsRead(n.id))}
+                        className={`group p-3.5 text-xs transition-colors hover:bg-[var(--popover-solid-hover)] cursor-pointer flex flex-col gap-1.5 ${
                           !n.isRead ? 'bg-[var(--color-brand-primary)]/5 font-medium' : 'opacity-85'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            {isUnmapped ? (
-                              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                            ) : esNuevoUsuario ? (
-                              <UserPlus className="w-4 h-4 text-emerald-400 shrink-0" />
-                            ) : (
-                              <Info className="w-4 h-4 text-blue-400 shrink-0" />
-                            )}
-                            <span className="font-bold text-[var(--text-primary)] truncate font-heading">
-                              {n.title}
-                            </span>
+                            <Icono className={`w-4 h-4 shrink-0 ${colorIcono}`} aria-hidden="true" />
+                            <span className="font-bold text-[var(--text-primary)] truncate font-heading">{d.titulo}</span>
                           </div>
-
-                          <span className="text-[10px] text-[var(--text-muted)] shrink-0 font-mono">
-                            {formatRelativeTime(n.createdAt)}
-                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono">{formatRelativeTime(n.createdAt)}</span>
+                            <button
+                              onClick={(e) => handleDismiss(n.id, e)}
+                              className="p-0.5 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
+                              title={t('topbar.dismiss')}
+                              aria-label={t('topbar.dismiss')}
+                            >
+                              <X className="w-3.5 h-3.5" aria-hidden="true" />
+                            </button>
+                          </div>
                         </div>
 
-                        <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed line-clamp-2">
-                          {n.message}
-                        </p>
+                        <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed line-clamp-2">{d.mensaje}</p>
 
-                        {puedeNavegar && (
+                        {d.accion && (
                           <div className="pt-1 flex items-center gap-2">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleNavigateToMapping(n);
+                                irA(n, d.accion!.href);
                               }}
-                              className="px-2.5 py-1.5 rounded-[6px] text-xs font-semibold bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-[6px] text-xs font-semibold bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] flex items-center gap-1.5 transition-all cursor-pointer"
                             >
-                              <ExternalLink className="w-3 h-3" />
-                              <span>{t('topbar.mapAnimeNow')}</span>
+                              <ExternalLink className="w-3 h-3" aria-hidden="true" />
+                              <span>{d.accion.etiqueta}</span>
                             </button>
                           </div>
                         )}
@@ -373,6 +354,16 @@ export function Topbar({
                   })
                 )}
               </div>
+
+              {/* Pie: historial completo */}
+              <Link
+                href="/settings/notifications#historial"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 border-t border-[var(--border-subtle)] text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors"
+              >
+                <History className="w-3.5 h-3.5" aria-hidden="true" />
+                {t('topbar.viewAllNotifications')}
+              </Link>
             </div>
           )}
         </div>

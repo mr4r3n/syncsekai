@@ -14,10 +14,11 @@ export class NotificationsService {
   /**
    * Obtener notificaciones del usuario con contador de no leídas
    */
+  /** La campana: lo que el usuario no ha quitado todavía. */
   async getUserNotifications(userId: string, limit = 30) {
     const [notifications, unreadCount] = await Promise.all([
       this.prisma.notification.findMany({
-        where: { userId },
+        where: { userId, dismissedAt: null },
         orderBy: { createdAt: 'desc' },
         take: limit,
       }),
@@ -30,6 +31,43 @@ export class NotificationsService {
       notifications,
       unreadCount,
     };
+  }
+
+  /** El historial completo, quitadas incluidas, paginado. */
+  async getHistory(userId: string, page = 1, limit = 25) {
+    const [notifications, total] = await Promise.all([
+      this.prisma.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.notification.count({ where: { userId } }),
+    ]);
+    return { notifications, total, page, limit };
+  }
+
+  /** Quitar de la campana sin borrar: queda en el historial. */
+  async dismiss(userId: string, notificationId: string) {
+    const res = await this.prisma.notification.updateMany({
+      where: { id: notificationId, userId, dismissedAt: null },
+      data: { dismissedAt: new Date(), isRead: true },
+    });
+    if (res.count === 0) throw new NotFoundException('Notificación no encontrada.');
+    return { success: true };
+  }
+
+  async dismissAll(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: { userId, dismissedAt: null },
+      data: { dismissedAt: new Date(), isRead: true },
+    });
+    return { success: true };
+  }
+
+  async deleteAll(userId: string) {
+    const res = await this.prisma.notification.deleteMany({ where: { userId } });
+    return { success: true, deletedCount: res.count };
   }
 
   /**
@@ -100,7 +138,7 @@ export class NotificationsService {
   ) {
     const settings = user.settings;
     const seasonNum = options.seasonNumber || 1;
-    const seasonText = seasonNum > 1 ? ` (Temporada ${seasonNum})` : '';
+    const seasonText = seasonNum > 1 ? ` (Season ${seasonNum})` : '';
 
     // 1. Notificación Web In-App (si el usuario la tiene habilitada)
     const isWebEnabled = settings ? settings.webNotifications ?? true : true;
@@ -125,8 +163,8 @@ export class NotificationsService {
           await this.prisma.notification.create({
             data: {
               userId: user.id,
-              title: `Sincronización omitida: ${options.showTitle}${seasonText}`,
-              message: `Viste el episodio ${options.episodeNumber} en ${serverName}, pero no se encontró coincidencia automática en AniList/MAL. Haz clic para crear el mapeo y sincronizarlo.`,
+              title: `Sync skipped: ${options.showTitle}${seasonText}`,
+              message: `You watched episode ${options.episodeNumber} on ${serverName}, but no automatic match was found on your trackers. Open it to create the mapping.`,
               type: 'UNMAPPED_ANIME',
               metadata: {
                 showTitle: options.showTitle,

@@ -683,10 +683,10 @@ export class TicketsService {
       this.prisma.notification.create({
         data: {
           userId: admin.id,
-          title: `Nuevo Ticket de Soporte (#${ticket.ticketNumber})`,
-          message: `${username} ha abierto un ticket: "${ticket.subject}" [${ticket.category}]`,
+          title: `New support ticket #${ticket.ticketNumber}`,
+          message: `${username} opened a ticket: "${ticket.subject}" [${ticket.category}]`,
           type: 'SYSTEM',
-          metadata: { ticketId: ticket.id, ticketNumber: ticket.ticketNumber },
+          metadata: { kind: 'ticket-new', ticketId: ticket.id, ticketNumber: ticket.ticketNumber, username, subject: ticket.subject },
         },
       }),
     );
@@ -706,10 +706,10 @@ export class TicketsService {
       this.prisma.notification.create({
         data: {
           userId: admin.id,
-          title: `Respuesta en Ticket #${ticket.ticketNumber}`,
-          message: `${ticket.user?.username || 'Usuario'}: "${snippet}"`,
+          title: `Reply on ticket #${ticket.ticketNumber}`,
+          message: `${ticket.user?.username || 'User'}: "${snippet}"`,
           type: 'SYSTEM',
-          metadata: { ticketId: ticket.id, ticketNumber: ticket.ticketNumber },
+          metadata: { kind: 'ticket-reply', ticketId: ticket.id, ticketNumber: ticket.ticketNumber, username: ticket.user?.username || '', snippet },
         },
       }),
     );
@@ -722,10 +722,10 @@ export class TicketsService {
     await this.prisma.notification.create({
       data: {
         userId,
-        title: `Respuesta de Soporte en Ticket #${ticket.ticketNumber}`,
-        message: `El equipo de SyncSekai ha respondido a tu ticket: "${snippet}"`,
+        title: `Support replied on ticket #${ticket.ticketNumber}`,
+        message: `The SyncSekai team replied to your ticket: "${snippet}"`,
         type: 'SYSTEM',
-        metadata: { ticketId: ticket.id, ticketNumber: ticket.ticketNumber },
+        metadata: { kind: 'ticket-support-reply', ticketId: ticket.id, ticketNumber: ticket.ticketNumber, snippet },
       },
     });
   }

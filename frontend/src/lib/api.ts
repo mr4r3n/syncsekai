@@ -717,6 +717,13 @@ export const api = {
         `/api/notifications${limit ? `?limit=${limit}` : ''}`,
       ),
     getUnreadCount: () => request<{ unreadCount: number }>('/api/notifications/unread-count'),
+    getHistory: (page = 1, limit = 25) =>
+      request<{ notifications: any[]; total: number; page: number; limit: number }>(
+        `/api/notifications/history?page=${page}&limit=${limit}`,
+      ),
+    dismiss: (id: string) => request<{ success: boolean }>(`/api/notifications/${id}/dismiss`, { method: 'PATCH' }),
+    dismissAll: () => request<{ success: boolean }>('/api/notifications/dismiss-all', { method: 'POST' }),
+    deleteAll: () => request<{ success: boolean; deletedCount: number }>('/api/notifications', { method: 'DELETE' }),
     markAsRead: (id: string) => request<any>(`/api/notifications/${id}/read`, { method: 'PATCH' }),
     markAllAsRead: () =>
       request<{ success: boolean; message: string }>('/api/notifications/mark-all-read', {

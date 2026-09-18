@@ -20,6 +20,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { HistorialNotificaciones } from '@/components/HistorialNotificaciones';
 
 export default function NotificationsSettingsPage() {
   const router = useRouter();
@@ -247,7 +248,7 @@ export default function NotificationsSettingsPage() {
                       <div className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-purple-400" />{t('notifications.criticalEmailAlerts')}</div>
                       <p className="text-xs text-[var(--text-secondary)]">
-                        Envía un reporte a tu email ({userProfile?.email || 'registrado'}) ante errores graves de conectividad.
+                        {t('notifications.criticalEmailDesc', { email: userProfile?.email || '' })}
                       </p>
                     </div>
                     <button
@@ -268,7 +269,7 @@ export default function NotificationsSettingsPage() {
                   <button
                     type="submit"
                     disabled={savingNotifications}
-                    className="btn-primary w-full py-2.5 mt-2"
+                    className="btn-primary mt-2 ml-auto"
                   >
                     {savingNotifications ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -298,7 +299,7 @@ export default function NotificationsSettingsPage() {
                       <span className="font-semibold text-[var(--text-primary)] block">{t('notifications.notificationBot')}</span>
                       <span className="text-[10.5px] text-[var(--text-muted)] font-mono">Chii</span>
                     </div>
-                    <span className="badge-status-success font-mono">CONECTADO</span>
+                    <span className="badge-status-success font-mono uppercase">{t('notifications.connectedBadge')}</span>
                   </div>
 
                   <div className="p-3.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between">
@@ -309,7 +310,7 @@ export default function NotificationsSettingsPage() {
                       </span>
                     </div>
                     <span className={userProfile?.discordId ? 'badge-pill font-mono text-[10.5px] text-emerald-400' : 'badge-pill font-mono text-[10.5px] text-amber-400'}>
-                      {userProfile?.discordId ? 'VINCULADO' : 'PENDIENTE'}
+                      {userProfile?.discordId ? t('notifications.linkedBadge') : t('notifications.pendingBadge')}
                     </span>
                   </div>
                 </div>
@@ -319,7 +320,7 @@ export default function NotificationsSettingsPage() {
                   type="button"
                   onClick={handleTestDiscord}
                   disabled={sendingDiscordTest || !userProfile?.discordId}
-                  className="btn-secondary w-full py-2 text-xs flex items-center justify-center gap-2 text-[#5865F2] hover:bg-[#5865F2]/10 border-[#5865F2]/30"
+                  className="btn-secondary text-xs text-[#5865F2] hover:bg-[#5865F2]/10"
                   title={t('notifications.testDiscord')}
                 >
                   {sendingDiscordTest ? (
@@ -352,6 +353,8 @@ export default function NotificationsSettingsPage() {
             </div>
           </div>
         )}
+
+        {!loading && <HistorialNotificaciones esAdmin={userProfile?.role === 'ADMIN'} />}
       </main>
     </div>
   );

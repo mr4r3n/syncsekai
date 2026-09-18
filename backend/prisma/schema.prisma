@@ -128,6 +128,8 @@ model Notification {
   type      String   @default("UNMAPPED_ANIME") // UNMAPPED_ANIME, SYNC_ERROR, SYSTEM
   metadata  Json?
   isRead    Boolean  @default(false)
+  // Quitada de la campana por el usuario; sigue en su historial hasta que la borre.
+  dismissedAt DateTime?
   createdAt DateTime @default(now())
 
   @@index([userId, isRead, createdAt(sort: Desc)])

@@ -17,6 +17,32 @@ export class NotificationsController {
     return this.notificationsService.getUserNotifications(userId, limitNum);
   }
 
+  @Get('history')
+  async getHistory(
+    @CurrentUser('id') userId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = Math.max(1, parseInt(page || '1', 10) || 1);
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit || '25', 10) || 25));
+    return this.notificationsService.getHistory(userId, pageNum, limitNum);
+  }
+
+  @Patch(':id/dismiss')
+  async dismiss(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.notificationsService.dismiss(userId, id);
+  }
+
+  @Post('dismiss-all')
+  async dismissAll(@CurrentUser('id') userId: string) {
+    return this.notificationsService.dismissAll(userId);
+  }
+
+  @Delete()
+  async deleteAll(@CurrentUser('id') userId: string) {
+    return this.notificationsService.deleteAll(userId);
+  }
+
   @Get('unread-count')
   async getUnreadCount(@CurrentUser('id') userId: string) {
     return this.notificationsService.getUnreadCount(userId);

@@ -74,7 +74,10 @@ export default function UsersManagementPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
   const { showToast, showUndoToast } = useToast();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const fechaAlta = (iso?: string) =>
+    iso ? new Date(iso).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+  const esReciente = (iso?: string) => !!iso && Date.now() - new Date(iso).getTime() < 7 * 24 * 60 * 60 * 1000;
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -84,7 +87,7 @@ export default function UsersManagementPage() {
     const buscado = new URLSearchParams(window.location.search).get('search');
     if (buscado) setSearchQuery(buscado);
   }, []);
-  const [filterType, setFilterType] = useState<'ALL' | 'ADMIN' | 'ACTIVE' | 'SUSPENDED'>('ALL');
+  const [filterType, setFilterType] = useState<'ALL' | 'ADMIN' | 'ACTIVE' | 'SUSPENDED' | 'NEW'>('ALL');
   const [activeUserMenuId, setActiveUserMenuId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -325,6 +328,7 @@ export default function UsersManagementPage() {
     if (filterType === 'ADMIN') return matchesSearch && u.role === 'ADMIN';
     if (filterType === 'ACTIVE') return matchesSearch && !isSuspended;
     if (filterType === 'SUSPENDED') return matchesSearch && isSuspended;
+    if (filterType === 'NEW') return matchesSearch && esReciente(u.createdAt);
     return matchesSearch;
   });
 
@@ -332,6 +336,7 @@ export default function UsersManagementPage() {
   const adminUsersCount = usersList.filter((u) => u.role === 'ADMIN').length;
   const activeUsersCount = usersList.filter((u) => !u.permissions?.isSuspended).length;
   const suspendedUsersCount = usersList.filter((u) => u.permissions?.isSuspended).length;
+  const newUsersCount = usersList.filter((u) => esReciente(u.createdAt)).length;
 
   return (
     <div
@@ -397,6 +402,12 @@ export default function UsersManagementPage() {
                 className={`shrink-0 ${filterType === 'SUSPENDED' ? 'filter-tab-active text-rose-400 border-rose-500/30' : 'filter-tab'}`}
               >
                 {t('users.filterSuspended')} ({suspendedUsersCount})
+              </button>
+              <button
+                onClick={() => setFilterType('NEW')}
+                className={`shrink-0 ${filterType === 'NEW' ? 'filter-tab-active text-sky-400 border-sky-500/30' : 'filter-tab'}`}
+              >
+                {t('users.filterNew')} ({newUsersCount})
               </button>
             </div>
 
@@ -497,6 +508,10 @@ export default function UsersManagementPage() {
                                 )}
                               </div>
                               <div className="text-[11px] text-[var(--text-muted)] truncate font-mono">{u.email}</div>
+                              <div className="text-[10.5px] text-[var(--text-muted)] font-mono">
+                                {t('users.joinedOn', { fecha: fechaAlta(u.createdAt) })}
+                                {esReciente(u.createdAt) && <span className="ml-1.5 text-sky-400">{t('users.newBadge')}</span>}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -718,6 +733,10 @@ export default function UsersManagementPage() {
                         )}
                       </div>
                       <div className="text-[11px] text-[var(--text-muted)] truncate font-mono">{u.email}</div>
+                              <div className="text-[10.5px] text-[var(--text-muted)] font-mono">
+                                {t('users.joinedOn', { fecha: fechaAlta(u.createdAt) })}
+                                {esReciente(u.createdAt) && <span className="ml-1.5 text-sky-400">{t('users.newBadge')}</span>}
+                              </div>
                     </div>
 
                     <button

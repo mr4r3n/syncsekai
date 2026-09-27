@@ -7,7 +7,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 
 /**
  * Real screens of the app on the landing page, taken from /demo by
- * scripts/capture-landing.mjs: one set per theme and language, so the picture
+ * an internal capture script: one set per theme and language, so the picture
  * matches the page around it (a dark screenshot on a light page looks like a patch).
  *
  * All five images sit on top of each other and only the active one is opaque:

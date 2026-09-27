@@ -18,7 +18,7 @@
 
 :root {
   /* ==========================================================================
-     MODO OSCURO (INSPIRADO ESTRICTAMENTE EN "INK WASH")
+     DARK MODE (STRICTLY INSPIRED BY "INK WASH")
      ========================================================================== */
   --bg-app: #1A1A1A;
   --bg-surface: rgba(37, 37, 37, 0.70);
@@ -48,11 +48,11 @@
   --glass-shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.45);
   --glass-backdrop-blur: 16px;
 
-  /* Estandarización de Botones (Dark: Cinnabar #FF634A) */
+  /* Button Standardization (Dark: Cinnabar #FF634A) */
   --btn-primary-bg: #FF634A;
-  /* Texto oscuro sobre el coral: en blanco daba 2,94:1 y la referencia AA
-     para este tamano es 4,5:1. Asi son 6,7:1 y el color de marca no cambia,
-     que es lo mismo que ya hacia el tema Plex con su ambar. */
+  /* Dark text on coral: white gave 2.94:1 and the AA reference
+     for this size is 4.5:1. This gives 6.7:1 while keeping the brand color,
+     just like the Plex theme already did with its amber. */
   --btn-primary-text: #0A0A0A;
   --btn-primary-hover: #ff4d30;
   --btn-primary-glow: rgba(255, 99, 74, 0.25);
@@ -62,12 +62,12 @@
   --btn-secondary-text: #F4F4F6;
   --btn-secondary-hover: rgba(255, 255, 255, 0.12);
 
-  /* Menú Lateral Activo (Dark) */
+  /* Active Sidebar (Dark) */
   --nav-active-bg: rgba(255, 255, 255, 0.08);
   --nav-active-text: #F4F4F6;
   --nav-active-border: rgba(207, 207, 207, 0.20);
 
-  /* Badges & Píldoras (Dark) */
+  /* Badges & Pills (Dark) */
   --badge-bg: rgba(255, 255, 255, 0.06);
   --badge-text: #CFCFCF;
   --badge-border: rgba(207, 207, 207, 0.15);
@@ -96,7 +96,7 @@
   --sidebar-width: 260px;
   --header-height: 64px;
 
-  /* Popovers y Toasts Sólidos Responsivos al Tema (Dark) */
+  /* Solid Theme-Responsive Popovers and Toasts (Dark) */
   --popover-solid-bg: #242427;
   --popover-solid-header: #1d1d20;
   --popover-solid-item-unread: #2c2c31;
@@ -105,7 +105,7 @@
 
 [data-theme="light"] {
   /* ==========================================================================
-     MODO CLARO (LIMPIO, NÍTIDO, FONDO BLANCO PURO)
+     LIGHT MODE (CLEAN, CRISP, PURE WHITE BACKGROUND)
      ========================================================================== */
   --bg-app: #FFFFFF;
   --bg-surface: #FFFFFF;
@@ -131,31 +131,31 @@
   --glass-bg-subtle: rgba(248, 249, 251, 0.92);
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-border-highlight: rgba(0, 0, 0, 0.15);
-  /* Sin borde, la sombra es lo único que separa una tarjeta blanca del fondo blanco. */
+  /* Without a border, the shadow is the only thing separating a white card from the white background. */
   --glass-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.08);
   --glass-shadow-lg: 0 14px 40px 0 rgba(0, 0, 0, 0.12);
   --glass-backdrop-blur: 16px;
 
-  /* Estandarización de Botones (Light: Cinnabar #FF634A) */
+  /* Button Standardization (Light: Cinnabar #FF634A) */
   --btn-primary-bg: #FF634A;
-  /* Blanco sobre el coral por decisión de diseño: da 2,9:1, por debajo del
-     4,5:1 de AA para texto pequeño; se compensa con peso semibold. */
+  /* White on coral by design decision: yields 2.9:1, below the
+     4.5:1 AA threshold for small text; compensated with semibold weight. */
   --btn-primary-text: #FFFFFF;
   --btn-primary-hover: #E5533D;
   --btn-primary-glow: rgba(255, 99, 74, 0.25);
 
-  /* Un gris con cuerpo: en #F4F4F6 el botón se fundía con la tarjeta blanca. */
+  /* A gray with body: at #F4F4F6 the button blended into the white card. */
   --btn-secondary-bg: #E4E4E7;
   --btn-secondary-border: rgba(0, 0, 0, 0.10);
   --btn-secondary-text: #18181B;
   --btn-secondary-hover: #D4D4D8;
 
-  /* Menú Lateral Activo (Light: Cinnabar) */
+  /* Active Sidebar (Light: Cinnabar) */
   --nav-active-bg: rgba(255, 99, 74, 0.10);
   --nav-active-text: #FF634A;
   --nav-active-border: rgba(255, 99, 74, 0.30);
 
-  /* Badges & Píldoras (Light: Cinnabar) */
+  /* Badges & Pills (Light: Cinnabar) */
   --badge-bg: rgba(255, 99, 74, 0.08);
   --badge-text: #FF634A;
   --badge-border: rgba(255, 99, 74, 0.20);
@@ -167,7 +167,7 @@
   --status-danger: #e11d48;
   --status-danger-bg: rgba(244, 63, 94, 0.14);
 
-  /* Popovers y Toasts Sólidos Responsivos al Tema (Light) */
+  /* Solid Theme-Responsive Popovers and Toasts (Light) */
   --popover-solid-bg: #FFFFFF;
   --popover-solid-header: #F4F4F6;
   --popover-solid-item-unread: #F0F4F8;
@@ -175,9 +175,9 @@
 }
 
 /* ==========================================================================
-   REGLAS DE LEGIBILIDAD UNIVERSAL: CONTRASTE DE TEXTOS EN MODO CLARO
-   Garantiza que cualquier texto con clases de acento Tailwind (400/300)
-   se oscurezca automáticamente en modo claro para máxima legibilidad WCAG AAA.
+   UNIVERSAL READABILITY RULES: TEXT CONTRAST IN LIGHT MODE
+   Ensures any text with Tailwind accent classes (400/300)
+   darkens automatically in light mode for maximum WCAG AAA readability.
    ========================================================================== */
 :is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-amber-300,
 :is([data-theme="light"], [data-palette="marfil"]:not([data-theme="dark"])) .text-amber-400,
@@ -238,7 +238,7 @@
 }
 
 /* ==========================================================================
-   PALETA: PLEX (Dorado Plex #E5A00D)
+   PALETTE: PLEX (Plex Gold #E5A00D)
    ========================================================================== */
 [data-palette="plex"] {
   --color-brand-primary: #E5A00D;
@@ -278,7 +278,7 @@
 }
 
 /* ==========================================================================
-   PALETA: OSCURO (#313338 / Cyan #01BCF3)
+   PALETTE: DARK (#313338 / Cyan #01BCF3)
    ========================================================================== */
 [data-palette="grafito"] {
   --bg-app: #313338;
@@ -298,7 +298,7 @@
   --color-brand-hover: #00A7DA;
   
   --btn-primary-bg: #01BCF3;
-  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */
   --btn-primary-text: #0A0A0A;
   --btn-primary-hover: #00A7DA;
   --btn-primary-glow: rgba(1, 188, 243, 0.30);
@@ -331,7 +331,7 @@
   --color-brand-hover: #00A7DA;
   
   --btn-primary-bg: #01BCF3;
-  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */
   --btn-primary-text: #0A0A0A;
   --btn-primary-hover: #00A7DA;
   --btn-secondary-bg: #F4F4F6;
@@ -348,7 +348,7 @@
 }
 
 /* ==========================================================================
-   PALETA: CENIZA (Ash / Midnight #111214 / Cyan #01BCF3)
+   PALETTE: ASH (Ash / Midnight #111214 / Cyan #01BCF3)
    ========================================================================== */
 [data-palette="carbon"] {
   --bg-app: #111214;
@@ -368,7 +368,7 @@
   --color-brand-hover: #00A7DA;
   
   --btn-primary-bg: #01BCF3;
-  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */
   --btn-primary-text: #0A0A0A;
   --btn-primary-hover: #00A7DA;
   --btn-primary-glow: rgba(1, 188, 243, 0.30);
@@ -401,7 +401,7 @@
   --color-brand-hover: #00A7DA;
   
   --btn-primary-bg: #01BCF3;
-  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */
   --btn-primary-text: #0A0A0A;
   --btn-secondary-bg: #F4F4F6;
   --btn-secondary-text: #18181B;
@@ -417,7 +417,7 @@
 }
 
 /* ==========================================================================
-   PALETA: CLARO (Light Theme #FFFFFF / Cyan #01BCF3)
+   PALETTE: LIGHT (Light Theme #FFFFFF / Cyan #01BCF3)
    ========================================================================== */
 [data-palette="marfil"] {
   --bg-app: #FFFFFF;
@@ -440,7 +440,7 @@
   --color-brand-hover: #00A7DA;
   
   --btn-primary-bg: #01BCF3;
-  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */
   --btn-primary-text: #0A0A0A;
   --btn-primary-hover: #00A7DA;
   --btn-primary-glow: rgba(1, 188, 243, 0.25);
@@ -474,19 +474,19 @@
   --color-brand-hover: #00A7DA;
   
   --btn-primary-bg: #01BCF3;
-  /* En blanco eran 2,21:1, el peor de los tres temas. En oscuro, 9,5:1. */
+  /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */
   --btn-primary-text: #0A0A0A;
 }
 
 /*
- * Sin bordes marcados: las superficies se separan por fondo y sombra, no por
- * línea. Se anulan los tokens aquí, después de todas las paletas, en vez de
- * tocar las ~800 clases que los usan. Los bordes de estado (peligro, aviso,
- * marca) y el de foco usan otros tokens y siguen dibujándose.
+ * No harsh borders: surfaces are separated by background and shadow, not by
+ * line. Tokens are overridden here, after all palettes, instead of touching
+ * the ~800 classes using them. Status borders (danger, warning,
+ * brand) and focus borders use other tokens and continue to be drawn.
  *
- * Los discontinuos sí se ven: una zona de subida o un hueco vacío sin línea
- * no se entiende. El elemento redefine los tokens para sí mismo, así que las
- * clases de hover/activo que ponen otro color siguen ganando como siempre.
+ * Dashed borders remain visible: an upload dropzone or empty placeholder without
+ * a line is confusing. The element redefines tokens for itself, so hover/active
+ * classes that apply another color still take precedence as usual.
  */
 :root, :root[data-theme], :root[data-palette], :root[data-palette][data-theme] {
   --border-subtle: transparent;
@@ -500,11 +500,11 @@
 
 :root[data-theme="light"], :root[data-palette][data-theme="light"] {
   --border-dashed: rgba(0, 0, 0, 0.16);
-  /* Era blanco puro: sin borde, una fila o un campo sobre una tarjeta blanca no se veía. */
+  /* It was pure white: without a border, a row or input on a white card was invisible. */
   --bg-surface: #F4F5F7;
 }
 
-/* Los campos también: en claro, un input blanco sobre tarjeta blanca desaparece. */
+/* Inputs too: in light mode, a white input on a white card disappears. */
 .border-dashed,
 input,
 textarea,
@@ -519,7 +519,7 @@ select {
 }
 
 /* ==========================================================================
-   TIPOGRAFÍAS: URBANE (Títulos) & CIRCULAR (Cuerpo y Controles)
+   TYPOGRAPHY: URBANE (Headings) & CIRCULAR (Body and Controls)
    ========================================================================== */
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-urbane);
@@ -535,17 +535,17 @@ code, kbd, samp, pre, .font-mono {
 }
 
 /* ==========================================================================
-   REGLA UNIVERSAL DE 6PX EN ELEMENTOS INTERACTIVOS
+   UNIVERSAL 6PX RULE ON INTERACTIVE ELEMENTS
    --------------------------------------------------------------------------
-   Va en @layer base a proposito. Sin capa, esta regla gana a TODAS las
-   utilidades de Tailwind v4 -el CSS sin capa siempre pasa por delante de
-   @layer utilities-, asi que `rounded-full` en un boton no hacia nada y los
-   interruptores salian como un rectangulo de 6 px con la bola redonda
-   asomando por fuera. Lo mismo con `rounded-none`, que tampoco pintaba nada.
+   Placed in @layer base intentionally. Without a layer, this rule overrides ALL
+   Tailwind v4 utilities -unlayered CSS always takes precedence over
+   @layer utilities-, so `rounded-full` on a button did nothing and toggle
+   switches appeared as a 6px rectangle with the round thumb
+   protruding outside. The same with `rounded-none`, which had no effect either.
 
-   En @layer base sigue siendo el valor por defecto de cualquier control que no
-   diga otra cosa, que es lo que se buscaba, pero ahora una clase explicita
-   puede cambiarlo.
+   In @layer base it remains the default value for any control that doesn't
+   specify otherwise, which was the goal, but now an explicit class
+   can override it.
    ========================================================================== */
 @layer base {
   input, textarea, select, button {
@@ -563,7 +563,7 @@ body {
 }
 
 /* ==========================================================================
-   TRANSICIÓN SUAVE ENTRE TEMAS (CLARO / OSCURO)
+   SMOOTH THEME TRANSITION (LIGHT / DARK)
    ========================================================================== */
 html.theme-transitioning,
 html.theme-transitioning *,
@@ -576,19 +576,19 @@ html.theme-transitioning *:after {
 }
 
 /* ==========================================================================
-   CLASES REUTILIZABLES: BOTONES ESTANDARIZADOS
+   REUSABLE CLASSES: STANDARDIZED BUTTONS
    ========================================================================== */
 /* --------------------------------------------------------------------------
-   TODO ESTO VA EN @layer components, Y NO ES COSMETICA
+   ALL OF THIS GOES IN @layer components, AND IT IS NOT COSMETIC
    --------------------------------------------------------------------------
-   En Tailwind v4 el CSS sin capa gana a TODAS las utilidades. Con estas clases
-   fuera de la capa, escribir `btn-secondary text-xs` o `badge-pill rounded-full`
-   no hacia nada: la clase de aqui ganaba en silencio y quien lo escribia no
-   tenia forma de enterarse. Es el mismo fallo que tenian .glass-card y la regla
-   universal de 6 px.
+   In Tailwind v4 unlayered CSS overrides ALL utilities. With these classes
+   outside the layer, writing `btn-secondary text-xs` or `badge-pill rounded-full`
+   did nothing: the class here won silently and whoever wrote it had
+   no way of knowing. It is the same issue that .glass-card and the universal
+   6px rule had.
 
-   Dentro de la capa siguen siendo el valor por defecto de la clase, pero una
-   utilidad puesta al lado ya puede cambiarlo, que es lo que espera cualquiera.
+   Inside the layer they remain the default value for the class, but an
+   adjacent utility can now override it, which is what anyone expects.
    -------------------------------------------------------------------------- */
 @layer components {
 .btn-primary {
@@ -732,7 +732,7 @@ html.theme-transitioning *:after {
 }
 
 /* ==========================================================================
-   CLASES DE CRISTAL TEMPLADO (GLASSMORPHISM)
+   TEMPERED GLASS CLASSES (GLASSMORPHISM)
    ========================================================================== */
 .glass-panel {
   background: var(--glass-bg);
@@ -744,29 +744,28 @@ html.theme-transitioning *:after {
 }
 
 /*
- * En capa `components` a proposito.
+ * In `components` layer intentionally.
  *
- * En Tailwind v4 el CSS sin capa gana a TODAS las utilidades, asi que estando
- * fuera estas reglas anulaban en silencio cualquier utilidad que se les
- * pusiera al lado: `rounded-none` sobre una glass-card se ignoraba y la
- * tarjeta seguia redondeada, sin ningun aviso. Dentro de la capa, la utilidad
- * gana, que es lo que espera cualquiera que escriba la clase.
+ * In Tailwind v4 unlayered CSS overrides ALL utilities, so being outside
+ * these rules silently negated any utility placed next to them: `rounded-none`
+ * on a glass-card was ignored and the card remained rounded, with no warning.
+ * Inside the layer, the utility wins, which is what anyone writing the class expects.
  */
-  /* En movil, la tarjeta se queda sin caja.
+  /* On mobile, the card loses its box.
      --------------------------------------------------------------------------
-     Un movil de 375 px ya tiene 16 px de margen por lado en el contenedor de la
-     pagina; encima, cada tarjeta anadia su borde, su fondo, su sombra y otros
-     16 px de relleno. Eso son 64 px de los 375 -un 17% de la pantalla- gastados
-     en dibujar una caja alrededor de algo que ya ocupa el ancho entero y que no
-     esta al lado de nada de lo que haya que distinguirlo.
+     A 375px mobile screen already has 16px padding per side on the page
+     container; on top of that, each card added its border, background, shadow,
+     and another 16px of padding. That is 64px out of 375 -17% of the screen- spent
+     drawing a box around something that already spans the full width and is not
+     next to anything it needs to be distinguished from.
 
-     De sm en adelante la tarjeta es una tarjeta. Por debajo es una seccion sin
-     mas: lo que las separa es el propio hueco entre ellas. */
+     From sm upwards the card is a card. Below that it is simply a section:
+     what separates them is the gap between them. */
   @media (max-width: 639px) {
-    /* Caja sin raya: en movil las tarjetas de cada servicio se separan con su
-       fondo y su sombra, que ya lo dicen todo; el borde encima solo anadia una
-       linea mas en una pantalla que va sobrada de lineas. Se deja el ancho del
-       borde y se vuelve transparente para no mover el contenido un pixel. */
+    /* Box without border: on mobile each service card is separated by its
+       background and shadow, which speak for themselves; the border on top only added
+       another line to a screen that already has plenty. The border width is kept
+       and made transparent to avoid shifting the content by a pixel. */
     .glass-card.card-sin-borde-movil {
       border-color: transparent;
     }
@@ -826,17 +825,17 @@ html.theme-transitioning *:after {
   border-bottom: 1px solid var(--glass-border);
 }
 
-/* Un campo de texto tiene que parecer un sitio donde escribir.
+/* A text input needs to look like a place to type.
    --------------------------------------------------------------------------
-   En oscuro --bg-surface y --glass-bg valen EXACTAMENTE lo mismo
-   -rgba(37,37,37,.70)-, asi que un buscador dentro de una cabecera de cristal
-   se dibujaba del mismo color que la cabecera y lo unico que lo delataba era un
-   borde al 12% de opacidad: no se veia que estuviera ahi.
+   In dark mode --bg-surface and --glass-bg are EXACTLY the same
+   -rgba(37,37,37,.70)-, so a search input inside a glass header
+   rendered in the exact same color as the header, with only a 12% opacity
+   border giving it away: you couldn't tell it was there.
 
-   El fondo se saca ahora del fondo de la aplicacion tirando hacia negro, que da
-   un hueco mas oscuro en los temas oscuros y un gris claro en los blancos -que
-   es como se ve un campo de texto en los dos casos- y funciona en las nueve
-   paletas sin tener que declarar nada en cada una. El borde sube al fuerte. */
+   The background is now derived from the application background shifted toward black,
+   giving a darker recess in dark themes and a light gray in white themes -which
+   is how a text input looks in both cases- working across all nine palettes
+   without declaring anything per palette. The border is bumped to strong. */
 .glass-input {
   width: 100%;
   height: 36px;
@@ -871,7 +870,7 @@ html.theme-transitioning *:after {
   padding-left: 2.5rem !important;
 }
 
-/* Ocultar flechas/spinners nativos feos en inputs de tipo número */
+/* Hide ugly native arrows/spinners on number inputs */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none !important;
@@ -883,7 +882,7 @@ input[type="number"] {
 }
 
 /* ==========================================================================
-   PESTAÑAS Y FILTROS ESTANDARIZADOS (DIMENSIÓN FIJA ANTI-JUMP)
+   STANDARDIZED TABS AND FILTERS (FIXED DIMENSION ANTI-JUMP)
    ========================================================================== */
 .filter-tab {
   height: 32px;
@@ -933,7 +932,7 @@ input[type="number"] {
 }
 
 /* ==========================================================================
-   BADGES & PÍLDORAS ESTANDARIZADAS
+   STANDARDIZED BADGES & PILLS
    ========================================================================== */
 .badge-pill {
   height: 28px;
@@ -1045,7 +1044,7 @@ input[type="number"] {
   user-select: none;
 }
 
-/* Badges de tamaño botón cuando conviven directamente en una fila de botones de acción */
+/* Button-sized badges when placed directly alongside an action button row */
 .badge-action-pill {
   height: 36px;
   min-height: 36px;
@@ -1120,13 +1119,13 @@ input[type="number"] {
 }
 
 /* ==========================================================================
-   BOTONES DE ICONO CUADRADOS (EVITAN APLASTAMIENTO DE SVG)
+   SQUARE ICON BUTTONS (PREVENT SVG SQUISHING)
    ========================================================================== */
-/* Los `!important` de estos dos eran un parche para el mismo fallo de capas
-   que tenia el resto del fichero: sin capa, cualquier utilidad de Tailwind los
-   pisaba... al reves, eran ELLOS los que no podian pisar a .btn-secondary. Ya
-   dentro de @layer components mandan por orden, y sin el !important una
-   utilidad puesta al lado -un w-full en movil- vuelve a poder cambiarlos. */
+/* The `!important` on these two was a patch for the same layering issue
+   as the rest of the file: without a layer, any Tailwind utility
+   overrode them... or rather, THEY couldn't override .btn-secondary. Now
+   inside @layer components they follow stylesheet order, and without !important
+   an adjacent utility -a w-full on mobile- can override them again. */
 .btn-icon {
   padding: 0;
   width: 36px;
@@ -1180,7 +1179,7 @@ input[type="number"] {
   background: var(--text-muted);
 }
 
-/* Ocultar barra de scroll manteniendo desplazamiento táctil/horizontal */
+/* Hide scrollbar while preserving touch/horizontal scrolling */
 .no-scrollbar::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
@@ -1191,7 +1190,7 @@ input[type="number"] {
   scrollbar-width: none !important;
 }
 
-/* Ocultar botones nativos de Edge/IE para ver contraseñas que colisionan con botones personalizados */
+/* Hide native Edge/IE password reveal buttons that collide with custom buttons */
 input::-ms-reveal,
 input::-ms-clear {
   display: none;
@@ -1222,7 +1221,7 @@ input::-ms-clear {
 }
 
 /* ==========================================================================
-   SLIDERS DE RANGO ULTRA-MINIMALISTAS (SYNCSEKAI DESIGN SYSTEM)
+   ULTRA-MINIMALIST RANGE SLIDERS (SYNCSEKAI DESIGN SYSTEM)
    ========================================================================== */
 .range-slider-ink {
   -webkit-appearance: none;
@@ -1275,7 +1274,7 @@ input::-ms-clear {
 }
 
 /* ==========================================================================
-   ANIMACIONES DE EFECTOS PARA BANNERS & ANUNCIOS (FESTIVOS & PROMOS)
+   EFFECT ANIMATIONS FOR BANNERS & ANNOUNCEMENTS (HOLIDAY & PROMOS)
    ========================================================================== */
 @keyframes snowflake {
   0% {
@@ -1399,10 +1398,10 @@ input::-ms-clear {
 }
 
 /* ==========================================================================
-   ATMÓSFERA FESTIVA GLOBAL (SEASONAL AMBIENCE - FULL VIEWPORT)
+   GLOBAL FESTIVE AMBIENCE (SEASONAL AMBIENCE - FULL VIEWPORT)
    ========================================================================== */
 
-/* 1. Nieve Ambiental en toda la pantalla */
+/* 1. Fullscreen Ambient Snow */
 @keyframes ambient-snowfall {
   0% {
     transform: translateY(-8vh) translateX(0) rotate(0deg);
@@ -1428,7 +1427,7 @@ input::-ms-clear {
   will-change: transform, opacity;
 }
 
-/* 2. Trineo y Renos Navideños cruzando el cielo (Ciclo fluido de 18s) */
+/* 2. Holiday Sleigh & Reindeer crossing the sky (Smooth 18s loop) */
 @keyframes flying-sleigh {
   0% {
     transform: translateX(105vw) translateY(0) scale(0.9);
@@ -1460,7 +1459,7 @@ input::-ms-clear {
   will-change: transform, opacity;
 }
 
-/* 3. Hojas de Otoño cayendo con rotación 3D natural */
+/* 3. Falling Autumn Leaves with natural 3D rotation */
 @keyframes autumn-leaf-fall {
   0% {
     transform: translateY(-8vh) translateX(0) rotateZ(0deg) rotateY(0deg);
@@ -1489,7 +1488,7 @@ input::-ms-clear {
   will-change: transform, opacity;
 }
 
-/* 4. Corazones Flotantes Ascendentes (San Valentín) */
+/* 4. Rising Floating Hearts (Valentine's Day) */
 @keyframes ambient-heart-rise {
   0% {
     transform: translateY(106vh) translateX(0) scale(0.7);
@@ -1515,7 +1514,7 @@ input::-ms-clear {
   will-change: transform, opacity;
 }
 
-/* 5. Murciélagos de Halloween en vuelo panorámico */
+/* 5. Halloween Bats in panoramic flight */
 @keyframes bat-fly-ambient {
   0% {
     transform: translateX(105vw) translateY(6vh) scale(0.85);
@@ -1544,7 +1543,7 @@ input::-ms-clear {
   will-change: transform, opacity;
 }
 
-/* 6. Confeti en Cascada (Año Nuevo & Celebración) */
+/* 6. Cascading Confetti (New Year & Celebrations) */
 @keyframes ambient-confetti-fall {
   0% {
     transform: translateY(-8vh) translateX(0) rotateX(0deg) rotateZ(0deg);
@@ -1570,7 +1569,7 @@ input::-ms-clear {
   will-change: transform, opacity;
 }
 
-/* 7. Arañas de Halloween bajando por su hilo de seda */
+/* 7. Halloween Spiders descending on silk thread */
 @keyframes spider-drop-left {
   0% {
     transform: translateY(-85%);
@@ -1676,7 +1675,7 @@ input::-ms-clear {
 }
 
 /* ==========================================================================
-   FIREWORKS / FUEGOS ARTIFICIALES (AÑO NUEVO & CELEBRACIONES)
+   FIREWORKS (NEW YEAR & CELEBRATIONS)
    ========================================================================== */
 @keyframes firework-burst-ring {
   0% {
@@ -1768,7 +1767,7 @@ input::-ms-clear {
 }
 
 /* ==========================================================================
-   ACCESIBILIDAD: MODO DE ALTO CONTRASTE (WINDOWS FORCED-COLORS & FOCUS)
+   ACCESSIBILITY: HIGH CONTRAST MODE (WINDOWS FORCED-COLORS & FOCUS)
    ========================================================================== */
 @media (forced-colors: active) {
   div:focus-within {
@@ -1784,42 +1783,42 @@ input::-ms-clear {
   }
 }
 
-/* Indicador de foco visible universal accesible para elementos interactivos,
-   excluyendo inputs contenidos para evitar doble borde interno */
+/* Universal accessible visible focus indicator for interactive elements,
+   excluding contained inputs to prevent double internal borders */
 :focus-visible:not(input):not(textarea) {
   outline: 2px solid var(--accent-primary, #FF634A);
   outline-offset: 2px;
 }
 
-/* El foco por puntero no dibuja anillo: lo indica el borde del contenedor. */
+/* Pointer focus does not draw a ring: indicated by the container border. */
 input:focus,
 textarea:focus {
   outline: none;
 }
 
-/* Pero el foco por TECLADO siempre debe verse. Antes había un
-   `outline: none !important` sobre todos los campos, de modo que quien navega con
-   Tab no tenía ninguna señal, y en el modo de alto contraste de Windows —que
-   descarta fondos y bordes personalizados— el campo enfocado era indistinguible.
-   El offset negativo lo dibuja por dentro, así que no descuadra el contenedor. */
-/* Un outline sólido dibujado dentro del campo se leía como estado de error y
-   chocaba con el borde del contenedor. En su lugar, el propio campo no dibuja
-   nada y el indicador se aplica al recuadro que lo envuelve (regla de abajo),
-   que es lo que el usuario percibe como "el campo". */
+/* But KEYBOARD focus must always be visible. Previously there was an
+   `outline: none !important` across all inputs, leaving Tab navigation users
+   with no feedback, and in Windows high-contrast mode —which discards custom
+   backgrounds and borders— the focused field was indistinguishable.
+   The negative offset renders inside, avoiding container misalignment. */
+/* A solid outline drawn inside the field read as an error state and
+   clashed with the container border. Instead, the field itself draws
+   nothing and the indicator applies to the wrapping container (rule below),
+   which is what the user perceives as "the field". */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
 }
 
-/* El foco en inputs es manejado internamente por cada campo sin crear marcos exteriores en contenedores */
+/* Input focus is handled internally by each field without creating outer frames on containers */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
   outline: none;
 }
 
-/* En modo de colores forzados, el sistema decide el color del indicador. */
+/* In forced-colors mode, the system decides the indicator color. */
 @media (forced-colors: active) {
   input:focus-visible,
   textarea:focus-visible,
@@ -1833,56 +1832,56 @@ select:focus-visible {
 
 
 /* ==========================================================================
-   ESCALA DE MEDIDAS COMPARTIDA
+   SHARED SIZING SCALE
    --------------------------------------------------------------------------
-   Motivo: una misma pantalla llegó a tener 7 alturas de botón distintas
-   (20, 24, 26, 30, 34, 36, 40 px) y 6 de badge (14, 15, 16, 19, 20, 28).
-   Las diferencias de 1 px no se leen como error, se leen como descuido.
-   Aquí se fija el repertorio; las vistas eligen de él en vez de inventar.
+   Reason: a single screen ended up having 7 different button heights
+   (20, 24, 26, 30, 34, 36, 40 px) and 6 badge heights (14, 15, 16, 19, 20, 28).
+   1px differences don't read as intentional, they read as careless.
+   The repertoire is standardized here; views pick from it instead of inventing.
    ========================================================================== */
 
 :root {
-  /* Alturas de control. 40px es el tamaño por defecto de formularios y acciones. */
+  /* Control heights. 40px is the default size for forms and actions. */
   --control-sm: 32px;
   --control-md: 40px;
   --control-lg: 48px;
 
-  /* Badges: dos únicos tamaños. */
+  /* Badges: only two sizes. */
   --badge-sm: 20px;
   --badge-md: 24px;
 
-  /* Escala tipográfica. Se eliminan los 9.5px y 10.5px: ilegibles y
-     visualmente indistinguibles de sus vecinos. El mínimo pasa a ser 11px. */
-  --text-2xs: 0.6875rem; /* 11px - solo metadatos y etiquetas cortas */
-  --text-xs: 0.75rem;    /* 12px - texto secundario */
-  --text-sm: 0.875rem;   /* 14px - cuerpo por defecto */
+  /* Typographic scale. 9.5px and 10.5px are removed: illegible and
+     visually indistinguishable from their neighbors. The minimum becomes 11px. */
+  --text-2xs: 0.6875rem; /* 11px - metadata and short labels only */
+  --text-xs: 0.75rem;    /* 12px - secondary text */
+  --text-sm: 0.875rem;   /* 14px - default body */
   --text-base: 1rem;     /* 16px */
   --text-lg: 1.25rem;    /* 20px */
 
-  /* Movimiento: un solo repertorio de curvas y tiempos. */
+  /* Motion: a single set of curves and timings. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --dur-press: 140ms;
   --dur-fast: 180ms;
   --dur-base: 240ms;
 
-  /* Contraste: el acento de marca cumple 5.91:1 sobre el fondo oscuro. */
+  /* Contrast: brand accent achieves 5.91:1 on dark background. */
   --accent-text: var(--accent-primary);
-  /* Borde de campo con 3.27:1, exigido por WCAG 1.4.11 para identificar el
-     control. --border-subtle (1.32:1) vale para separadores decorativos,
-     que están exentos, pero no para delimitar un campo. */
+  /* Input border at 3.27:1, required by WCAG 1.4.11 to identify the
+     control. --border-subtle (1.32:1) works for decorative dividers,
+     which are exempt, but not for bounding an input. */
   --border-input: rgba(207, 207, 207, 0.45);
 }
 
 [data-theme="light"] {
-  /* #FF634A sobre blanco da 2.94:1 y no llega ni al mínimo de texto grande.
-     Esta variante mantiene la familia de color y alcanza 4.71:1.
-     Solo para TEXTO e iconos: los rellenos siguen usando --accent-primary. */
+  /* #FF634A on white gives 2.94:1 and does not even meet the large text minimum.
+     This variant preserves the color family and reaches 4.71:1.
+     Only for TEXT and icons: fills continue using --accent-primary. */
   --accent-text: #D63916;
   --border-input: rgba(0, 0, 0, 0.42);
 }
 
-/* Utilidades de tamaño: alturas fijas, sin depender del relleno del contenido. */
+/* Size utilities: fixed heights, independent of content padding. */
 .control-sm { height: var(--control-sm); }
 .control-md { height: var(--control-md); }
 .control-lg { height: var(--control-lg); }
@@ -1890,8 +1889,8 @@ select:focus-visible {
 .badge-sm { height: var(--badge-sm); display: inline-flex; align-items: center; }
 .badge-md { height: var(--badge-md); display: inline-flex; align-items: center; }
 
-/* Todo destino interactivo alcanza el mínimo de 24x24 de WCAG 2.5.8, aunque
-   su contenido sea un icono pequeño. */
+/* Every interactive target meets the WCAG 2.5.8 minimum of 24x24, even
+   if its content is a small icon. */
 button,
 [role="button"],
 a[class*="px-"] {
@@ -1899,13 +1898,13 @@ a[class*="px-"] {
 }
 
 /* ==========================================================================
-   MOVIMIENTO REDUCIDO
+   REDUCED MOTION
    --------------------------------------------------------------------------
-   Este fichero define 21 animaciones, varias en bucle infinito (fuegos
-   artificiales, trineo, atmósfera). No había ni una sola guarda de
-   prefers-reduced-motion: para alguien con sensibilidad vestibular eso no es
-   un detalle estético, provoca mareo. Se reduce en lugar de eliminar, para
-   que las transiciones sigan comunicando el cambio de estado.
+   This file defines 21 animations, several on infinite loops (fireworks,
+   sleigh, ambience). There wasn't a single prefers-reduced-motion guard:
+   for someone with vestibular sensitivity this isn't an aesthetic detail,
+   it causes dizziness. Reduced rather than removed, so transitions
+   continue communicating state changes.
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1918,7 +1917,7 @@ a[class*="px-"] {
     scroll-behavior: auto !important;
   }
 
-  /* Los efectos puramente decorativos se retiran del todo. */
+  /* Purely decorative effects are completely removed. */
   .firework-burst-ring,
   .firework-spark,
   .flying-sleigh,
@@ -1929,14 +1928,14 @@ a[class*="px-"] {
 }
 
 /* ==========================================================================
-   TRANSICIÓN ENTRE PÁGINAS DEL PANEL (cambio de menú lateral)
+   DASHBOARD PAGE TRANSITION (sidebar navigation change)
    --------------------------------------------------------------------------
-   Cada página del dashboard monta su propio Sidebar/Topbar/contenido, así que
-   Next.js sustituye el árbol entero al navegar: sin esto el contenido nuevo
-   aparecía de golpe, en vez de sentirse como un cambio fluido. Un fade + leve
-   deslizamiento hacia arriba (nada de deslizar en horizontal: eso sí "salta
-   de un lado a otro"). Ver PageTransition.tsx, que aplica esta clase con una
-   key por ruta para que el navegador dispare la animación en cada cambio.
+   Each dashboard page mounts its own Sidebar/Topbar/content, so
+   Next.js replaces the entire tree on navigation: without this, new content
+   popped in abruptly, rather than feeling like a fluid transition. A fade + subtle
+   slide upward (no horizontal slide: that really "jumps across").
+   See PageTransition.tsx, which applies this class with a per-route key so
+   the browser triggers the animation on every route change.
    ========================================================================== */
 @keyframes page-fade-in {
   from {
@@ -1954,11 +1953,11 @@ a[class*="px-"] {
 }
 
 /* --------------------------------------------------------------------------
-   CAMPOS DE TEXTO: altura real
-   Los buscadores viven dentro de contenedores con relleno, pero el relleno es
-   del contenedor y no del campo: el <input> medía 16px de alto, así que la
-   franja superior e inferior del cuadro era zona muerta. Se le da altura
-   mínima propia para que la superficie pulsable coincida con la visible.
+   TEXT INPUTS: actual height
+   Search bars live inside padded containers, but the padding belongs to
+   the container, not the field: the <input> was 16px tall, leaving the top
+   and bottom areas of the box as dead zones. Given an explicit minimum
+   height so the clickable area matches the visible area.
    -------------------------------------------------------------------------- */
 input[type="text"],
 input[type="email"],
@@ -1972,10 +1971,10 @@ textarea {
 }
 
 /* --------------------------------------------------------------------------
-   SUELO TIPOGRÁFICO
-   Convivían 9.5px, 10px, 10.5px, 11px y 12px. Los tres primeros no se
-   distinguen entre sí pero sí ensucian el ritmo vertical, y por debajo de 11px
-   el texto deja de ser cómodo de leer. Se elevan al mínimo de la escala.
+   TYPOGRAPHIC FLOOR
+   9.5px, 10px, 10.5px, 11px, and 12px coexisted. The first three are visually
+   indistinguishable but clutter vertical rhythm, and below 11px text ceases
+   to be comfortably readable. Raised to the scale minimum.
    -------------------------------------------------------------------------- */
 [class*="text-[9px]"],
 [class*="text-[9.5px]"],
@@ -1985,13 +1984,13 @@ textarea {
 }
 
 /* ==========================================================================
-   COMPORTAMIENTO DEL MOVIMIENTO
+   MOTION BEHAVIOR
    --------------------------------------------------------------------------
-   Medido: 97 de 99 elementos interactivos usaban cubic-bezier(0.4, 0, 0.2, 1),
-   una curva simétrica que arranca despacio. En un control que responde a una
-   pulsación, ese arranque lento se percibe como retardo. Una curva de salida
-   —rápida al inicio, suave al asentar— hace que la interfaz se sienta
-   reaccionando en lugar de reproduciendo una animación.
+   Measured: 97 of 99 interactive elements used cubic-bezier(0.4, 0, 0.2, 1),
+   a symmetrical curve that starts slowly. In a control responding to a tap
+   or click, that sluggish start is perceived as lag. An ease-out curve
+   —fast at the start, soft upon settling— makes the interface feel
+   responsive rather than playing an animation.
    ========================================================================== */
 
 button,
@@ -2004,12 +2003,12 @@ textarea {
 }
 
 /* --------------------------------------------------------------------------
-   RESPUESTA AL PULSAR
-   405 de 435 botones no tenían ningún estado :active. Pulsarlos no devolvía
-   nada y la interfaz se sentía inerte.
-   Deliberadamente sutil (0.97 en 140ms): a decenas de pulsaciones diarias, un
-   rebote marcado deja de ser agradable y pasa a estorbar.
-   Se excluyen los que ya definen su propia transformación para no pisarla.
+   PRESS FEEDBACK
+   405 out of 435 buttons had no :active state. Clicking them gave no feedback
+   and the interface felt unresponsive.
+   Deliberately subtle (0.97 over 140ms): across dozens of daily clicks, an
+   exaggerated bounce stops being pleasant and becomes annoying.
+   Elements that already define their own transform are excluded to avoid conflicts.
    -------------------------------------------------------------------------- */
 button:active:not([class*="translate"]):not([class*="scale"]):not(:disabled),
 [role="button"]:active:not([class*="translate"]):not([class*="scale"]) {
@@ -2017,7 +2016,7 @@ button:active:not([class*="translate"]):not([class*="scale"]):not(:disabled),
   transition-duration: var(--dur-press);
 }
 
-/* Sin puntero fino no hay hover real: evita estados pegados en táctil. */
+/* Without a fine pointer there is no true hover: prevents sticky hover states on touch. */
 @media (hover: none) {
   button:hover,
   [role="button"]:hover {
@@ -2026,12 +2025,12 @@ button:active:not([class*="translate"]):not([class*="scale"]):not(:disabled),
 }
 
 /* ==========================================================================
-   ICONOS DE MARCA CON DOS VARIANTES
+   BRAND ICONS WITH TWO VARIANTS
 
-   Marcas monocromas y negras (X, GitHub, TikTok): sobre el tema oscuro
-   desaparecen, asi que traen una segunda variante en blanco y se pintan las
-   dos. Con CSS y no leyendo el tema en JavaScript, que daria discrepancia de
-   hidratacion y parpadeo en la primera pintura. Lo usa <BrandIcon />.
+   Monochrome black brands (X, GitHub, TikTok): invisible on dark themes,
+   so they include a second white variant with both rendered. Handled via CSS
+   rather than reading the theme in JavaScript, which would cause hydration
+   mismatch and flashing on first paint. Used by <BrandIcon />.
    ========================================================================== */
 
 .icono-marca-claro {

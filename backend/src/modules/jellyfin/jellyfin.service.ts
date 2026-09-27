@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { ScrobblePipelineService, NormalizedScrobbleEvent } from '../plex/scrobble-pipeline.service';
 import * as os from 'os';
 import axios from 'axios';
+import { decodeHtmlEntities } from '../../common/text/decode-html-entities';
 import {
   validateOutboundTarget,
   type ValidatedNetworkTarget,
@@ -480,8 +481,9 @@ export class JellyfinService {
     const positionTicks = Number(p.PlaybackPositionTicks || 0);
     const runtimeTicks = Number(p.RunTimeTicks || 0);
 
-    const seriesName = String(p.SeriesName || '').trim();
-    const itemName = String(p.Name || '').trim();
+    // Handlebars escapes the template's values: undo it before anything compares titles.
+    const seriesName = decodeHtmlEntities(String(p.SeriesName || '').trim());
+    const itemName = decodeHtmlEntities(String(p.Name || '').trim());
 
     // PlaybackStop ~ Plex media.stop; PlaybackProgress ~ media.pause (both
     // already trigger a scrobble if they pass the threshold in
@@ -498,7 +500,7 @@ export class JellyfinService {
       source: 'JELLYFIN',
       event: eventMap[notificationType] || notificationType || 'raw',
       showTitle: seriesName || itemName || 'Untitled',
-      librarySectionTitle: String(p.LibraryName || '').trim(),
+      librarySectionTitle: decodeHtmlEntities(String(p.LibraryName || '').trim()),
       episodeNumber: Number(p.EpisodeNumber || 1),
       seasonNumber: Number(p.SeasonNumber || 1),
       viewOffsetMs: Math.max(0, Math.round(positionTicks / TICKS_PER_MS)),
@@ -506,8 +508,8 @@ export class JellyfinService {
       // No rating sync via webhook: Jellyfin does not expose a 1-10 rating
       // equivalent to Plex's in the playback context.
       rating: null,
-      accountUsername: String(p.NotificationUsername || '').trim(),
-      serverTitle: p.ServerName ? String(p.ServerName) : undefined,
+      accountUsername: decodeHtmlEntities(String(p.NotificationUsername || '').trim()),
+      serverTitle: p.ServerName ? decodeHtmlEntities(String(p.ServerName)) : undefined,
       hasPayload: Boolean(seriesName || itemName || p.ItemType),
       rawPayload: payload,
     };

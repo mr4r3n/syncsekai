@@ -37,7 +37,19 @@ export function CustomSelect({
   const { t } = useI18n();
   const effectivePlaceholder = placeholder ?? t('common.selectOption');
   const [isOpen, setIsOpen] = useState(false);
+  // Opens upwards when the window has no room below (e.g. a per-page selector at the end of a list).
+  const [dropUp, setDropUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const toggle = () => {
+    if (!isOpen && containerRef.current) {
+      const { top, bottom } = containerRef.current.getBoundingClientRect();
+      const menuHeight = Math.min(256, options.length * 36 + 8) + 6; // max-h-64 + margin
+      const below = window.innerHeight - bottom;
+      setDropUp(below < menuHeight && top > below);
+    }
+    setIsOpen(!isOpen);
+  };
 
   const selectedOption = options.find((opt) => opt.value === value);
 
@@ -93,7 +105,7 @@ export function CustomSelect({
       {/* Trigger Button with Glassmorphism */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggle}
         className={`w-full h-9 min-h-[36px] px-3.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md text-xs text-left text-[var(--text-primary)] flex items-center justify-between gap-2 outline-none transition-all duration-150 cursor-pointer select-none ${getAccentBorderClass()} ${
           isOpen ? 'ring-1 ring-[var(--border-strong)] border-[var(--border-strong)]' : ''
         } ${triggerClassName}`}
@@ -118,7 +130,7 @@ export function CustomSelect({
 
       {/* Floating Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-[70] left-0 right-0 mt-1.5 max-h-64 overflow-y-auto rounded-[6px] border border-[var(--border-strong)] bg-[var(--popover-solid-bg)] shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-1 space-y-0.5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 custom-scrollbar">
+        <div className={`absolute z-[70] left-0 right-0 ${dropUp ? 'bottom-full mb-1.5' : 'mt-1.5'} max-h-64 overflow-y-auto rounded-[6px] border border-[var(--border-strong)] bg-[var(--popover-solid-bg)] shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-1 space-y-0.5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 custom-scrollbar`}>
           {options.map((option) => {
             const isSelected = option.value === value;
             return (

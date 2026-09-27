@@ -6,7 +6,7 @@ import { Sparkles, Link2, Tv, Layers, History, GitMerge, ShieldBan, Sliders, Shi
  *
  * Each section is reading-order text accompanied at most by a screenshot
  * where words do not suffice. Screenshots are all from the same environment—English,
- * light theme, 2560 width—and regenerated in batch via scripts/capture-guide.js.
+ * light theme, 2560 width—and regenerated in batch by an internal capture script.
  *
  * Inline markup, strictly limited: **bold** for buttons to click or text to read
  * on screen, and [text](/route) for linking to discussed screens.

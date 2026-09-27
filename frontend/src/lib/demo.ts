@@ -3,7 +3,7 @@
  *
  * /demo turns it on for this tab only (sessionStorage) and opens the panel.
  * While it is on, `request()` in api.ts asks this module instead of the server:
- * the recording (demo-data.json, made by scripts/record-demo-data.mjs) holds
+ * the recording (demo-data.json, made against a local instance) holds
  * what the API answered for the demo user, so every page renders exactly as it
  * would for a real account, and a change to the panel shows up in the demo too.
  * Nothing is ever written: any request that is not a GET is refused with a

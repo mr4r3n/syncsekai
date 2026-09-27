@@ -5,6 +5,7 @@ import { KitsuService } from '../kitsu/kitsu.service';
 import { anilistCoverUrl } from '../covers/covers.service';
 import axios from 'axios';
 import { MappingSource } from '@prisma/client';
+import { decodeHtmlEntities } from '../../common/text/decode-html-entities';
 
 @Injectable()
 export class MappingsService {
@@ -47,7 +48,7 @@ export class MappingsService {
     isAdmin = false,
   ) {
     const season = data.plexSeason !== undefined ? Number(data.plexSeason) : 1;
-    const plexTitle = (data.plexTitle || '').trim();
+    const plexTitle = decodeHtmlEntities((data.plexTitle || '').trim());
 
     if (data.mappingId) {
       const existing = await this.prisma.titleMapping.findUnique({
@@ -145,7 +146,7 @@ export class MappingsService {
       where: {
         userId_plexTitle_plexSeason: {
           userId,
-          plexTitle: data.plexTitle,
+          plexTitle,
           plexSeason: data.plexSeason || 1,
         },
       },
@@ -163,7 +164,7 @@ export class MappingsService {
       },
       create: {
         userId,
-        plexTitle: data.plexTitle,
+        plexTitle,
         plexSeason: data.plexSeason || 1,
         anilistMediaId: data.anilistMediaId,
         anilistTitle: data.anilistTitle,
@@ -308,7 +309,7 @@ export class MappingsService {
     let importedCount = 0;
     for (const item of items) {
       if (!item.plexTitle || !item.anilistMediaId) continue;
-      const plexTitle = String(item.plexTitle).trim();
+      const plexTitle = decodeHtmlEntities(String(item.plexTitle).trim());
       const plexSeason = Number(item.plexSeason) || 1;
       const anilistMediaId = Number(item.anilistMediaId);
       const anilistTitle = item.anilistTitle ? String(item.anilistTitle).trim() : plexTitle;

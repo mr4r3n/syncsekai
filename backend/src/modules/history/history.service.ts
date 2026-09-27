@@ -424,20 +424,20 @@ export class HistoryService {
     const [okAnilist, okMal, okKitsu] = byTracker;
     const trackerSum = okAnilist + okMal + okKitsu;
     const candidates = [
-      { nombre: 'AniList', envios: okAnilist },
-      { nombre: 'MyAnimeList', envios: okMal },
-      { nombre: 'Kitsu', envios: okKitsu },
-    ].sort((a, b) => b.envios - a.envios);
+      { name: 'AniList', submissions: okAnilist },
+      { name: 'MyAnimeList', submissions: okMal },
+      { name: 'Kitsu', submissions: okKitsu },
+    ].sort((a, b) => b.submissions - a.submissions);
     const principal =
-      trackerSum > 0 && candidates[0].envios > 0
+      trackerSum > 0 && candidates[0].submissions > 0
         ? {
-            nombre: candidates[0].nombre,
-            porcentaje: Math.round((candidates[0].envios / trackerSum) * 100),
+            name: candidates[0].name,
+            percentage: Math.round((candidates[0].submissions / trackerSum) * 100),
           }
         : null;
 
     // Most active slot: the hour with the most plays and the next one.
-    let activeSlot: { desde: number; hasta: number } | null = null;
+    let activeSlot: { from: number; to: number } | null = null;
     if (rows.length > 0) {
       const byHour = new Array(24).fill(0);
       for (const f of rows) byHour[new Date(f.viewedAt).getHours()]++;
@@ -446,20 +446,20 @@ export class HistoryService {
         const timeWindow = byHour[h] + byHour[(h + 1) % 24];
         if (timeWindow > byHour[best] + byHour[(best + 1) % 24]) best = h;
       }
-      if (byHour[best] > 0) activeSlot = { desde: best, hasta: (best + 2) % 24 };
+      if (byHour[best] > 0) activeSlot = { from: best, to: (best + 2) % 24 };
     }
 
     return {
       total,
-      correctos: successful,
+      successful,
       // Without submissions there is no rate: null, and the screen shows a dash.
-      tasaExito: total > 0 ? Number(((successful / total) * 100).toFixed(1)) : null,
-      episodios: episodes,
-      esteMes: thisMonth,
-      mesAnterior: previousMonth,
-      variacionMensual: monthlyChange,
-      trackerPrincipal: principal,
-      franjaActiva: activeSlot,
+      successRate: total > 0 ? Number(((successful / total) * 100).toFixed(1)) : null,
+      episodes,
+      thisMonth,
+      previousMonth,
+      monthlyChange,
+      topTracker: principal,
+      activeSlot,
     };
   }
 

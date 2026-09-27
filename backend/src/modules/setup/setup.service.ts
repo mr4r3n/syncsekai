@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { getRequiredSecret } from '../../common/security/required-secret';
 import { validateNetworkHost } from '../../common/security/network-target';
 import { findNetwork } from '../../common/security/social-networks';
-import { SITE_SETTINGS, ICON_VERSION_KEY, resolveSiteSettings } from '../../common/security/site-setting-definitions';
+import { SITE_SETTINGS, ICON_VERSION_KEY, resolveSiteSettings, readMaintenanceStatus } from '../../common/security/site-setting-definitions';
 import { emailTemplate, escapeHtml } from '../../common/email/email-template';
 import { isIP } from 'net';
 
@@ -143,17 +143,8 @@ export class SetupService {
 
 
   async getMaintenanceStatus() {
-    const [enabledSetting, messageSetting, endSetting] = await Promise.all([
-      this.prisma.systemSetting.findUnique({ where: { key: 'MAINTENANCE_MODE' } }).catch(() => null),
-      this.prisma.systemSetting.findUnique({ where: { key: 'MAINTENANCE_MESSAGE' } }).catch(() => null),
-      this.prisma.systemSetting.findUnique({ where: { key: 'MAINTENANCE_ESTIMATED_END' } }).catch(() => null),
-    ]);
-
-    return {
-      inMaintenance: enabledSetting?.value === 'true',
-      message: messageSetting?.value || 'We are tuning SyncSekai\'s sync engines. We will be back shortly.',
-      estimatedEnd: endSetting?.value || null,
-    };
+    const { enabled, message, estimatedEnd } = await readMaintenanceStatus(this.prisma);
+    return { inMaintenance: enabled, message, estimatedEnd };
   }
 
   async hasCustomIcon(): Promise<boolean> {

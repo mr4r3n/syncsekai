@@ -58,7 +58,7 @@ export class CatalogController {
     ) {
       throw new BadRequestException('A valid AniList or MyAnimeList id is required.');
     }
-    const provider = rawProvider === 'MAL' ? 'MAL' : rawProvider === 'KITSU' ? 'KITSU' : 'ANILIST';
+    const provider = rawProvider === 'MAL' ? 'MAL' : rawProvider === 'KITSU' ? 'KITSU' : rawProvider === 'LOCAL' ? 'LOCAL' : 'ANILIST';
     return this.franchiseService.getFranchise(user.id, { anilistId, malId, provider });
   }
 

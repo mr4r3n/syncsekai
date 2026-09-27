@@ -335,10 +335,13 @@ export class CatalogService {
         });
       }
 
-      // Add favorites that are not in the scrobbles
+      // Add favorites that are not in the scrobbles. By id too: the favorite keeps
+      // the tracker's title and the scrobble the server's ("Sousou no Frieren" vs
+      // "Frieren: Beyond Journey's End"), so matching titles alone listed it twice.
+      const watchedIds = new Set([...localMap.values()].map((item) => String(item.id)));
       for (const fav of favorites) {
         const key = fav.title.toLowerCase().trim();
-        if (!localMap.has(key)) {
+        if (!localMap.has(key) && !watchedIds.has(String(fav.animeId))) {
           localMap.set(key, {
             id: Number(fav.animeId) || Math.abs(key.split('').reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0)),
             title: fav.title,
@@ -868,6 +871,7 @@ export class CatalogService {
         planning: planningCount,
         paused: pausedCount,
         dropped: droppedCount,
+        favorites: await this.prisma.userFavorite.count({ where: { userId } }),
       },
       items: paginatedItems,
     };

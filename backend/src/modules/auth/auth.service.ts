@@ -16,7 +16,7 @@ import { verifySync } from 'otplib';
 import { Role } from '@prisma/client';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { emailTemplate } from '../../common/email/email-template';
-import { detectDeviceInfo } from './device-info';
+import { SessionsService } from './sessions.service';
 import { MailService } from './mail.service';
 import { AccountLifecycleService } from './account-lifecycle.service';
 import { RegistrationService } from './registration.service';
@@ -44,6 +44,7 @@ export class AuthService implements OnModuleInit {
     private mailService: MailService,
     private accountLifecycleService: AccountLifecycleService,
     private registrationService: RegistrationService,
+    private sessionsService: SessionsService,
   ) {}
 
   private assertNotLockedOut(emailKey: string) {
@@ -105,7 +106,7 @@ export class AuthService implements OnModuleInit {
     this.logger.log(`Migrated ${legacySecrets.length} legacy TOTP secret(s) to AES-GCM encryption.`);
   }
 
-  async login(dto: LoginDto, clientIp = '127.0.0.1', userAgent = '') {
+  async login(dto: LoginDto, clientIp = '127.0.0.1', userAgent = '', deviceId: string | null = null) {
     const emailKey = dto.email.trim().toLowerCase();
     this.assertNotLockedOut(emailKey);
 
@@ -216,36 +217,8 @@ export class AuthService implements OnModuleInit {
     // Fully authenticated (password and, if applicable, 2FA): the history is discarded.
     this.failedLogins.delete(emailKey);
 
-    const sessionToken = `ses_live_${crypto.randomBytes(16).toString('hex')}`;
-    const deviceInfo = detectDeviceInfo(userAgent, clientIp);
-
-    // Clear previous sessions from the same client/browser and IP to avoid duplicates
-    try {
-      await this.prisma.session.deleteMany({
-        where: {
-          userId: user.id,
-          ipAddress: clientIp,
-          browser: deviceInfo.browser,
-          os: deviceInfo.os,
-        },
-      });
-    } catch {}
-
     await this.accountLifecycleService.unlockOnSignIn(user.id);
-    await this.prisma.session.create({
-      data: {
-        userId: user.id,
-        sessionToken,
-        ipAddress: clientIp,
-        userAgent: userAgent || 'Web browser',
-        deviceName: deviceInfo.deviceName,
-        deviceType: deviceInfo.deviceType,
-        browser: deviceInfo.browser,
-        os: deviceInfo.os,
-        iconType: deviceInfo.iconType,
-        lastActiveAt: new Date(),
-      },
-    });
+    const sessionToken = await this.sessionsService.createSession(user.id, clientIp, userAgent, deviceId, 'Web browser');
 
     const payload = {
       sub: user.id,
@@ -292,6 +265,7 @@ export class AuthService implements OnModuleInit {
     },
     clientIp = '127.0.0.1',
     userAgent = '',
+    deviceId: string | null = null,
   ) {
     const email = data.email.trim().toLowerCase();
     if (!data.providerId || !data.emailVerified) {
@@ -395,37 +369,8 @@ export class AuthService implements OnModuleInit {
       await this.registrationService.notifyAdminsOfNewUser(user, data.provider);
     }
 
-    // Record the active session
-    const sessionToken = `ses_live_${crypto.randomBytes(24).toString('hex')}`;
-    const deviceInfo = detectDeviceInfo(userAgent, clientIp);
-
-    // Clear previous sessions from the same client/browser and IP to avoid duplicates
-    try {
-      await this.prisma.session.deleteMany({
-        where: {
-          userId: user.id,
-          ipAddress: clientIp,
-          browser: deviceInfo.browser,
-          os: deviceInfo.os,
-        },
-      });
-    } catch {}
-
     await this.accountLifecycleService.unlockOnSignIn(user.id);
-    await this.prisma.session.create({
-      data: {
-        userId: user.id,
-        sessionToken,
-        ipAddress: clientIp,
-        userAgent: userAgent || 'OAuth Client',
-        deviceName: deviceInfo.deviceName,
-        deviceType: deviceInfo.deviceType,
-        browser: deviceInfo.browser,
-        os: deviceInfo.os,
-        iconType: deviceInfo.iconType,
-        lastActiveAt: new Date(),
-      },
-    });
+    const sessionToken = await this.sessionsService.createSession(user.id, clientIp, userAgent, deviceId, 'OAuth Client');
 
     const payload = {
       sub: user.id,

@@ -35,7 +35,7 @@ import {
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { setSessionCookie, clearSessionCookie } from './auth-cookies';
+import { setSessionCookie, clearSessionCookie, deviceIdFrom } from './auth-cookies';
 
 @Controller('api/auth')
 export class AuthController {
@@ -80,7 +80,7 @@ export class AuthController {
   ) {
     const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
     const userAgent = req.headers['user-agent'] || '';
-    const result = await this.authService.login(dto, clientIp, userAgent);
+    const result = await this.authService.login(dto, clientIp, userAgent, deviceIdFrom(req, res));
     if (result.accessToken) {
       setSessionCookie(res, result.accessToken);
       const { accessToken: _accessToken, ...safeResult } = result;

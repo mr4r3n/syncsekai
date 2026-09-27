@@ -1,3 +1,5 @@
+import type { PrismaService } from '../../prisma/prisma.service';
+
 /**
  * Public site settings edited from the admin panel.
  *
@@ -71,4 +73,22 @@ export function validateSiteSetting(a: SiteSettingDefinition, value: string): st
   if (a.key === 'REGISTRATION_OPEN' && value !== 'true' && value !== 'false') return 'REGISTRATION_OPEN must be true or false.';
   if (/[\r\n<>]/.test(value)) return `${a.key} does not accept line breaks or tags.`;
   return null;
+}
+
+/**
+ * Maintenance mode, read by the admin panel and by the public status endpoint
+ * that the frontend checks on every page. A database hiccup counts as "not in
+ * maintenance" rather than taking the whole site down.
+ */
+export async function readMaintenanceStatus(prisma: Pick<PrismaService, 'systemSetting'>) {
+  const [enabled, message, estimatedEnd] = await Promise.all(
+    ['MAINTENANCE_MODE', 'MAINTENANCE_MESSAGE', 'MAINTENANCE_ESTIMATED_END'].map((key) =>
+      prisma.systemSetting.findUnique({ where: { key } }).catch(() => null),
+    ),
+  );
+  return {
+    enabled: enabled?.value === 'true',
+    message: message?.value || "We are tuning SyncSekai's sync engines. We will be back shortly.",
+    estimatedEnd: estimatedEnd?.value || null,
+  };
 }

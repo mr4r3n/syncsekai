@@ -178,6 +178,33 @@ ${animeNodes}
   }
 
   /**
+   * Re-importing the same list must not duplicate the history: an episode
+   * already imported earlier is skipped. Imports from before `source: 'IMPORT'`
+   * existed have no source and were never synced (statuses still PENDING),
+   * which tells them apart from manual catalog syncs.
+   */
+  private async addImportedEntry(
+    userId: string,
+    entry: { showTitle: string; episodeNumber: number; seasonNumber: number; viewPercentage: number; rating: number | null },
+  ): Promise<boolean> {
+    const existing = await this.prisma.scrobbleHistory.findFirst({
+      where: {
+        userId,
+        showTitle: entry.showTitle,
+        seasonNumber: entry.seasonNumber,
+        episodeNumber: entry.episodeNumber,
+        OR: [{ source: 'IMPORT' }, { source: null, anilistStatus: 'PENDING', malStatus: 'PENDING' }],
+      },
+      select: { id: true },
+    });
+    if (existing) return false;
+    await this.prisma.scrobbleHistory.create({
+      data: { userId, ...entry, source: 'IMPORT', viewedAt: new Date() },
+    });
+    return true;
+  }
+
+  /**
    * Imports anime and progress from external export files (MAL XML, AniList JSON, CSV).
    */
   async importAnimeData(userId: string, rawData: string) {
@@ -188,6 +215,7 @@ ${animeNodes}
     const trimmed = rawData.trim();
     let importedCount = 0;
     let favoritesCount = 0;
+    let skippedCount = 0;
 
     // Case 1: standard MyAnimeList / Kitsu / AniList XML file
     if (trimmed.startsWith('<?xml') || trimmed.includes('<myanimelist>') || trimmed.includes('<anime>')) {
@@ -223,18 +251,15 @@ ${animeNodes}
             });
             favoritesCount++;
           } else {
-            await this.prisma.scrobbleHistory.create({
-              data: {
-                userId,
-                showTitle: title,
-                episodeNumber: Math.max(1, epWatched),
-                seasonNumber: 1,
-                viewPercentage: status === 'completed' ? 100 : 85,
-                rating: score > 0 ? score : null,
-                viewedAt: new Date(),
-              },
+            const added = await this.addImportedEntry(userId, {
+              showTitle: title,
+              episodeNumber: Math.max(1, epWatched),
+              seasonNumber: 1,
+              viewPercentage: status === 'completed' ? 100 : 85,
+              rating: score > 0 ? score : null,
             });
-            importedCount++;
+            if (added) importedCount++;
+            else skippedCount++;
           }
         }
       }
@@ -271,18 +296,15 @@ ${animeNodes}
             });
             favoritesCount++;
           } else {
-            await this.prisma.scrobbleHistory.create({
-              data: {
-                userId,
-                showTitle: title,
-                episodeNumber: Math.max(1, Number(epWatched)),
-                seasonNumber: Number(item.seasonNumber || item.season || 1),
-                viewPercentage: 100,
-                rating: score ? Number(score) : null,
-                viewedAt: new Date(),
-              },
+            const added = await this.addImportedEntry(userId, {
+              showTitle: title,
+              episodeNumber: Math.max(1, Number(epWatched)),
+              seasonNumber: Number(item.seasonNumber || item.season || 1),
+              viewPercentage: 100,
+              rating: score ? Number(score) : null,
             });
-            importedCount++;
+            if (added) importedCount++;
+            else skippedCount++;
           }
         }
       } catch (err: any) {
@@ -301,18 +323,15 @@ ${animeNodes}
           const epWatched = parseInt(cols[1], 10) || 1;
           const score = parseInt(cols[4], 10) || null;
 
-          await this.prisma.scrobbleHistory.create({
-            data: {
-              userId,
-              showTitle: title,
-              episodeNumber: Math.max(1, epWatched),
-              seasonNumber: 1,
-              viewPercentage: 100,
-              rating: score,
-              viewedAt: new Date(),
-            },
+          const added = await this.addImportedEntry(userId, {
+            showTitle: title,
+            episodeNumber: Math.max(1, epWatched),
+            seasonNumber: 1,
+            viewPercentage: 100,
+            rating: score,
           });
-          importedCount++;
+          if (added) importedCount++;
+          else skippedCount++;
         }
       }
     }
@@ -323,8 +342,11 @@ ${animeNodes}
       success: true,
       importedCount,
       favoritesCount,
-      totalProcessed: importedCount + favoritesCount,
-      message: `Imported ${importedCount} series into the history and ${favoritesCount} into your favorites/planned list.`,
+      skippedCount,
+      totalProcessed: importedCount + favoritesCount + skippedCount,
+      message:
+        `Imported ${importedCount} series into the history and ${favoritesCount} into your favorites/planned list.` +
+        (skippedCount ? ` ${skippedCount} were already imported and were skipped.` : ''),
     };
   }
 }

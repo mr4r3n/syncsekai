@@ -8,7 +8,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { setOAuthTxCookie, setSessionCookie, clearOAuthTxCookie, readCookie } from './auth-cookies';
+import { setOAuthTxCookie, setSessionCookie, clearOAuthTxCookie, readCookie, deviceIdFrom } from './auth-cookies';
 
 /** Sign-in and account linking with Google and Discord (OAuth). */
 @Controller('api/auth')
@@ -194,6 +194,7 @@ export class SocialAuthController {
         },
         clientIp,
         userAgent,
+        deviceIdFrom(req, res),
       );
 
       setSessionCookie(res, accessToken);
@@ -301,6 +302,7 @@ export class SocialAuthController {
         },
         clientIp,
         userAgent,
+        deviceIdFrom(req, res),
       );
 
       setSessionCookie(res, accessToken);

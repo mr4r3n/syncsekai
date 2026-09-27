@@ -177,14 +177,30 @@ export class FranchiseService {
     return items;
   }
 
+  /**
+   * The user's LOCAL catalog, which is not cached: without it every season of a
+   * local-only user showed as "not in list".
+   * ponytail: rebuilt page by page (100 per page, the catalog's maximum); fine for a
+   * few hundred titles. If libraries grow, extract the LOCAL builder from getCatalog.
+   */
+  private async localItems(userId: string): Promise<CatalogAnimeItem[]> {
+    const items: CatalogAnimeItem[] = [];
+    for (let page = 1, pages = 1; page <= pages; page++) {
+      const result: any = await this.catalogService.getCatalog(userId, { provider: 'LOCAL', page, limit: 100 });
+      items.push(...(result.items || []));
+      pages = result.pagination?.totalPages || 1;
+    }
+    return items;
+  }
+
   async getFranchise(
     userId: string,
-    ids: { anilistId?: number; malId?: number; provider?: 'ANILIST' | 'MAL' | 'KITSU' },
+    ids: { anilistId?: number; malId?: number; provider?: 'ANILIST' | 'MAL' | 'KITSU' | 'LOCAL' },
   ) {
     const provider = ids.provider === 'MAL' ? 'MAL' : ids.provider === 'KITSU' ? 'KITSU' : 'ANILIST';
     const preferredCache = this.catalogService.userCache.get(`${userId}_${provider}`)?.rawItems || [];
     const fallbackCache = this.catalogService.userCache.get(`${userId}_${provider === 'MAL' ? 'ANILIST' : provider === 'KITSU' ? 'ANILIST' : 'MAL'}`)?.rawItems || [];
-    const userItems = [...preferredCache, ...fallbackCache];
+    const userItems = ids.provider === 'LOCAL' ? await this.localItems(userId) : [...preferredCache, ...fallbackCache];
 
     let metadata: any[] = [];
     try {

@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { detectDeviceInfo } from './device-info';
+import { randomBytes } from 'crypto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 /** Active sessions per device: validation, listing and revocation. */
 @Injectable()
@@ -8,6 +10,47 @@ export class SessionsService {
   constructor(
     private prisma: PrismaService,
   ) {}
+
+  /**
+   * Opens a session after a successful sign-in. A previous session of the same
+   * browser (same `deviceId` cookie) is replaced, so signing in again does not
+   * pile up duplicates; other browsers and profiles keep theirs.
+   */
+  async createSession(userId: string, clientIp: string, userAgent: string, deviceId: string | null, defaultAgent: string) {
+    const sessionToken = `ses_live_${randomBytes(24).toString('hex')}`;
+    const deviceInfo = detectDeviceInfo(userAgent, clientIp);
+    if (deviceId) {
+      await this.prisma.session.deleteMany({ where: { userId, deviceId } }).catch(() => undefined);
+    }
+    await this.prisma.session.create({
+      data: {
+        userId,
+        sessionToken,
+        deviceId,
+        ipAddress: clientIp,
+        userAgent: userAgent || defaultAgent,
+        deviceName: deviceInfo.deviceName,
+        deviceType: deviceInfo.deviceType,
+        browser: deviceInfo.browser,
+        os: deviceInfo.os,
+        iconType: deviceInfo.iconType,
+        lastActiveAt: new Date(),
+      },
+    });
+    return sessionToken;
+  }
+
+  /**
+   * Sessions whose sign-in token can no longer be valid (it lasts 7 days by
+   * default; 30 days of inactivity leaves a wide margin). Without this, a browser
+   * that lost its device cookie would leave its old session listed forever.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  async purgeStaleSessions() {
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const { count } = await this.prisma.session.deleteMany({ where: { lastActiveAt: { lt: cutoff } } });
+    return count;
+  }
 
   // Active sessions and devices
   async validateSessionToken(userId: string, sessionToken: string): Promise<boolean> {

@@ -6,6 +6,7 @@ import {
   findSiteSetting,
   resolveSiteSettings,
   validateSiteSetting,
+  readMaintenanceStatus,
 } from '../../common/security/site-setting-definitions';
 import { reencodeSiteIcon, SITE_ICON_VARIANTS } from '../../common/security/image-file';
 import { SYSTEM_CREDENTIALS, findCredential, displayValue } from '../../common/security/system-credentials';
@@ -215,17 +216,7 @@ export class SiteSettingsService {
    * Returns the maintenance mode state.
    */
   async getMaintenanceStatus() {
-    const [enabledSetting, messageSetting, endSetting] = await Promise.all([
-      this.prisma.systemSetting.findUnique({ where: { key: 'MAINTENANCE_MODE' } }),
-      this.prisma.systemSetting.findUnique({ where: { key: 'MAINTENANCE_MESSAGE' } }),
-      this.prisma.systemSetting.findUnique({ where: { key: 'MAINTENANCE_ESTIMATED_END' } }),
-    ]);
-
-    return {
-      enabled: enabledSetting?.value === 'true',
-      message: messageSetting?.value || 'We are tuning SyncSekai\'s sync engines. We will be back shortly.',
-      estimatedEnd: endSetting?.value || null,
-    };
+    return readMaintenanceStatus(this.prisma);
   }
 
   /**

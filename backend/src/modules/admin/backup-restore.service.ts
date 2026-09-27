@@ -156,6 +156,12 @@ export class BackupRestoreService {
               githubId: u.githubId,
               passwordResetToken: u.passwordResetToken,
               passwordResetExpiresAt: u.passwordResetExpiresAt ? new Date(u.passwordResetExpiresAt) : null,
+              inactivityWarnedAt: u.inactivityWarnedAt ? new Date(u.inactivityWarnedAt) : null,
+              inactivityLockedAt: u.inactivityLockedAt ? new Date(u.inactivityLockedAt) : null,
+              lastUsernameChange: u.lastUsernameChange ? new Date(u.lastUsernameChange) : null,
+              backupCodes: Array.isArray(u.backupCodes) ? u.backupCodes : [],
+              backupCodesGeneratedAt: u.backupCodesGeneratedAt ? new Date(u.backupCodesGeneratedAt) : null,
+              deletionScheduledAt: u.deletionScheduledAt ? new Date(u.deletionScheduledAt) : null,
             },
             create: {
               id: u.id,
@@ -179,6 +185,12 @@ export class BackupRestoreService {
               githubId: u.githubId,
               passwordResetToken: u.passwordResetToken,
               passwordResetExpiresAt: u.passwordResetExpiresAt ? new Date(u.passwordResetExpiresAt) : null,
+              inactivityWarnedAt: u.inactivityWarnedAt ? new Date(u.inactivityWarnedAt) : null,
+              inactivityLockedAt: u.inactivityLockedAt ? new Date(u.inactivityLockedAt) : null,
+              lastUsernameChange: u.lastUsernameChange ? new Date(u.lastUsernameChange) : null,
+              backupCodes: Array.isArray(u.backupCodes) ? u.backupCodes : [],
+              backupCodesGeneratedAt: u.backupCodesGeneratedAt ? new Date(u.backupCodesGeneratedAt) : null,
+              deletionScheduledAt: u.deletionScheduledAt ? new Date(u.deletionScheduledAt) : null,
               createdAt: u.createdAt ? new Date(u.createdAt) : new Date(),
             },
           });
@@ -204,6 +216,11 @@ export class BackupRestoreService {
               canSyncAnilist: s.canSyncAnilist ?? true,
               canSyncMal: s.canSyncMal ?? true,
               isSuspended: s.isSuspended ?? false,
+              discordNotifications: s.discordNotifications ?? true,
+              webNotifications: s.webNotifications ?? true,
+              canSyncKitsu: s.canSyncKitsu ?? true,
+              themePalette: s.themePalette ?? 'sync',
+              themeMode: s.themeMode ?? 'dark',
               showInLeaderboard: s.showInLeaderboard === true,
             },
             create: {
@@ -220,6 +237,11 @@ export class BackupRestoreService {
               canSyncAnilist: s.canSyncAnilist ?? true,
               canSyncMal: s.canSyncMal ?? true,
               isSuspended: s.isSuspended ?? false,
+              discordNotifications: s.discordNotifications ?? true,
+              webNotifications: s.webNotifications ?? true,
+              canSyncKitsu: s.canSyncKitsu ?? true,
+              themePalette: s.themePalette ?? 'sync',
+              themeMode: s.themeMode ?? 'dark',
               showInLeaderboard: s.showInLeaderboard === true,
             },
           });
@@ -346,6 +368,8 @@ export class BackupRestoreService {
               anilistTitle: m.anilistTitle,
               malMediaId: m.malMediaId,
               malTitle: m.malTitle,
+              kitsuMediaId: m.kitsuMediaId ?? null,
+              kitsuTitle: m.kitsuTitle ?? null,
               confidenceScore: m.confidenceScore ?? 1.0,
               isApproved: m.isApproved ?? true,
               isManual: m.isManual ?? false,
@@ -361,6 +385,8 @@ export class BackupRestoreService {
               anilistTitle: m.anilistTitle,
               malMediaId: m.malMediaId,
               malTitle: m.malTitle,
+              kitsuMediaId: m.kitsuMediaId ?? null,
+              kitsuTitle: m.kitsuTitle ?? null,
               confidenceScore: m.confidenceScore ?? 1.0,
               isApproved: m.isApproved ?? true,
               isManual: m.isManual ?? false,
@@ -480,6 +506,7 @@ export class BackupRestoreService {
               message: n.message,
               isRead: n.isRead ?? false,
               metadata: n.metadata,
+              dismissedAt: n.dismissedAt ? new Date(n.dismissedAt) : null,
             },
             create: {
               id: n.id,
@@ -489,6 +516,7 @@ export class BackupRestoreService {
               message: n.message,
               isRead: n.isRead ?? false,
               metadata: n.metadata,
+              dismissedAt: n.dismissedAt ? new Date(n.dismissedAt) : null,
               createdAt: n.createdAt ? new Date(n.createdAt) : new Date(),
             },
           });
@@ -509,9 +537,11 @@ export class BackupRestoreService {
               status: t.status,
               lastReplyAt,
               closedAt: t.closedAt ? new Date(t.closedAt) : null,
+              assignedAdminId: t.assignedAdminId ?? null,
             },
             create: {
               id: t.id,
+              ...(Number.isInteger(t.ticketNumber) ? { ticketNumber: t.ticketNumber } : {}),
               userId: t.userId,
               subject: t.subject,
               category: t.category,
@@ -519,11 +549,16 @@ export class BackupRestoreService {
               status: t.status,
               lastReplyAt,
               closedAt: t.closedAt ? new Date(t.closedAt) : null,
+              assignedAdminId: t.assignedAdminId ?? null,
               createdAt: t.createdAt ? new Date(t.createdAt) : new Date(),
             },
           });
           restoredCount++;
         }
+      }
+
+      if (Array.isArray(data.tickets) && data.tickets.length > 0) {
+        await this.prisma.$executeRaw`SELECT setval(pg_get_serial_sequence('"Ticket"', 'ticketNumber'), (SELECT COALESCE(MAX("ticketNumber"), 0) + 1 FROM "Ticket"), false)`;
       }
 
       // 9.3 Restore ticket messages

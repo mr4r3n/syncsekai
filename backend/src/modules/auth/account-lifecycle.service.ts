@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, UnauthorizedException, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -225,6 +225,10 @@ export class AccountLifecycleService {
       data: {
         deletionToken: hashToken(rawToken),
         deletionTokenExpiresAt: expiresAt,
+        // An email code works once, as in sign-in and 2FA changes.
+        ...(user.twoFactorEnabled && user.twoFactorType === 'EMAIL_OTP'
+          ? { emailOtpCode: null, emailOtpExpiresAt: null }
+          : {}),
       },
     });
 
@@ -244,7 +248,15 @@ export class AccountLifecycleService {
       note: 'The link expires in one hour. If you did not request this, ignore it and change your password: someone has signed in to your account.',
     });
 
-    await this.mailService.sendEmail(user.email, emailSubject, emailHtml);
+    const sent = await this.mailService.sendEmail(user.email, emailSubject, emailHtml);
+    if (!sent) {
+      // Without the email the link is unreachable: drop it instead of claiming it was sent.
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { deletionToken: null, deletionTokenExpiresAt: null },
+      });
+      throw new ServiceUnavailableException('The confirmation email could not be sent. Try again later.');
+    }
 
     return {
       success: true,

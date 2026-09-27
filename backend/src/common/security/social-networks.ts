@@ -28,23 +28,23 @@ export interface SocialNetwork {
   /** Light variant of the glyph, only for monochrome brands. */
   iconDark?: string;
   /** Example shown in the form, so it is clear what is expected. */
-  ejemplo: string;
+  example: string;
 }
 
 export const SOCIAL_NETWORKS: readonly SocialNetwork[] = [
-  { id: 'discord', label: 'Discord', icon: '/social/discord.svg', ejemplo: 'https://discord.gg/your-server' },
-  { id: 'x', label: 'X', icon: '/social/x.svg', iconDark: '/social/x-light.svg', ejemplo: 'https://x.com/your-account' },
-  { id: 'instagram', label: 'Instagram', icon: '/social/instagram.svg', ejemplo: 'https://instagram.com/your-account' },
-  { id: 'facebook', label: 'Facebook', icon: '/social/facebook.svg', ejemplo: 'https://facebook.com/your-page' },
-  { id: 'youtube', label: 'YouTube', icon: '/social/youtube.svg', ejemplo: 'https://youtube.com/@your-channel' },
-  { id: 'twitch', label: 'Twitch', icon: '/social/twitch.svg', ejemplo: 'https://twitch.tv/your-channel' },
-  { id: 'tiktok', label: 'TikTok', icon: '/social/tiktok.svg', iconDark: '/social/tiktok-light.svg', ejemplo: 'https://tiktok.com/@your-account' },
-  { id: 'reddit', label: 'Reddit', icon: '/social/reddit.svg', ejemplo: 'https://reddit.com/r/your-community' },
-  { id: 'telegram', label: 'Telegram', icon: '/social/telegram.svg', ejemplo: 'https://t.me/your-channel' },
-  { id: 'whatsapp', label: 'WhatsApp', icon: '/social/whatsapp.svg', ejemplo: 'https://chat.whatsapp.com/your-group' },
-  { id: 'bluesky', label: 'Bluesky', icon: '/social/bluesky.svg', ejemplo: 'https://bsky.app/profile/your-account' },
-  { id: 'mastodon', label: 'Mastodon', icon: '/social/mastodon.svg', ejemplo: 'https://mastodon.social/@your-account' },
-  { id: 'github', label: 'GitHub', icon: '/social/github.svg', iconDark: '/social/github-light.svg', ejemplo: 'https://github.com/your-account' },
+  { id: 'discord', label: 'Discord', icon: '/social/discord.svg', example: 'https://discord.gg/your-server' },
+  { id: 'x', label: 'X', icon: '/social/x.svg', iconDark: '/social/x-light.svg', example: 'https://x.com/your-account' },
+  { id: 'instagram', label: 'Instagram', icon: '/social/instagram.svg', example: 'https://instagram.com/your-account' },
+  { id: 'facebook', label: 'Facebook', icon: '/social/facebook.svg', example: 'https://facebook.com/your-page' },
+  { id: 'youtube', label: 'YouTube', icon: '/social/youtube.svg', example: 'https://youtube.com/@your-channel' },
+  { id: 'twitch', label: 'Twitch', icon: '/social/twitch.svg', example: 'https://twitch.tv/your-channel' },
+  { id: 'tiktok', label: 'TikTok', icon: '/social/tiktok.svg', iconDark: '/social/tiktok-light.svg', example: 'https://tiktok.com/@your-account' },
+  { id: 'reddit', label: 'Reddit', icon: '/social/reddit.svg', example: 'https://reddit.com/r/your-community' },
+  { id: 'telegram', label: 'Telegram', icon: '/social/telegram.svg', example: 'https://t.me/your-channel' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: '/social/whatsapp.svg', example: 'https://chat.whatsapp.com/your-group' },
+  { id: 'bluesky', label: 'Bluesky', icon: '/social/bluesky.svg', example: 'https://bsky.app/profile/your-account' },
+  { id: 'mastodon', label: 'Mastodon', icon: '/social/mastodon.svg', example: 'https://mastodon.social/@your-account' },
+  { id: 'github', label: 'GitHub', icon: '/social/github.svg', iconDark: '/social/github-light.svg', example: 'https://github.com/your-account' },
 ];
 
 export function findNetwork(id: unknown): SocialNetwork | null {

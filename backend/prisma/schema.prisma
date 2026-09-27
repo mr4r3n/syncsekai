@@ -317,6 +317,8 @@ model Session {
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   sessionToken String   @unique
+  // Random id of the browser (cookie plexsync_device): signing in again from it replaces this session.
+  deviceId     String?
   ipAddress    String?
   userAgent    String?
   deviceName   String?
@@ -328,6 +330,7 @@ model Session {
   createdAt    DateTime @default(now())
 
   @@index([userId, lastActiveAt(sort: Desc)])
+  @@index([userId, deviceId])
 }
 
 model SystemSetting {

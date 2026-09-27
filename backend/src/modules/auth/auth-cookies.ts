@@ -1,4 +1,5 @@
 import type { Response } from 'express';
+import { randomBytes } from 'crypto';
 
 export function setSessionCookie(res: Response, accessToken: string) {
   res.cookie('plexsync_session', accessToken, {
@@ -61,4 +62,26 @@ export function clearSessionCookie(res: Response) {
     sameSite: 'lax',
     path: '/',
   });
+}
+
+const DEVICE_COOKIE = 'plexsync_device';
+
+/**
+ * Random id of this browser, kept for a year and only sent to /api/auth.
+ *
+ * Signing in again from the same browser replaces its previous session instead
+ * of piling up duplicates. Before, "same browser" was guessed from IP + browser
+ * + OS, so two profiles of the same browser on one PC signed each other out.
+ */
+export function deviceIdFrom(req: any, res: Response): string {
+  const current = readCookie(req, DEVICE_COOKIE);
+  const deviceId = /^[a-f0-9]{32}$/.test(current) ? current : randomBytes(16).toString('hex');
+  res.cookie(DEVICE_COOKIE, deviceId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/auth',
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+  });
+  return deviceId;
 }

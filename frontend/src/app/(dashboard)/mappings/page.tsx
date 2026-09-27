@@ -21,7 +21,7 @@ export default function MappingsPage() {
   const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
   const [currentUser, setCurrentUser] = useState<any>(null);
-  // El historial y las notificaciones enlazan aqui con el anime a mapear:
+  // History and notifications link here with anime to map:
   // /mappings?search=Titulo&season=2.
   const [mappings, setMappings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,27 +29,27 @@ export default function MappingsPage() {
   const [searchFilter, setSearchFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL'>('ALL');
 
-  // Estados de Paginación
+  // Pagination States
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const [jumpPage, setJumpPage] = useState('');
 
-  // Cargar estado inicial de paginación desde URL o localStorage
+  // Load initial pagination state from URL or localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     // ?filter= only narrows the list (reviewing a community suggestion); ?search= opens the create modal
     const filterOnly = (params.get('filter') || '').trim();
     if (filterOnly) setSearchFilter(filterOnly);
-    const titulo = (params.get('search') || '').trim();
-    if (!titulo) return;
+    const title = (params.get('search') || '').trim();
+    if (!title) return;
 
-    const temporada = Math.max(1, parseInt(params.get('season') || '1', 10) || 1);
-    setSearchFilter(titulo);
-    handleOpenCreateModal(titulo, temporada);
+    const season = Math.max(1, parseInt(params.get('season') || '1', 10) || 1);
+    setSearchFilter(title);
+    handleOpenCreateModal(title, season);
 
-    // La intencion se gasta al usarla: recargar la pagina despues no deberia
-    // volver a abrir la ventana.
+    // Intent is consumed upon use: reloading page afterwards should not
+    // reopen the modal.
     const url = new URL(window.location.href);
     url.searchParams.delete('search');
     url.searchParams.delete('season');
@@ -113,7 +113,7 @@ export default function MappingsPage() {
     changePage(1);
   };
 
-  // Modal de Confirmación
+  // Confirmation Modal
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -126,7 +126,7 @@ export default function MappingsPage() {
     onConfirm: () => {},
   });
 
-  // Modal de Búsqueda y Edición Manual
+  // Manual Search and Edit Modal
   const [showModal, setShowModal] = useState(false);
   const [isNewMapping, setIsNewMapping] = useState(false);
   const [editingMappingId, setEditingMappingId] = useState<string | null>(null);
@@ -135,14 +135,14 @@ export default function MappingsPage() {
   const [plexSeasonInput, setPlexSeasonInput] = useState(1);
   const [isSavingModal, setIsSavingModal] = useState(false);
 
-  // Búsqueda en vivo de AniList dentro del modal
+  // Live AniList search within modal
   const [remoteSearchQuery, setRemoteSearchQuery] = useState('');
   const [remoteResults, setRemoteResults] = useState<any[]>([]);
   const [isSearchingRemote, setIsSearchingRemote] = useState(false);
   const [selectedRemoteAnime, setSelectedRemoteAnime] = useState<any | null>(null);
 
-  // Semántica de diálogo y gestión de foco de los modales de esta vista.
-  const { dialogProps: propsMapeo } = useModalA11y(Boolean(showModal), () => setShowModal(false));
+  // Dialog semantics and focus management for modals in this view.
+  const { dialogProps: mappingProps } = useModalA11y(Boolean(showModal), () => setShowModal(false));
 
   useEffect(() => {
     loadUserAndMappings();
@@ -209,13 +209,13 @@ export default function MappingsPage() {
     setConfirmModal({
       isOpen: true,
       title: t('mappings.unlinkConfirm'),
-      description: `¿Deseas desvincular el mapeo para "${item.plexTitle}" (Temporada ${item.plexSeason || 1})? Los futuros scrobbles volverán a buscar coincidencias automáticamente.`,
+      description: t('mappings.unlinkConfirmDesc', { title: item.plexTitle, season: item.plexSeason || 1 }),
       onConfirm: () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         setMappings((prev) => prev.filter((m) => m.id !== item.id));
         showUndoToast(t('common.deletingItem', { name: item.plexTitle }), {
-          alDeshacer: () => loadUserAndMappings(),
-          alExpirar: async () => {
+          onUndo: () => loadUserAndMappings(),
+          onExpire: async () => {
             try {
               await api.mappings.unlink(item.id);
               showToast(t('mappings.mappingUnlinked'), 'info');
@@ -229,21 +229,21 @@ export default function MappingsPage() {
     });
   };
 
-  // Abrir Modal para Nuevo Mapeo
-  const handleOpenCreateModal = (titulo = '', temporada = 1) => {
+  // Open Modal for New Mapping
+  const handleOpenCreateModal = (title = '', season = 1) => {
     setIsNewMapping(true);
     setEditingMappingId(null);
-    setPlexTitleInput(titulo);
-    setPlexSeasonInput(temporada);
-    // Con titulo, la busqueda del tracker arranca por el: es lo unico que se
-    // sabe del anime y lo primero que habria que escribir a mano.
-    setRemoteSearchQuery(titulo);
+    setPlexTitleInput(title);
+    setPlexSeasonInput(season);
+    // With title, tracker search starts with it: only known piece of anime
+    // info and first thing needed to type manually.
+    setRemoteSearchQuery(title);
     setRemoteResults([]);
     setSelectedRemoteAnime(null);
     setShowModal(true);
   };
 
-  // Abrir Modal para Editar Mapeo Existente
+  // Open Modal to Edit Existing Mapping
   const handleOpenEditModal = (item: any) => {
     setIsNewMapping(false);
     setEditingMappingId(item.id);
@@ -265,7 +265,7 @@ export default function MappingsPage() {
     executeRemoteSearch(item.anilistTitle || item.plexTitle, item.plexSeason || 1);
   };
 
-  // Búsqueda en Vivo de AniList
+  // AniList Live Search
   const executeRemoteSearch = async (query: string, season = 1) => {
     if (!query || query.trim().length === 0) return;
     setIsSearchingRemote(true);
@@ -298,19 +298,19 @@ export default function MappingsPage() {
         plexSeason: Number(plexSeasonInput || 1),
         anilistMediaId: selectedRemoteAnime.id,
         anilistTitle: selectedRemoteAnime.title?.romaji || selectedRemoteAnime.title?.english || plexTitleInput,
-        // Antes caía a selectedRemoteAnime.id cuando no había idMal real: cuando el
-        // resultado venía del fallback de Kitsu (sin match en MAL), eso guardaba el
-        // ID de Kitsu como si fuera de MyAnimeList -- mismo tipo de bug que el de
+        // Previously fell back to selectedRemoteAnime.id when real idMal was missing: when
+        // result came from Kitsu fallback (no match on MAL), it saved Kitsu ID
+        // as if it were MyAnimeList -- same kind of bug as the one
         // kitsuMediaId de arriba, confirmado en vivo (malMediaId=48915 siendo en
-        // realidad un ID de Kitsu). Sin idMal real, no se manda nada.
+        // actually a Kitsu ID). Without real idMal, nothing is sent.
         malMediaId: selectedRemoteAnime.idMal ? Number(selectedRemoteAnime.idMal) : undefined,
         malTitle: selectedRemoteAnime.idMal
           ? (selectedRemoteAnime.title?.romaji || selectedRemoteAnime.title?.english)
           : undefined,
-        // kitsuMediaId es Int? en la base de datos: solo se envía cuando el resultado
-        // realmente viene de Kitsu (selectedRemoteAnime.kitsuId), nunca el id de AniList
-        // disfrazado de id de Kitsu (guardaría el tracker equivocado) y nunca como string
-        // (Prisma lo rechaza con un error 500 porque la columna es numérica).
+        // kitsuMediaId is Int? in database: only sent when result
+        // actually comes from Kitsu (selectedRemoteAnime.kitsuId), never AniList id
+        // disguised as Kitsu id (would store wrong tracker) and never as string
+        // (Prisma rejects with 500 error because column is numeric).
         kitsuMediaId: selectedRemoteAnime.kitsuId ? Number(selectedRemoteAnime.kitsuId) : undefined,
         kitsuTitle: selectedRemoteAnime.kitsuId
           ? (selectedRemoteAnime.title?.romaji || selectedRemoteAnime.title?.english || plexTitleInput)
@@ -351,10 +351,10 @@ export default function MappingsPage() {
     a.download = `plexsync-mappings-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`Se exportaron ${mappings.length} mapeos en archivo JSON.`, 'success');
+    showToast(t('mappings.exportedJsonCount', { n: mappings.length }), 'success');
   };
 
-  // Importar Mapeos desde Archivo JSON
+  // Import Mappings from JSON File
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -422,7 +422,7 @@ export default function MappingsPage() {
             t={t}
           />
 
-          {/* CONTENEDOR PRINCIPAL: ESTILO SHOWS MÁS VISTOS DE ADMIN */}
+          {/* MAIN CONTAINER: ADMIN TOP SHOWS STYLE */}
           <div className="glass-card -mx-4 sm:mx-0 rounded-none sm:rounded-[10px] border-x-0 sm:border-x px-0 py-4 sm:p-6 space-y-4">
             <MappingsListSection
               filteredMappings={filteredMappings}
@@ -439,7 +439,7 @@ export default function MappingsPage() {
               t={t}
             />
 
-            {/* BARRA DE PAGINACIÓN COMPLETA */}
+            {/* COMPLETE PAGINATION BAR */}
             {filteredMappings.length > 0 && (
               <MappingsPagination
                 filteredMappings={filteredMappings}
@@ -456,10 +456,10 @@ export default function MappingsPage() {
             )}
           </div>
 
-          {/* Modal de Búsqueda y Edición de Mapeo */}
+          {/* Mapping Search and Edit Modal */}
           {showModal && (
             <MappingEditModal
-              propsMapeo={propsMapeo}
+              mappingProps={mappingProps}
               setShowModal={setShowModal}
               isNewMapping={isNewMapping}
               handleSaveMapping={handleSaveMapping}
@@ -481,7 +481,7 @@ export default function MappingsPage() {
         </main>
       </div>
 
-      {/* BOTTOM SHEET NATIVO MÓVIL PARA MAPEOS */}
+      {/* NATIVE MOBILE BOTTOM SHEET FOR MAPPINGS */}
       {activeMappingSheetItem && (
         <MappingActionSheet
           activeMappingSheetItem={activeMappingSheetItem}
@@ -499,7 +499,7 @@ export default function MappingsPage() {
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         description={confirmModal.description}
-        confirmText="Desvincular"
+        confirmText={t('mappings.unlink')}
         cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={confirmModal.onConfirm}

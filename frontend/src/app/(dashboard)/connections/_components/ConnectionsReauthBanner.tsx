@@ -20,11 +20,11 @@ export function ConnectionsReauthBanner({ hubData }: ConnectionsReauthBannerProp
           <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2 flex-wrap">
             <span>{t('connections.reauthRequiredHeading')}</span>
             <span className="bg-rose-500 text-white text-[10.5px] font-extrabold px-2 py-0.5 rounded-full animate-pulse shadow-sm tracking-tight">
-              {hubData.reconnectionRequiredCount} servicio(s)
+              {t('connections.reauthServicesCount', { n: hubData.reconnectionRequiredCount })}
             </span>
           </h3>
           <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
-            Detectamos que tus conexiones ({hubData.servicesNeedingReauth?.join(', ')}) fueron creadas en una versión previa. Para sincronizar tu avatar oficial, tu ID de usuario y disfrutar de todas las nuevas funciones, haz clic en <strong>&quot;Reconectar&quot;</strong>{' '}{t('connections.onCardsBelow')}</p>
+            {t('connections.reauthBannerPrefix', { trackers: hubData.servicesNeedingReauth?.join(', ') || '' })}{' '}<strong>&quot;{t('connections.reconnect')}&quot;</strong>{' '}{t('connections.onCardsBelow')}</p>
         </div>
       </div>
     </div>

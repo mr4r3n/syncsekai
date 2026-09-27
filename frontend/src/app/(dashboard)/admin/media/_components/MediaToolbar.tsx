@@ -44,7 +44,7 @@ export function MediaToolbar({
 }: MediaToolbarProps) {
   return (
     <>
-          {/* BARRA DE HERRAMIENTAS, FILTROS Y ORDENAMIENTO */}
+          {/* TOOLBAR, FILTERS AND SORTING */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[var(--glass-border)]">
             <div className="flex items-center gap-3 flex-wrap flex-1">
               {/* Buscador Universal */}
@@ -64,7 +64,7 @@ export function MediaToolbar({
                 )}
               </div>
 
-              {/* Filtro por Categoría */}
+              {/* Filter by Category */}
               <div className="flex items-center gap-1 p-1 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs">
                 <button
                   type="button"
@@ -84,7 +84,7 @@ export function MediaToolbar({
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] border border-transparent'
                   }`}
                 >
-                  Portadas
+                  {t('admin.covers')}
                 </button>
                 <button
                   type="button"
@@ -95,11 +95,11 @@ export function MediaToolbar({
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] border border-transparent'
                   }`}
                 >
-                  General
+                  {t('admin.generalCategory')}
                 </button>
               </div>
 
-              {/* Filtro por Estado (Vinculadas vs Huérfanas) */}
+              {/* Filter by Status (Linked vs Orphan) */}
               <div className="flex items-center gap-1 p-1 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs">
                 <button
                   type="button"
@@ -120,7 +120,7 @@ export function MediaToolbar({
                   }`}
                 >
                   <LinkIcon className="w-3 h-3" />
-                  <span>En Uso ({totalLinked})</span>
+                  <span>{t('admin.inUseCount', { count: totalLinked })}</span>
                 </button>
                 <button
                   type="button"
@@ -132,12 +132,12 @@ export function MediaToolbar({
                   }`}
                 >
                   <Unlink className="w-3 h-3" />
-                  <span>Huérfanas ({totalOrphans})</span>
+                  <span>{t('admin.orphansCount', { count: totalOrphans })}</span>
                 </button>
               </div>
             </div>
 
-            {/* Ordenamiento y Contador */}
+            {/* Sorting and Counter */}
             <div className="flex items-center gap-3 shrink-0">
               <div className="w-48 sm:w-52">
                 <CustomSelect
@@ -149,7 +149,7 @@ export function MediaToolbar({
               </div>
 
               <div className="text-xs font-mono text-[var(--text-muted)] whitespace-nowrap">
-                <span>{filteredMedia.length} elementos</span>
+                <span>{t('admin.itemsCount', { n: filteredMedia.length })}</span>
               </div>
             </div>
           </div>

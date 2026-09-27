@@ -1,21 +1,21 @@
 import React from 'react';
 import { Crown, MoreVertical, Edit3, Lock, Unlock, Trash2, Sliders } from 'lucide-react';
-import { Paginacion } from '@/components/Paginacion';
-import { SERVICIOS_USUARIO } from './constants';
+import { Pagination } from '@/components/Pagination';
+import { USER_SERVICES } from './constants';
 import { getAvatarSrc } from './utils';
 
 interface UsersCardGridProps {
-  vista: 'lista' | 'tarjetas';
+  view: 'lista' | 'tarjetas';
   loading: boolean;
   filteredUsers: any[];
-  usuariosPagina: any[];
-  totalPaginas: number;
-  paginaActual: number;
-  setPagina: (p: number) => void;
-  fechaAlta: (iso?: string) => string;
-  haceCuanto: (iso?: string | null) => string;
-  esReciente: (iso?: string) => boolean;
-  abrirOpciones: (u: any) => void;
+  pageUsers: any[];
+  totalPages: number;
+  currentPage: number;
+  setPage: (p: number) => void;
+  registrationDate: (iso?: string) => string;
+  timeAgo: (iso?: string | null) => string;
+  isRecent: (iso?: string) => boolean;
+  openOptions: (u: any) => void;
   setActiveUserMenuId: (id: string | null) => void;
   handleOpenEdit: (u: any) => void;
   handleToggleBlock: (userId: string, currentSuspended: boolean, username: string) => void;
@@ -24,17 +24,17 @@ interface UsersCardGridProps {
 }
 
 export function UsersCardGrid({
-  vista,
+  view,
   loading,
   filteredUsers,
-  usuariosPagina,
-  totalPaginas,
-  paginaActual,
-  setPagina,
-  fechaAlta,
-  haceCuanto,
-  esReciente,
-  abrirOpciones,
+  pageUsers,
+  totalPages,
+  currentPage,
+  setPage,
+  registrationDate,
+  timeAgo,
+  isRecent,
+  openOptions,
   setActiveUserMenuId,
   handleOpenEdit,
   handleToggleBlock,
@@ -42,25 +42,25 @@ export function UsersCardGrid({
   t,
 }: UsersCardGridProps) {
   return (
-    <div className={vista === 'tarjetas' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3' : 'block lg:hidden space-y-2.5'}>
-      {/* Tarjeta de movil, en tres lineas en vez de cinco.
+    <div className={view === 'tarjetas' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3' : 'block lg:hidden space-y-2.5'}>
+      {/* Mobile card, in three lines instead of five.
           ------------------------------------------------------------------
-          Medía 239 px de alto y con cinco cuentas la pagina se iba a 1669:
-          entraba una tarjeta y media en pantalla. La altura se la comian dos
-          rotulos -"SERVIDORES" y "TRACKERS"- que gastaban un renglon entero
-          para tres pastillas de 30 px, una fila propia para "Permisos
-          Plataforma" y un "2FA: INACTIVO" que ocupa lo mismo diga lo que
-          diga.
+          Measured 239 px high and with five accounts page stretched to 1669:
+          barely 1.5 cards fit on screen. Height was consumed by two
+          headers—"SERVERS" and "TRACKERS"—wasting an entire line
+          for three 30 px pills, a dedicated row for "Platform
+          Permissions", and a "2FA: INACTIVE" occupying space regardless
+          of state.
 
-          Los seis servicios caben de sobra en una sola linea (unos 230 px de
-          los 343 disponibles), y lo que valia la pena de los rotulos -saber
-          que es cada pastilla- ya estaba en su title. */}
+          All six services comfortably fit on one line (about 230 px of
+          343 available), and the value of headers—identifying
+          pills—was already in their title attribute. */}
       {loading ? (
         <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card lg:col-span-full">{t('users.loadingUsers')}</div>
       ) : filteredUsers.length === 0 ? (
         <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card lg:col-span-full">{t('users.noUsersFound')}</div>
       ) : (
-        usuariosPagina.map((u) => {
+        pageUsers.map((u) => {
           const isSuspended = u.permissions?.isSuspended;
           const avatarSrc = getAvatarSrc(u.avatarUrl);
           const perms = u.permissions || {};
@@ -78,11 +78,11 @@ export function UsersCardGrid({
               key={u.id}
               role="button"
               tabIndex={0}
-              onClick={() => abrirOpciones(u)}
+              onClick={() => openOptions(u)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  abrirOpciones(u);
+                  openOptions(u);
                 }
               }}
               aria-label={t('users.userOptions')}
@@ -90,7 +90,7 @@ export function UsersCardGrid({
                 isSuspended ? 'border-[var(--status-danger)]/25' : 'border-[var(--border-subtle)]'
               }`}
             >
-              {/* 1. Quien es */}
+              {/* 1. Who it is */}
               <div className="flex items-center gap-3">
                 {avatarSrc ? (
                   <img
@@ -116,8 +116,8 @@ export function UsersCardGrid({
                   </div>
                   <div className="text-[11px] text-[var(--text-muted)] truncate font-mono">{u.email}</div>
                   <div className="text-[10.5px] text-[var(--text-muted)] font-mono">
-                    {t('users.joinedOn', { fecha: fechaAlta(u.createdAt) })} · {haceCuanto(u.lastActiveAt)}
-                    {esReciente(u.createdAt) && <span className="ml-1.5 text-sky-400">{t('users.newBadge')}</span>}
+                    {t('users.joinedOn', { date: registrationDate(u.createdAt) })} · {timeAgo(u.lastActiveAt)}
+                    {isRecent(u.createdAt) && <span className="ml-1.5 text-sky-400">{t('users.newBadge')}</span>}
                   </div>
                 </div>
 
@@ -132,7 +132,7 @@ export function UsersCardGrid({
                 >
                   <MoreVertical className="w-4 h-4" aria-hidden="true" />
                 </button>
-                {/* En escritorio, las mismas tres acciones que la lista. */}
+                {/* On desktop, same three actions as the list. */}
                 <div className="hidden lg:flex items-center gap-0.5 shrink-0">
                   <button
                     onClick={(e) => {
@@ -172,13 +172,12 @@ export function UsersCardGrid({
                 </div>
               </div>
 
-              {/* 2. Todo lo demas en una sola linea que envuelve.
-                  Eran dos filas con un separador entre medias, y en una
-                  cuenta normal la de arriba llevaba unicamente la pastilla
-                  de permisos empujada a la derecha: una linea entera para
-                  un dato y un hueco. Las pastillas aparecen solo cuando
-                  dicen algo -es admin, esta bloqueada, tiene 2FA- y los
-                  servicios, solo los que estan vinculados. */}
+              {/* 2. Everything else on a single wrapping line.
+                  Previously two rows with separator between, and on normal
+                  accounts top row carried only the permissions pill pushed
+                  to right: a whole line for one value and empty space.
+                  Pills appear only when informative—admin, blocked, 2FA—and
+                  services appear only when linked. */}
               <div className="flex items-center gap-1.5 flex-wrap font-mono text-[10.5px] pt-2.5 border-t border-[var(--glass-border)]">
                 {u.role === 'ADMIN' && (
                   <span className="px-2 py-0.5 rounded-[var(--radius-xs)] font-bold border bg-[var(--accent-primary)]/15 text-[var(--accent-text)] border-[var(--accent-primary)]/30">
@@ -195,26 +194,26 @@ export function UsersCardGrid({
                 )}
 
                 {(() => {
-                  const vinculados = SERVICIOS_USUARIO.filter((s) => !!u.connections?.[s.id]);
-                  if (vinculados.length === 0) {
+                  const linked = USER_SERVICES.filter((s) => !!u.connections?.[s.id]);
+                  if (linked.length === 0) {
                     return (
                       <span className="text-[var(--text-muted)]">{t('users.noLinkedServices')}</span>
                     );
                   }
-                  return vinculados.map(({ id, corto, nombre, color }) => {
-                    const detalle =
+                  return linked.map(({ id, short, name, color }) => {
+                    const detail =
                       u.connections?.[`${id}Server`] || u.connections?.[`${id}User`];
                     return (
                       <span
                         key={id}
                         title={t('users.linkedTo', {
-                          service: nombre,
-                          detail: detalle || t('users.connected'),
+                          service: name,
+                          detail: detail || t('users.connected'),
                         })}
                         className="h-6 px-2 rounded-[var(--radius-xs)] inline-flex items-center justify-center font-bold border border-current/35 bg-current/10"
                         style={{ color: `var(${color})` }}
                       >
-                        {corto}
+                        {short}
                       </span>
                     );
                   });
@@ -241,14 +240,14 @@ export function UsersCardGrid({
           );
         })
       )}
-      {!loading && totalPaginas > 1 && (
-        <Paginacion
-          pagina={paginaActual}
-          totalPaginas={totalPaginas}
-          onCambio={setPagina}
-          resumen={t('common.page', { page: paginaActual, total: totalPaginas })}
-          etiquetaAnterior={t('common.previous')}
-          etiquetaSiguiente={t('common.next')}
+      {!loading && totalPages > 1 && (
+        <Pagination
+          page={currentPage}
+          totalPages={totalPages}
+          onChange={setPage}
+          summary={t('common.page', { page: currentPage, total: totalPages })}
+          prevLabel={t('common.previous')}
+          nextLabel={t('common.next')}
           className="pt-1 lg:col-span-full"
         />
       )}

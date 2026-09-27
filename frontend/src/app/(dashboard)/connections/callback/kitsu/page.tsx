@@ -27,7 +27,7 @@ function KitsuCallbackContent() {
 
     if (errorParam) {
       setStatus('error');
-      setErrorMessage(`Kitsu reportó un error: ${errorParam}`);
+      setErrorMessage(t('connections.trackerReportedError', { tracker: 'Kitsu', error: errorParam }));
       return;
     }
 
@@ -41,7 +41,7 @@ function KitsuCallbackContent() {
       const res = await api.kitsu.handleOAuthCallback(code);
       setUserData(res);
       setStatus('success');
-      showToast(`¡Cuenta de Kitsu (@${res.username || 'Usuario'}) vinculada con éxito!`, 'success');
+      showToast(t('connections.trackerLinkedSuccess', { tracker: 'Kitsu', username: res.username || t('common.user') }), 'success');
 
       setTimeout(() => {
         router.push('/connections');

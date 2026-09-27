@@ -8,14 +8,14 @@ import {
   Copy,
 } from 'lucide-react';
 import { BottomSheet } from '@/components/BottomSheet';
-import { SyncStatus, type TrackersVinculados } from '@/components/SyncStatus';
-import { etiquetasSync } from './utils';
+import { SyncStatus, type LinkedTrackers } from '@/components/SyncStatus';
+import { syncLabels } from './utils';
 
 interface HistoryBottomSheetProps {
   activeHistorySheetItem: any | null;
   setActiveHistorySheetItem: (item: any | null) => void;
   resolveCoverUrl: (cover: string | null) => string | null;
-  vinculados: TrackersVinculados;
+  linked: LinkedTrackers;
   handleDeleteAndRevert: (item: any) => void;
   router: any;
   showToast: (message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
@@ -26,7 +26,7 @@ export function HistoryBottomSheet({
   activeHistorySheetItem,
   setActiveHistorySheetItem,
   resolveCoverUrl,
-  vinculados,
+  linked,
   handleDeleteAndRevert,
   router,
   showToast,
@@ -34,7 +34,7 @@ export function HistoryBottomSheet({
 }: HistoryBottomSheetProps) {
   return (
     <>
-      {/* BOTTOM SHEET NATIVO MÓVIL PARA HISTORIAL */}
+      {/* NATIVE MOBILE BOTTOM SHEET FOR HISTORY */}
       {activeHistorySheetItem && (
         <BottomSheet
           isOpen={!!activeHistorySheetItem}
@@ -131,14 +131,14 @@ export function HistoryBottomSheet({
             },
           ]}
         >
-          {/* Estado: tres iconos con su marca, y el resto en una linea gris. */}
+          {/* Status: three icons with indicator, and remainder in a gray line. */}
           <div className="space-y-2.5">
             <SyncStatus
-              vinculados={vinculados}
+              linked={linked}
               anilist={activeHistorySheetItem.anilistStatus}
               mal={activeHistorySheetItem.malStatus}
               kitsu={activeHistorySheetItem.kitsuStatus}
-              etiquetas={etiquetasSync(activeHistorySheetItem, t)}
+              labels={syncLabels(activeHistorySheetItem, t)}
             />
             <p className="text-[11px] font-mono text-[var(--text-muted)]">
               {Math.round(activeHistorySheetItem.viewPercentage || 95)}%{' '}

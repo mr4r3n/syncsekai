@@ -27,7 +27,7 @@ export function ActiveSessionsSection({
 }: ActiveSessionsSectionProps) {
   return (
     <>
-            {/* SECCIÓN COMPLETA: DISPOSITIVOS & SESIONES ACTIVAS (100% DINÁMICO & CON ICONOS DE MARCA) */}
+            {/* FULL SECTION: ACTIVE DEVICES & SESSIONS (100% DYNAMIC & WITH BRAND ICONS) */}
             <div className="col-span-full glass-card p-6 sm:p-7 space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--glass-border)] pb-4">
                 <div className="flex items-center gap-3.5">
@@ -52,7 +52,7 @@ export function ActiveSessionsSection({
                 </button>
               </div>
 
-              {/* Lista Dinámica de Sesiones */}
+              {/* Dynamic Sessions List */}
               {sessions.length === 0 ? (
                 <div className="p-8 text-center text-xs font-mono text-[var(--text-muted)] bg-[var(--bg-surface)] rounded-[6px] border border-[var(--border-subtle)]">{t('security.noSessionsFound')}</div>
               ) : (
@@ -66,7 +66,7 @@ export function ActiveSessionsSection({
                     >
                       <div className="flex items-center justify-between gap-2.5">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          {/* Icono directo sin caja contenedora */}
+                          {/* Direct icon without container box */}
                           <div className="shrink-0 flex items-center justify-center">
                             {renderDeviceBrandIcon(sess.iconType, sess.browser, sess.os)}
                           </div>
@@ -76,12 +76,12 @@ export function ActiveSessionsSection({
                               {sess.deviceName || t('security.webDevice')}
                             </div>
                             <div className="text-[10.5px] text-[var(--text-muted)] font-mono truncate">
-                              {sess.browser || 'Plex Web'} • {sess.os || 'Desconocido'}
+                              {sess.browser || 'Plex Web'} • {sess.os || t('common.unknown')}
                             </div>
                           </div>
                         </div>
 
-                        {/* Indicador Actual o Botón Revocar Individual */}
+                        {/* Current Indicator or Individual Revoke Button */}
                         {sess.isCurrent ? (
                           <span className="badge-status-success shrink-0 text-[10px] px-2 py-0.5 whitespace-nowrap">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -104,7 +104,7 @@ export function ActiveSessionsSection({
                         )}
                       </div>
 
-                      {/* Footer con IP y Fecha Relativa */}
+                      {/* Footer with IP and Relative Date */}
                       <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)] pt-2 border-t border-[var(--glass-border)]">
                         <span>IP: {sess.ipAddress}</span>
                         <span className={sess.isCurrent ? 'text-emerald-400 font-semibold' : 'text-[var(--text-secondary)]'}>

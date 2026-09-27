@@ -33,36 +33,36 @@ export function AdminMappingsFilterTabs({
         <GitMerge className="w-4 h-4 text-[var(--accent-text)]" />
         <h2 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('admin.generalMappingCatalogue')}</h2>
         <span className="text-xs text-[var(--text-muted)] font-mono">
-          ({filteredMappings.length} mostrados)
+          {t('admin.shownCount', { count: filteredMappings.length })}
         </span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">
-        {/* Tabs de Filtro (Swipeable en móvil) */}
+        {/* Filter Tabs (Swipeable on mobile) */}
         <div className="w-full sm:w-auto flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap shrink-0 pb-1 sm:pb-0">
           <button
             onClick={() => handleTypeFilterChange('ALL')}
             className={`${typeFilter === 'ALL' ? 'filter-tab-active' : 'filter-tab'} shrink-0`}
           >
-            Todos ({totalCount})
+            {t('admin.tabAllCount', { count: totalCount })}
           </button>
           <button
             onClick={() => handleTypeFilterChange('GLOBAL')}
             className={`${typeFilter === 'GLOBAL' ? 'filter-tab-active text-amber-400 border-amber-500/30' : 'filter-tab'} shrink-0`}
           >
-            Globales ({globalCount})
+            {t('admin.tabGlobalCount', { count: globalCount })}
           </button>
           <button
             onClick={() => handleTypeFilterChange('USER')}
             className={`${typeFilter === 'USER' ? 'filter-tab-active text-sky-400 border-sky-500/30' : 'filter-tab'} shrink-0`}
           >
-            Usuarios ({userSpecificCount})
+            {t('admin.tabUserCount', { count: userSpecificCount })}
           </button>
           <button
             onClick={() => handleTypeFilterChange('PENDING')}
             className={`${typeFilter === 'PENDING' ? 'filter-tab-active text-rose-400 border-rose-500/30' : 'filter-tab'} shrink-0`}
           >
-            Pendientes ({pendingCount})
+            {t('admin.tabPendingCount', { count: pendingCount })}
           </button>
         </div>
 

@@ -42,7 +42,7 @@ export function SetupStepSmtp({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-[var(--text-secondary)]">Puerto:</label>
+                      <label className="text-xs font-bold text-[var(--text-secondary)]">{t('setup.port')}</label>
                       <input
                         type="number"
                         placeholder={t('setup.smtpPortPlaceholder')}
@@ -78,7 +78,7 @@ export function SetupStepSmtp({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[var(--text-secondary)]">Remitente Oficial (From):</label>
+                    <label className="text-xs font-bold text-[var(--text-secondary)]">{t('setup.officialSender')}</label>
                     <input
                       type="text"
                       placeholder="SyncSekai <noreply@tudominio.com>"

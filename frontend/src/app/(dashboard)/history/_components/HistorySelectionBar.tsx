@@ -21,11 +21,11 @@ export function HistorySelectionBar({
 }: HistorySelectionBarProps) {
   return (
     <>
-      {/* BARRA DE SELECCION MULTIPLE
-          Anclada abajo y fuera del flujo, para no desplazar la lista al
-          aparecer. Ademas asi sigue
-          visible mientras marcas mas, y en el movil cae donde llega el
-          pulgar. */}
+      {/* MULTI-SELECTION BAR
+          Anchored at bottom and out of flow, avoiding list shifts when
+          appearing. Also remains
+          visible while selecting more, positioned within thumb reach
+          on mobile. */}
       {selectedIds.length > 0 && (
         <div
           role="region"

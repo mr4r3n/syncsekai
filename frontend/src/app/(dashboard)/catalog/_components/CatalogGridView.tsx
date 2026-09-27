@@ -50,13 +50,13 @@ export function CatalogGridView({
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
 
-              {/* Header Flotante Superior (Estado + Calificación) */}
+              {/* Top Floating Header (Status + Rating) */}
               <div className="absolute top-1.5 inset-x-1.5 flex items-center justify-between gap-1 pointer-events-none">
                 <div
                   // max-w-[50%] recortaba "Completado" a "Complet…" en tarjetas
-                  // estrechas (160px en móvil): el 50% daba 80px y la etiqueta
-                  // necesita ~75px más relleno. "Viendo", más corto, sí cabía, y
-                  // de ahí que unas tarjetas se vieran bien y otras no.
+                  // narrow screens (160px on mobile): 50% yielded 80px and the label
+                  // needs ~75px plus padding. "Watching", shorter, did fit, hence
+                  // why some cards looked fine while others broke.
                   className="px-1.5 py-0.5 rounded-[4px] text-[9.5px] font-bold bg-black/80 backdrop-blur-md border shadow-sm truncate max-w-[62%] shrink-0"
                   style={{
                     color: badge.text,
@@ -68,17 +68,17 @@ export function CatalogGridView({
 
                 <div className="flex items-center gap-1 pointer-events-auto">
                   {/*
-                    Ambas variantes comparten forma, tamaño y escala /10.
-                    Antes, al no haber nota propia se pintaba averageScore crudo
-                    ("90%"): escala sobre 100, sin icono y en otro color, en el
-                    mismo hueco donde el resto muestra una nota sobre 10. Rompía
-                    la lectura de la rejilla y no se entendía qué medía.
-                    El color y el icono siguen distinguiendo tu nota del promedio
-                    de la comunidad, pero ya no cambia la unidad.
+                    Both variants share shape, size, and /10 scale.
+                    Previously, lacking custom rating, raw averageScore was shown
+                    ("90%"): 100-point scale, no icon, different color, in the
+                    same slot where others display rating out of 10. Disrupted
+                    grid scanning and obscured what was measured.
+                    Color and icon still distinguish your rating from community
+                    average, but the unit no longer changes.
                   */}
                   {anime.rating > 0 ? (
                     <div
-                      title={`Tu puntuación: ${Number(anime.rating).toFixed(1)} de 10`}
+                      title={t('catalog.yourScore', { score: Number(anime.rating).toFixed(1) })}
                       className="px-1.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-black/80 backdrop-blur-md text-amber-300 flex items-center gap-0.5 border border-amber-500/25 shadow-sm shrink-0"
                     >
                       <Star className="hidden min-[420px]:block w-2.5 h-2.5 fill-amber-300 shrink-0" aria-hidden="true" />
@@ -86,7 +86,7 @@ export function CatalogGridView({
                     </div>
                   ) : anime.averageScore ? (
                     <div
-                      title={`Promedio de la comunidad: ${(Number(anime.averageScore) / 10).toFixed(1)} de 10`}
+                      title={t('catalog.communityAverage', { score: (Number(anime.averageScore) / 10).toFixed(1) })}
                       className="px-1.5 py-0.5 rounded-[4px] text-[11px] font-bold bg-black/80 backdrop-blur-md text-sky-300 flex items-center gap-0.5 border border-sky-500/25 shadow-sm shrink-0"
                     >
                       <Star className="hidden min-[420px]:block w-2.5 h-2.5 shrink-0" aria-hidden="true" />
@@ -126,7 +126,7 @@ export function CatalogGridView({
               </div>
             </div>
 
-            {/* Información Inferior de la Tarjeta */}
+            {/* Bottom Card Information */}
             <div className="p-2 space-y-1">
               <h3
                 className="font-bold text-xs truncate text-[var(--text-primary)] leading-tight group-hover:text-sky-400 transition-colors"
@@ -139,9 +139,9 @@ export function CatalogGridView({
               >
                 <span className="truncate max-w-[60%]">{anime.studio || 'Studio'}</span>
                 <div className="flex items-center gap-1 font-mono shrink-0">
-                  {/* Dos datos distintos: que temporada es y cuando
-                      se emitio. Se pinta cada uno solo si lo hay, en
-                      vez de rellenar con 'TV' lo que no se sabe. */}
+                  {/* Two distinct data points: which season and air
+                      date. Each is rendered only if present,
+                      instead of filling unknown values with 'TV'. */}
                   {getSeasonNumber(anime) > 1 && (
                     <span className="text-sky-400 font-bold">T{getSeasonNumber(anime)}</span>
                   )}

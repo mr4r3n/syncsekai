@@ -48,7 +48,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     saveHandlerRef.current = handler;
   }, []);
 
-  // Al cambiar de ruta limpia el dirty state automáticamente
+  // On route change, dirty state is automatically cleared
   useEffect(() => {
     setDirty(false);
     saveHandlerRef.current = null;
@@ -56,7 +56,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     setPendingNavigation(null);
   }, [pathname, setDirty]);
 
-  // Interceptar navegación por enlaces o router
+  // Intercept navigation via links or router
   const confirmNavigation = useCallback(
     (targetUrl: string, onProceed?: () => void): boolean => {
       if (!isDirtyRef.current) {
@@ -72,7 +72,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     [router]
   );
 
-  // Interceptar cierre o recarga de pestaña
+  // Intercept tab closing or reload
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirtyRef.current) {
@@ -84,7 +84,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
-  // Interceptar botón atrás/adelante del navegador
+  // Intercept browser back/forward button
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
       if (isDirtyRef.current) {
@@ -101,7 +101,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Acciones del modal
+  // Modal actions
   const handleCancel = () => {
     setIsModalOpen(false);
     setPendingNavigation(null);
@@ -130,7 +130,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     try {
       const result = await saveHandlerRef.current();
       if (result === false) {
-        // El guardado falló explícitamente, cancelamos navegación
+        // Save explicitly failed, navigation cancelled
         setIsSaving(false);
         return;
       }
@@ -163,7 +163,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
     >
       {children}
 
-      {/* MODAL DE PREVENCIÓN DE PÉRDIDA DE CAMBIOS GLASSMORPHISM */}
+      {/* GLASSMORPHISM CHANGE LOSS PREVENTION MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
           <div
@@ -172,7 +172,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
             aria-labelledby="unsaved-modal-title"
             className="w-full max-w-md rounded-[10px] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-6 shadow-[var(--glass-shadow-lg)] space-y-5 text-[var(--text-primary)] backdrop-blur-2xl animate-in zoom-in-95 duration-200"
           >
-            {/* Header con Icono de Advertencia y Botón de Cerrar */}
+            {/* Header with Warning Icon and Close Button */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-[8px] flex items-center justify-center border shrink-0 bg-amber-500/10 border-amber-500/20 text-amber-400 shadow-xs">
@@ -196,7 +196,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
             {/* Mensaje Informativo */}
             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('common.unsavedDesc')}</p>
 
-            {/* Botones de Acción */}
+            {/* Action Buttons */}
             <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[var(--glass-border)]">
               <button
                 type="button"
@@ -212,7 +212,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
                 className="btn-danger text-xs px-3.5 py-2 flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Descartar</span>
+                <span>{t('common.discard')}</span>
               </button>
 
               <button
@@ -226,7 +226,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
                 ) : (
                   <Save className="w-3.5 h-3.5" />
                 )}
-                <span>{isSaving ? 'Guardando...' : t('common.saveAndExit')}</span>
+                <span>{isSaving ? t('common.saving') : t('common.saveAndExit')}</span>
               </button>
             </div>
           </div>

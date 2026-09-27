@@ -2,18 +2,18 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
-  // Generar nonce criptográfico aleatorio en base64 para cada solicitud
+  // Generate random cryptographic base64 nonce for each request
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const isDev = process.env.NODE_ENV !== 'production';
 
   // Directivas de scripts estrictas:
-  // En producción: 'nonce-${nonce}' 'strict-dynamic', sin 'unsafe-inline'.
-  // En desarrollo: 'unsafe-eval' para HMR de Next.js / React.
+  // In production: 'nonce-${nonce}' 'strict-dynamic', without 'unsafe-inline'.
+  // In development: 'unsafe-eval' for Next.js / React HMR.
   const scriptSrc = isDev
     ? `'self' 'unsafe-eval' 'nonce-${nonce}' 'strict-dynamic'`
     : `'self' 'nonce-${nonce}' 'strict-dynamic'`;
 
-  // connect-src estricto: únicamente 'self' y https://plex.tv (usado por PlexPinModal)
+  // Strict connect-src: only 'self' and https://plex.tv (used by PlexPinModal)
   const connectSrc = isDev
     ? "'self' https://plex.tv ws: wss: http: https:"
     : "'self' https://plex.tv";
@@ -26,9 +26,9 @@ export function proxy(request: NextRequest) {
     "form-action 'self'",
     `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    // En desarrollo el backend vive en http://localhost:4000 y las portadas se
-    // sirven desde ahí, así que sin http: la CSP las bloquea. En producción
-    // frontend y backend comparten origen y basta con 'self'.
+    // In development the backend lives at http://localhost:4000 and covers are
+    // served from there, so without http: CSP blocks them. In production
+    // frontend and backend share origin and 'self' suffices.
     `img-src 'self' data: blob: https:${isDev ? ' http:' : ''}`,
     "font-src 'self' data: https://fonts.gstatic.com",
     `connect-src ${connectSrc}`,
@@ -54,10 +54,10 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Interceptar todas las rutas excepto recursos estáticos o internos:
-     * - api (rutas proxy)
-     * - _next/static (archivos estáticos cacheados)
-     * - _next/image (optimización de imágenes)
+     * Intercept all routes except static or internal resources:
+     * - api (proxy routes)
+     * - _next/static (cached static files)
+     * - _next/image (image optimization)
      * - favicon.ico, sitemap.xml, robots.txt
      */
     {

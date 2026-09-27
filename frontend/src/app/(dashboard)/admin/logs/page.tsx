@@ -83,7 +83,7 @@ export default function AdminLogsPage() {
     if (!newDomain.trim()) return;
     try {
       await api.admin.addDomain(newDomain.trim(), isAllowedDomain);
-      showToast(`Dominio "${newDomain}" agregado a las políticas.`, 'success');
+      showToast(t('admin.domainAddedPolicy', { domain: newDomain }), 'success');
       setNewDomain('');
       loadData();
     } catch (err: any) {
@@ -92,11 +92,11 @@ export default function AdminLogsPage() {
   };
 
   const handleDeleteDomain = (id: string) => {
-    const dominio = (data?.domainPolicies || []).find((d: any) => d.id === id);
+    const domain = (data?.domainPolicies || []).find((d: any) => d.id === id);
     setData((prev: any) => prev ? { ...prev, domainPolicies: (prev.domainPolicies || []).filter((d: any) => d.id !== id) } : prev);
-    showUndoToast(t('common.deletingItem', { name: dominio?.domain || id }), {
-      alDeshacer: () => loadData(),
-      alExpirar: async () => {
+    showUndoToast(t('common.deletingItem', { name: domain?.domain || id }), {
+      onUndo: () => loadData(),
+      onExpire: async () => {
         try {
           await api.admin.deleteDomain(id);
           showToast(t('admin.domainRemoved'), 'info');
@@ -128,7 +128,7 @@ export default function AdminLogsPage() {
     >
       <Topbar rootLabel={t('navigation.systemAdmin')} currentLabel={t('admin.logsTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -137,7 +137,7 @@ export default function AdminLogsPage() {
                 <div className="w-8 h-8 rounded-[6px] bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border border-[var(--nav-active-border)] flex items-center justify-center">
                   <Activity className="w-4 h-4" />
                 </div>
-                <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)] font-heading">Salud &amp; Logs del Sistema</h1>
+                <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)] font-heading">{t('admin.systemHealthLogs')}</h1>
               </div>
               <p className="text-xs text-[var(--text-secondary)] mt-1">{t('admin.logsSubtitle')}</p>
             </div>
@@ -149,7 +149,7 @@ export default function AdminLogsPage() {
                 className="btn-secondary"
               >
                 <RefreshCw className={`w-3.5 h-3.5 text-[var(--accent-text)] ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span>Refrescar Logs</span>
+                <span>{t('admin.refreshLogs')}</span>
               </button>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function AdminLogsPage() {
 
       {/* CONTENIDO PRINCIPAL */}
       <main className="w-full px-4 sm:px-6 md:px-8 py-8 space-y-8 min-w-0">
-        {/* SECCIÓN POLÍTICAS DE DOMINIO DE CORREO */}
+        {/* EMAIL DOMAIN POLICIES SECTION */}
         <div className="glass-card p-6 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--glass-border)] pb-4">
             <div>
@@ -169,7 +169,7 @@ export default function AdminLogsPage() {
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">{t('admin.domainPoliciesDesc')}</p>
             </div>
 
-            {/* Form para agregar nuevo dominio en línea compacta */}
+            {/* Compact inline form to add new domain */}
             <form onSubmit={handleAddDomain} className="flex items-center gap-2 shrink-0 flex-nowrap">
               <input
                 type="text"
@@ -177,7 +177,7 @@ export default function AdminLogsPage() {
                 suppressHydrationWarning
                 autoComplete="off"
                 placeholder="ej: tempmail.com"
-                      aria-label="Dominio a bloquear"
+                aria-label={t('admin.domainToBlock')}
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 className="w-36 sm:w-48 h-[36px] min-h-[36px] px-3.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-xs font-mono text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:border-[var(--border-focus)] focus:ring-1 focus:ring-[var(--border-focus)] outline-none transition-all"
@@ -188,8 +188,8 @@ export default function AdminLogsPage() {
                   onChange={(val) => setIsAllowedDomain(val === 'ALLOW')}
                   accentColor="sky"
                   options={[
-                    { value: 'ALLOW', label: 'Permitir' },
-                    { value: 'BLOCK', label: 'Bloquear' },
+                    { value: 'ALLOW', label: t('admin.allow') },
+                    { value: 'BLOCK', label: t('admin.block') },
                   ]}
                 />
               </div>
@@ -198,7 +198,7 @@ export default function AdminLogsPage() {
                 className="btn-primary h-[36px] min-h-[36px] px-3.5 text-xs flex items-center gap-1 shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Agregar</span>
+                <span>{t('common.add')}</span>
               </button>
             </form>
           </div>
@@ -240,12 +240,12 @@ export default function AdminLogsPage() {
                           : 'h-7 px-2.5 rounded-[4px] text-[10.5px] font-mono font-semibold inline-flex items-center justify-center bg-rose-500/15 text-rose-400 border border-rose-500/30 select-none'
                       }
                     >
-                      {dp.isAllowed ? 'PERMITIDO' : 'BLOQUEADO'}
+                      {dp.isAllowed ? t('admin.allowed') : t('admin.blocked')}
                     </span>
                     <button
                       onClick={() => handleDeleteDomain(dp.id)}
                       className="btn-danger btn-icon-sm"
-                      title="Eliminar dominio"
+                      title={t('admin.deleteDomain')}
                     >
                       <Trash2 className="w-3.5 h-3.5 text-rose-400" />
                     </button>
@@ -256,7 +256,7 @@ export default function AdminLogsPage() {
           </div>
         </div>
 
-        {/* SECCIÓN TERMINAL DE LOGS EN VIVO */}
+        {/* LIVE LOGS TERMINAL SECTION */}
         <div className="glass-card p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
@@ -272,7 +272,7 @@ export default function AdminLogsPage() {
                   type="text"
                   suppressHydrationWarning
                   autoComplete="off"
-                  placeholder="Filtrar mensajes..."
+                  placeholder={t('admin.filterMessagesPlaceholder')}
                       aria-label={t('admin.filterLogMessages')}
                   value={logSearch}
                   onChange={(e) => setLogSearch(e.target.value)}
@@ -311,12 +311,12 @@ export default function AdminLogsPage() {
               ))
             ) : filteredLogs.length === 0 ? (
               <div className="py-8 text-center text-[var(--text-muted)]">
-                &gt; No hay eventos registrados que coincidan con los filtros.
+                {t('admin.noMatchingEvents')}
               </div>
             ) : (
               filteredLogs.map((log: any, idx: number) => (
                 <div key={idx} className="flex items-start gap-2 leading-relaxed">
-                  <span className="text-[var(--text-muted)] shrink-0 select-none">[{log.timestamp || 'AHORA'}]</span>
+                  <span className="text-[var(--text-muted)] shrink-0 select-none">[{log.timestamp || t('admin.now')}]</span>
                   <span
                     className={`px-1.5 rounded-[4px] text-[10px] font-bold shrink-0 ${
                       log.level === 'ERROR'

@@ -4,50 +4,50 @@ import React from 'react';
 import { Check, X } from 'lucide-react';
 
 /**
- * Estado de sincronización de un scrobble en los tres trackers.
+ * Sync status of a scrobble across the three trackers.
  *
- * ## Por qué existe
+ * ## Why it exists
  *
- * Un único componente para el estado de los trackers en todas las pantallas.
- * Un fallo y un tracker sin configurar deben distinguirse de un vistazo, así
- * que son tres estados, no dos:
+ * A single component for tracker status across all screens.
+ * A failure and an unconfigured tracker must be distinguishable at a glance,
+ * so there are three states, not two:
  *
- * | Estado           | Se ve                                    |
+ * | Status           | Appearance                               |
  * |------------------|------------------------------------------|
- * | Sincronizado     | icono en color de marca, con una marca ✓ |
- * | Falló            | icono en rojo de sistema, con una ✕      |
- * | Sin configurar   | icono apagado, sin marca                 |
+ * | Synced           | brand-colored icon, with a ✓ checkmark   |
+ * | Failed           | system red icon, with an ✕ cross         |
+ * | Unconfigured     | dimmed icon, without checkmark           |
  *
- * El color de marca identifica **de qué tracker se trata**; la marca dice **qué
- * pasó**. Así el estado no depende sólo del color, que es lo que exige que
- * también lo entienda quien no distingue el rojo del verde.
+ * Brand color identifies **which tracker it is**; the symbol says **what
+ * happened**. This way status does not rely solely on color, allowing
+ * those who cannot distinguish red from green to understand it.
  */
 
-export type EstadoSync = 'SUCCESS' | 'FAILED' | string | null | undefined;
+export type SyncState = 'SUCCESS' | 'FAILED' | string | null | undefined;
 
 const TRACKERS = {
-  anilist: { nombre: 'AniList', color: 'var(--brand-anilist)' },
-  mal: { nombre: 'MyAnimeList', color: 'var(--brand-mal)' },
-  kitsu: { nombre: 'Kitsu', color: 'var(--brand-kitsu)' },
+  anilist: { name: 'AniList', color: 'var(--brand-anilist)' },
+  mal: { name: 'MyAnimeList', color: 'var(--brand-mal)' },
+  kitsu: { name: 'Kitsu', color: 'var(--brand-kitsu)' },
 } as const;
 
 export type Tracker = keyof typeof TRACKERS;
 
 /**
- * Qué trackers tiene vinculados el usuario. Es un dato de la cuenta, no del
- * scrobble: un tracker sin vincular no es que fallara, es que nunca se
- * intentó. Sin esta distinción, «no lo tienes puesto» y «lo tienes puesto y
- * fue mal» se veían igual.
+ * Which trackers the user has linked. Account data, not scrobble
+ * data: an unlinked tracker didn't fail, it was never
+ * attempted. Without this distinction, "not set up" and "set up and
+ * failed" looked identical.
  */
-export interface TrackersVinculados {
+export interface LinkedTrackers {
   anilist: boolean;
   mal: boolean;
   kitsu: boolean;
 }
 
-const TODOS_VINCULADOS: TrackersVinculados = { anilist: true, mal: true, kitsu: true };
+const ALL_LINKED: LinkedTrackers = { anilist: true, mal: true, kitsu: true };
 
-function Glifo({ tracker }: { tracker: Tracker }) {
+function Glyph({ tracker }: { tracker: Tracker }) {
   if (tracker === 'anilist') {
     return (
       <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor" aria-hidden="true">
@@ -69,15 +69,15 @@ function Glifo({ tracker }: { tracker: Tracker }) {
   );
 }
 
-function Marca({ estado }: { estado: EstadoSync }) {
-  if (estado === 'SUCCESS') {
+function Mark({ status }: { status: SyncState }) {
+  if (status === 'SUCCESS') {
     return (
       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--status-success)] text-white flex items-center justify-center ring-2 ring-[var(--bg-surface)]">
         <Check className="w-2 h-2" strokeWidth={4} aria-hidden="true" />
       </span>
     );
   }
-  if (estado === 'FAILED') {
+  if (status === 'FAILED') {
     return (
       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--status-danger)] text-white flex items-center justify-center ring-2 ring-[var(--bg-surface)]">
         <X className="w-2 h-2" strokeWidth={4} aria-hidden="true" />
@@ -87,113 +87,113 @@ function Marca({ estado }: { estado: EstadoSync }) {
   return null;
 }
 
-function Icono({
+function Icon({
   tracker,
-  estado,
-  etiqueta,
-  vinculado = true,
+  status,
+  label,
+  linked = true,
 }: {
   tracker: Tracker;
-  estado: EstadoSync;
-  etiqueta: string;
-  vinculado?: boolean;
+  status: SyncState;
+  label: string;
+  linked?: boolean;
 }) {
-  // Sin vincular manda sobre cualquier estado del scrobble: si no lo tienes
-  // puesto, no hay nada que informar mas alla de eso.
-  const ok = vinculado && estado === 'SUCCESS';
-  const fallo = vinculado && estado === 'FAILED';
+  // Unlinked overrides any scrobble status: if you don't have it
+  // set up, there is nothing to report beyond that.
+  const ok = linked && status === 'SUCCESS';
+  const failed = linked && status === 'FAILED';
 
   return (
     <span
-      title={etiqueta}
-      // El texto accesible lleva el estado; el color y la marca son refuerzo.
+      title={label}
+      // Accessible text carries status; color and mark provide reinforcement.
       role="img"
-      aria-label={etiqueta}
+      aria-label={label}
       className={`relative w-7 h-7 rounded-[var(--radius-sm)] border flex items-center justify-center shrink-0 ${
         ok
           ? 'border-current/30 bg-current/10'
-          : fallo
+          : failed
           ? 'border-[var(--status-danger)]/35 bg-[var(--status-danger-bg)] text-[var(--status-danger)]'
           : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-muted)] opacity-40'
       }`}
       style={ok ? { color: TRACKERS[tracker].color } : undefined}
     >
-      <Glifo tracker={tracker} />
-      {vinculado && <Marca estado={estado} />}
+      <Glyph tracker={tracker} />
+      {linked && <Mark status={status} />}
     </span>
   );
 }
 
 /**
- * `etiquetas` recibe el texto ya traducido de cada estado, porque este
- * componente no debe conocer el sistema de traducción.
+ * `etiquetas` receives pre-translated text for each status, because this
+ * component should not know about the translation system.
  */
 export function SyncStatus({
   anilist,
   mal,
   kitsu,
-  etiquetas,
-  vinculados = TODOS_VINCULADOS,
+  labels,
+  linked = ALL_LINKED,
   className = '',
 }: {
-  anilist: EstadoSync;
-  mal: EstadoSync;
-  kitsu: EstadoSync;
-  etiquetas: { anilist: string; mal: string; kitsu: string };
-  vinculados?: TrackersVinculados;
+  anilist: SyncState;
+  mal: SyncState;
+  kitsu: SyncState;
+  labels: { anilist: string; mal: string; kitsu: string };
+  linked?: LinkedTrackers;
   className?: string;
 }) {
   return (
     <div className={`flex items-center gap-1.5 ${className}`}>
-      <Icono tracker="anilist" estado={anilist} etiqueta={etiquetas.anilist} vinculado={vinculados.anilist} />
-      <Icono tracker="mal" estado={mal} etiqueta={etiquetas.mal} vinculado={vinculados.mal} />
-      <Icono tracker="kitsu" estado={kitsu} etiqueta={etiquetas.kitsu} vinculado={vinculados.kitsu} />
+      <Icon tracker="anilist" status={anilist} label={labels.anilist} linked={linked.anilist} />
+      <Icon tracker="mal" status={mal} label={labels.mal} linked={linked.mal} />
+      <Icon tracker="kitsu" status={kitsu} label={labels.kitsu} linked={linked.kitsu} />
     </div>
   );
 }
 
 /**
- * Versión de una sola pieza para pantallas estrechas: dice cuántos trackers
- * fueron bien sin gastar tres controles, y el detalle queda a un toque.
+ * Single-piece version for narrow screens: reports how many trackers
+ * succeeded without spending three controls, and details remain one tap away.
  *
- * `resumen` es el texto ya traducido, del tipo «2 de 3 sincronizados».
+ * `resumen` is pre-translated text, like "2 of 3 synced".
  */
 export function SyncSummary({
   anilist,
   mal,
   kitsu,
-  resumen,
-  vinculados = TODOS_VINCULADOS,
+  summary,
+  linked = ALL_LINKED,
   className = '',
 }: {
-  anilist: EstadoSync;
-  mal: EstadoSync;
-  kitsu: EstadoSync;
-  resumen: string;
-  vinculados?: TrackersVinculados;
+  anilist: SyncState;
+  mal: SyncState;
+  kitsu: SyncState;
+  summary: string;
+  linked?: LinkedTrackers;
   className?: string;
 }) {
-  // El denominador son los trackers que el usuario tiene puestos, no tres
-  // siempre: con solo AniList vinculado, lo correcto es 1/1 y no 1/3, que
-  // parece que dos han fallado.
-  const estados = ([
+  // Denominator is trackers configured by user, not always
+  // three: with only AniList linked, 1/1 is correct, not 1/3 which
+  // makes it seem two failed.
+  const statuses = ([
     ['anilist', anilist],
     ['mal', mal],
     ['kitsu', kitsu],
-  ] as [Tracker, EstadoSync][])
-    .filter(([id]) => vinculados[id])
-    .map(([, estado]) => estado);
+  ] as [Tracker, SyncState][])
+    .filter(([id]) => linked[id])
+    .map(([, status]) => status);
 
-  const total = estados.length;
-  const ok = estados.filter((e) => e === 'SUCCESS').length;
-  const hayFallo = estados.some((e) => e === 'FAILED');
+  const total = statuses.length;
+  const ok = statuses.filter((e) => e === 'SUCCESS').length;
+  const hasFailed = statuses.some((e) => e === 'FAILED');
 
-  // Sin ningun tracker vinculado no hay nada que contar.
+  // Without any linked tracker there is nothing to report.
   if (total === 0) {
     return (
       <span
-        title={resumen}
-        aria-label={resumen}
+        title={summary}
+        aria-label={summary}
         className={`inline-flex items-center px-2 py-1 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[11px] font-mono text-[var(--text-muted)] ${className}`}
       >
         —
@@ -203,17 +203,17 @@ export function SyncSummary({
 
   return (
     <span
-      title={resumen}
-      aria-label={resumen}
+      title={summary}
+      aria-label={summary}
       className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[var(--radius-sm)] border text-[11px] font-mono font-semibold ${
-        hayFallo
+        hasFailed
           ? 'border-[var(--status-danger)]/35 bg-[var(--status-danger-bg)] text-[var(--status-danger)]'
           : ok === total
           ? 'border-[var(--status-success)]/30 bg-[var(--status-success-bg)] text-[var(--status-success)]'
           : 'border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-muted)]'
       } ${className}`}
     >
-      {hayFallo ? (
+      {hasFailed ? (
         <X className="w-3 h-3" strokeWidth={3} aria-hidden="true" />
       ) : (
         <Check className="w-3 h-3" strokeWidth={3} aria-hidden="true" />

@@ -67,13 +67,13 @@ export function AnimeTrackersSection({
 
   return (
     <section className="space-y-4">
-      {/* Cabecera Sección Anime */}
+      {/* Anime Section Header */}
       <div className="space-y-1">
         <h2 className="text-base font-bold text-[var(--text-primary)] font-heading">{t('connections.linkedAnimeAccounts')}</h2>
         <p className="text-xs text-[var(--text-secondary)]">{t('connections.bothAtOnce')}</p>
       </div>
 
-      {/* Grid con AniList, MyAnimeList y Kitsu lado a lado */}
+      {/* Grid with AniList, MyAnimeList, and Kitsu side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {/* 2.1 Tarjeta AniList */}
         <div className="glass-card card-sin-borde-movil p-4 sm:p-5 space-y-4 flex flex-col justify-between">
@@ -110,8 +110,8 @@ export function AnimeTrackersSection({
                     }`}
                   >
                     {isAnilistConnected
-                      ? `@${hubData?.anilist?.remoteUsername || hubData?.anilist?.username || 'Usuario'}`
-                      : '@Sin vincular'}
+                      ? `@${hubData?.anilist?.remoteUsername || hubData?.anilist?.username || t('common.user')}`
+                      : t('connections.unlinkedHandle')}
                   </span>
                 </div>
               </div>
@@ -134,7 +134,7 @@ export function AnimeTrackersSection({
               <span className="badge-pill bg-rose-500/15 text-rose-400 border-rose-500/30 animate-pulse font-semibold">{t('connections.reconnectionRequired')}</span>
             ) : (
               <span className={isAnilistConnected ? 'badge-status-success' : 'badge-pill'}>
-                ● {isAnilistConnected ? t('connections.syncOk') : 'Inactivo'}
+                ● {isAnilistConnected ? t('connections.syncOk') : t('connections.inactive')}
               </span>
             )}
 
@@ -201,8 +201,8 @@ export function AnimeTrackersSection({
                     }`}
                   >
                     {isMalConnected
-                      ? `@${hubData?.mal?.remoteUsername || hubData?.mal?.username || 'Usuario'}`
-                      : '@Sin vincular'}
+                      ? `@${hubData?.mal?.remoteUsername || hubData?.mal?.username || t('common.user')}`
+                      : t('connections.unlinkedHandle')}
                   </span>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export function AnimeTrackersSection({
               <span className="badge-pill bg-rose-500/15 text-rose-400 border-rose-500/30 animate-pulse font-semibold">{t('connections.reconnectionRequired')}</span>
             ) : (
               <span className={isMalConnected ? 'badge-status-success' : 'badge-pill'}>
-                ● {isMalConnected ? t('connections.syncOk') : 'Inactivo'}
+                ● {isMalConnected ? t('connections.syncOk') : t('connections.inactive')}
               </span>
             )}
 
@@ -289,8 +289,8 @@ export function AnimeTrackersSection({
                     }`}
                   >
                     {isKitsuConnected
-                      ? `@${hubData?.kitsu?.remoteUsername || hubData?.kitsu?.username || 'Usuario'}`
-                      : '@Sin vincular'}
+                      ? `@${hubData?.kitsu?.remoteUsername || hubData?.kitsu?.username || t('common.user')}`
+                      : t('connections.unlinkedHandle')}
                   </span>
                 </div>
               </div>
@@ -311,7 +311,7 @@ export function AnimeTrackersSection({
               <span className="badge-pill bg-rose-500/15 text-rose-400 border-rose-500/30 animate-pulse font-semibold">{t('connections.reconnectionRequired')}</span>
             ) : (
               <span className={isKitsuConnected ? 'badge-status-success' : 'badge-pill'}>
-                ● {isKitsuConnected ? t('connections.syncOk') : 'Inactivo'}
+                ● {isKitsuConnected ? t('connections.syncOk') : t('connections.inactive')}
               </span>
             )}
 

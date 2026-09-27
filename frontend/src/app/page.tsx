@@ -16,9 +16,18 @@ import {
   Activity,
   Cpu,
   Clock,
+  Eye,
+  Globe,
+  Sparkles,
+  BellRing,
+  Languages,
+  Wrench,
+  BookOpen,
+  HelpCircle,
 } from 'lucide-react';
 import { SiteFooter } from '@/components/SiteFooter';
 import { CommunityLeaderboard } from '@/components/CommunityLeaderboard';
+import { LandingGallery, BrowserFrame, useDocumentTheme } from '@/components/LandingGallery';
 
 interface PublicStats {
   status: string;
@@ -34,9 +43,9 @@ interface PublicStats {
   lastScrobbleAt?: string | null;
 }
 
-type Traductor = (key: string, vars?: Record<string, string | number>) => string;
+type Translator = (key: string, vars?: Record<string, string | number>) => string;
 
-function formatLastScrobble(t: Traductor, dateStr?: string | null): string {
+function formatLastScrobble(t: Translator, dateStr?: string | null): string {
   if (!dateStr) return t('landing.lastSyncNever');
   try {
     const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -52,12 +61,12 @@ function formatLastScrobble(t: Traductor, dateStr?: string | null): string {
   }
 }
 
-/** Los servicios del panel de estado, en el orden en que se pintan. */
-const SERVICIOS_PORTADA = [
-  { clave: 'backend', etiqueta: 'SyncSekai API' },
-  { clave: 'database', etiqueta: 'PostgreSQL' },
-  { clave: 'anilist', etiqueta: 'AniList' },
-  { clave: 'mal', etiqueta: 'MyAnimeList' },
+/** Status panel services, in rendering order. */
+const HOME_SERVICES = [
+  { key: 'backend', label: 'SyncSekai API' },
+  { key: 'database', label: 'PostgreSQL' },
+  { key: 'anilist', label: 'AniList' },
+  { key: 'mal', label: 'MyAnimeList' },
 ] as const;
 
 export default function LandingPage() {
@@ -66,10 +75,11 @@ export default function LandingPage() {
   const [hasSession, setHasSession] = useState(false);
   const [stats, setStats] = useState<PublicStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const theme = useDocumentTheme();
 
   useEffect(() => {
-    // La cookie de sesión es httpOnly, así que document.cookie nunca la ve: hay que
-    // preguntarle al backend. Un 401 de visitante anónimo es la respuesta esperada.
+    // Session cookie is httpOnly, so document.cookie never sees it: we must
+    // query backend. A 401 from anonymous visitor is the expected response.
     api.auth
       .me()
       .then((me) => {
@@ -87,12 +97,12 @@ export default function LandingPage() {
       })
       .catch(() => {
         /*
-         * Si la API no contesta, no se enseña nada.
+         * If API does not respond, nothing is displayed.
          *
-         * Aquí había un objeto entero inventado -1420 scrobbles, 99.8% de
-         * acierto, 4ms- que se pintaba igual que si fuera real. Es decir: la
-         * portada enseñaba sus mejores cifras justo cuando el servicio estaba
-         * caído. Ahora las tarjetas muestran un guión.
+         * Previously contained an entirely fabricated object—1420 scrobbles, 99.8%
+         * success, 4ms—rendered identically to real data. Meaning: homepage
+         * displayed peak figures precisely while service was down.
+         * Now cards display a dash.
          */
         setStats(null);
       })
@@ -113,7 +123,7 @@ export default function LandingPage() {
         <div className="absolute -top-20 right-1/4 w-96 h-96 bg-purple-600 rounded-full blur-[170px]" />
       </div>
 
-      {/* TOPBAR HEADER CON CRISTAL TEMPLADO FLUIDO QUE OCUPA TODO EL ANCHO */}
+      {/* FULL-WIDTH FLUID TEMPERED GLASS TOPBAR HEADER */}
       <header className="sticky top-0 z-50 w-full border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-xs transition-colors duration-300">
         <nav className="w-full px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -133,8 +143,8 @@ export default function LandingPage() {
               <span className="font-bold text-base tracking-tight text-[var(--text-primary)] font-heading">
                 SyncSekai
               </span>
-              {/* Oculto por debajo de sm: en 375px la cabecera se salía 9px y recortaba
-                  el botón de tema. La versión es informativa, no una función. */}
+              {/* Hidden below sm: at 375px header overflowed by 9px and clipped
+                  theme toggle. Version is informational, not a function. */}
               <span className="hidden sm:inline-block px-2 py-0.5 rounded-[6px] text-[10px] font-mono font-bold uppercase bg-[var(--accent-primary)]/10 text-[var(--accent-text)] border border-[var(--accent-primary)]/20">
                 v3.2
               </span>
@@ -168,16 +178,16 @@ export default function LandingPage() {
       </header>
 
       {/* CONTENIDO PRINCIPAL CENTRADO & EXPANSIVO */}
-      <main id="main-content" tabIndex={-1} className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-16 sm:space-y-20 relative z-10 outline-none">
+      <main id="main-content" tabIndex={-1} className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12 sm:space-y-14 relative z-10 outline-none">
         {/* HERO SECTION ORIGINAL CENTRADA */}
         <section className="text-center space-y-6 max-w-4xl mx-auto pt-4 sm:pt-8">
           {/* BADGE DE ESTADO EN VIVO */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-medium border border-emerald-500/25 bg-emerald-500/10 text-emerald-400 shadow-sm backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
             <span>
-              {/* El porcentaje de disponibilidad no se mide en ninguna parte:
-                  era un "99.9%" fijo dentro de la frase. Se dice el estado, que
-                  si se comprueba. */}
+              {/* Availability percentage is not measured anywhere:
+                  it was a fixed "99.9%" in the sentence. Stating status instead,
+                  which is actually verified. */}
               {!stats
                 ? t('landing.statusUnknown')
                 : stats.status === 'OPERATIONAL'
@@ -201,13 +211,13 @@ export default function LandingPage() {
             <strong className="text-[var(--text-primary)]">Kitsu</strong> {t('landing.heroBodyAfter')}
           </p>
 
-          {/* BOTONES DE LLAMADA A LA ACCIÓN */}
+          {/* CALL TO ACTION BUTTONS */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
-              href="/register"
+              href="/demo"
               className="w-full sm:w-auto px-6 py-3.5 rounded-[8px] text-xs sm:text-sm font-bold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] shadow-xl shadow-[var(--accent-primary)]/25 transition-colors duration-200 border border-transparent flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
             >
-              <span>{t('landing.ctaPrimary')}</span>
+              <span>{t('landing.ctaDemo')}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 
@@ -219,7 +229,7 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* PILLS DE CARACTERÍSTICAS */}
+          {/* FEATURE PILLS */}
           <div className="flex items-center justify-center gap-3 text-xs font-mono text-[var(--text-muted)] pt-2 flex-wrap">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -236,178 +246,218 @@ export default function LandingPage() {
               {t('landing.pillGdpr')}
             </span>
           </div>
-        </section>
 
-        {/* MÉTRICAS DEL SISTEMA EN VIVO (4 KPI CARDS FLUIDAS) */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--glass-shadow)] space-y-1.5 transition-all duration-200 hover:-translate-y-1 hover:border-emerald-500/40">
-            <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)]">
-              <span>{t('landing.kpiAccuracy')}</span>
-              <Activity className="w-4 h-4 text-emerald-400" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] font-heading">
-              {stats?.successRate || t('landing.noData')}
-            </div>
-            <p className="text-[11px] text-[var(--text-secondary)]">{t('landing.kpiAccuracyDesc')}</p>
-          </div>
-
-          <div className="p-5 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--glass-shadow)] space-y-1.5 transition-all duration-200 hover:-translate-y-1 hover:border-[var(--accent-primary)]/40">
-            <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)]">
-              <span>{t('landing.kpiLatency')}</span>
-              <Cpu className="w-4 h-4 text-[var(--accent-text)]" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] font-heading">
-              {stats?.latency || t('landing.noData')}
-            </div>
-            <p className="text-[11px] text-[var(--text-secondary)]">{t('landing.kpiLatencyDesc')}</p>
-          </div>
-
-          <div className="p-5 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--glass-shadow)] space-y-1.5 transition-all duration-200 hover:-translate-y-1 hover:border-purple-500/40">
-            <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)]">
-              <span>{t('landing.statScrobbles')}</span>
-              <Layers className="w-4 h-4 text-purple-400" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] font-heading">
-              {typeof stats?.totalScrobbles === 'number'
-                ? stats.totalScrobbles.toLocaleString(locale)
-                : t('landing.noData')}
-            </div>
-            <p className="text-[11px] text-[var(--text-secondary)]">{t('landing.kpiScrobblesDesc')}</p>
-          </div>
-
-          <div className="p-5 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--glass-shadow)] space-y-1.5 transition-all duration-200 hover:-translate-y-1 hover:border-amber-500/40">
-            <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)]">
-              <span>{t('landing.kpiSecurity')}</span>
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] font-heading">
-              AES-256
-            </div>
-            <p className="text-[11px] text-[var(--text-secondary)]">{t('landing.kpiSecurityDesc')}</p>
+          {/* Product preview: the catalogue, fading into the page */}
+          <div className="pt-6 max-h-[440px] overflow-hidden [mask-image:linear-gradient(to_bottom,black_55%,transparent)]" aria-hidden="true">
+            <BrowserFrame path="/catalog">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/landing/catalog-${theme}-${locale === 'es' ? 'es' : 'en'}.webp`}
+                alt=""
+                width={1400}
+                height={805}
+                className="w-full h-auto block"
+              />
+            </BrowserFrame>
           </div>
         </section>
 
-        {/* WIDGET EN VIVO: ESTADO DE NODOS & SERVICIOS EXTERNOS */}
-        <section className="p-5 sm:p-6 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border-subtle)] pb-3">
-            <div className="flex items-center gap-2">
-              <Server className="w-4 h-4 text-sky-400" />
-              <h2 className="text-xs font-bold uppercase tracking-wider font-mono text-[var(--text-primary)]">
-                {t('landing.infraTitle')}
-              </h2>
-            </div>
-            <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
-              <Clock className="w-3 h-3 text-emerald-400" aria-hidden="true" />
-              <span>
-                {t('landing.lastSync')} {formatLastScrobble(t, stats?.lastScrobbleAt)}
-              </span>
-            </div>
-          </div>
-
-          {/* Este bloque estaba escrito a mano: cuatro filas fijas, las cuatro
-              en verde diciendo ONLINE / LISTENING / HEALTHY pasara lo que
-              pasara. Un panel de estado que no lee ningun estado es una foto, y
-              en el peor momento -el servicio caido- seguia diciendo que todo va
-              bien. Ahora sale de `services`, que el backend deduce de la base y
-              de como fueron los ultimos envios a cada tracker. */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-            {SERVICIOS_PORTADA.map(({ clave, etiqueta }) => {
-              const estado: string = stats?.services?.[clave] || 'UNKNOWN';
-              const color =
-                estado === 'ONLINE'
-                  ? 'text-emerald-400'
-                  : estado === 'DEGRADED'
-                  ? 'text-amber-400'
-                  : estado === 'OFFLINE'
-                  ? 'text-rose-400'
-                  : 'text-[var(--text-muted)]';
-              const punto =
-                estado === 'ONLINE'
-                  ? 'bg-emerald-400'
-                  : estado === 'DEGRADED'
-                  ? 'bg-amber-400'
-                  : estado === 'OFFLINE'
-                  ? 'bg-rose-400'
-                  : 'bg-[var(--text-muted)]';
-              return (
-                <div
-                  key={clave}
-                  className="p-3 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between gap-2"
-                >
-                  <span className="text-[var(--text-secondary)] truncate">{etiqueta}</span>
-                  <span className={`font-bold flex items-center gap-1 shrink-0 ${color}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${punto}`} aria-hidden="true" />
-                    {estado}
-                  </span>
+        {/* LIVE STATUS: the four figures and the services, in one band */}
+        <section className="rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--glass-shadow)] overflow-hidden">
+          <div className="grid grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: t('landing.kpiAccuracy'), icon: <Activity className="w-4 h-4 text-emerald-400" />, value: stats?.successRate || t('landing.noData'), desc: t('landing.kpiAccuracyDesc'), edge: 'border-r border-b lg:border-b-0' },
+              { label: t('landing.kpiLatency'), icon: <Cpu className="w-4 h-4 text-[var(--accent-text)]" />, value: stats?.latency || t('landing.noData'), desc: t('landing.kpiLatencyDesc'), edge: 'border-b lg:border-b-0 lg:border-r' },
+              {
+                label: t('landing.statScrobbles'),
+                icon: <Layers className="w-4 h-4 text-purple-400" />,
+                value: typeof stats?.totalScrobbles === 'number' ? stats.totalScrobbles.toLocaleString(locale) : t('landing.noData'),
+                desc: t('landing.kpiScrobblesDesc'),
+                edge: 'border-r',
+              },
+              { label: t('landing.kpiSecurity'), icon: <ShieldCheck className="w-4 h-4 text-amber-400" />, value: 'AES-256', desc: t('landing.kpiSecurityDesc'), edge: '' },
+            ].map(({ label, icon, value, desc, edge }) => (
+              <div key={label} className={`p-5 sm:p-6 space-y-1.5 border-[var(--border-subtle)] ${edge}`}>
+                <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)]">
+                  <span>{label}</span>
+                  {icon}
                 </div>
-              );
-            })}
+                <div className="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] font-heading">{value}</div>
+                <p className="text-[11px] text-[var(--text-secondary)]">{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Services, driven by `services` from the backend (see HOME_SERVICES) */}
+          <div className="px-5 sm:px-6 py-3.5 border-t border-[var(--border-subtle)] flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6 text-xs font-mono">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 flex-1" aria-label={t('landing.infraTitle')}>
+              <Server className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
+              {HOME_SERVICES.map(({ key, label }) => {
+                const status: string = stats?.services?.[key] || 'UNKNOWN';
+                const color =
+                  status === 'ONLINE'
+                    ? 'text-emerald-400'
+                    : status === 'DEGRADED'
+                    ? 'text-amber-400'
+                    : status === 'OFFLINE'
+                    ? 'text-rose-400'
+                    : 'text-[var(--text-muted)]';
+                const dot =
+                  status === 'ONLINE'
+                    ? 'bg-emerald-400'
+                    : status === 'DEGRADED'
+                    ? 'bg-amber-400'
+                    : status === 'OFFLINE'
+                    ? 'bg-rose-400'
+                    : 'bg-[var(--text-muted)]';
+                return (
+                  <div
+                    key={key}
+                    className="flex items-center gap-2"
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} aria-hidden="true" />
+                    <span className="text-[var(--text-secondary)]">{label}</span>
+                    {status === 'ONLINE' ? (
+                      <span className="sr-only">{status}</span>
+                    ) : (
+                      <span className={`font-bold text-[10px] ${color}`}>{status}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <span className="flex items-center gap-2 text-[11px] text-[var(--text-muted)] shrink-0">
+              <Clock className="w-3 h-3 text-emerald-400" aria-hidden="true" />
+              {t('landing.lastSync')} {formatLastScrobble(t, stats?.lastScrobbleAt)}
+            </span>
           </div>
         </section>
 
-        {/* CÓMO FUNCIONA EL PIPELINE */}
-        <section className="p-6 sm:p-10 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--glass-shadow)] space-y-8">
+        <div aria-hidden="true" className="landing-divider" />
+
+        {/* HOW IT WORKS: three steps on a line */}
+        <section className="space-y-10">
           <div className="text-center space-y-2 max-w-xl mx-auto">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[var(--accent-text)]">{t('landing.eyebrowHow')}</p>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)] font-heading">
               {t('landing.pipelineTitle')}
             </h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
-              {t('landing.pipelineSubtitle')}
-            </p>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">{t('landing.pipelineSubtitle')}</p>
           </div>
 
+          <ol className="relative grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+            <li aria-hidden="true" className="hidden md:block absolute top-5 left-[16.67%] right-[16.67%] h-px bg-[var(--border-strong)]" />
+            {[
+              { n: 1, tone: 'bg-[var(--accent-primary)]/10 text-[var(--accent-text)] border-[var(--accent-primary)]/30' },
+              { n: 2, tone: 'bg-sky-500/10 text-sky-400 border-sky-500/30' },
+              { n: 3, tone: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
+            ].map(({ n, tone }) => (
+              <li key={n} className="relative text-center space-y-3">
+                <div className="relative mx-auto w-10 h-10 rounded-full bg-[var(--bg-app)]">
+                  <div className={`w-full h-full rounded-full border flex items-center justify-center font-mono font-bold text-sm ${tone}`}>0{n}</div>
+                </div>
+                <h3 className="text-base font-bold text-[var(--text-primary)] font-heading">{t(`landing.step${n}Title`)}</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-xs mx-auto">{t(`landing.step${n}Desc`)}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <div aria-hidden="true" className="landing-divider" />
+
+        {/* CENTRAL MESSAGE: the user only watches; SyncSekai keeps the lists up to date */}
+        <section className="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-14 items-center">
+          <div className="space-y-4 text-center lg:text-left">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[var(--accent-text)]">{t('landing.eyebrowIdea')}</p>
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-primary)] font-heading leading-tight">
+              {t('landing.messageTitle')}
+            </h2>
+            <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{t('landing.messageBody')}</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-7">
+            {[
+              { icon: Globe, n: 1 },
+              { icon: Server, n: 2 },
+              { icon: Sparkles, n: 3 },
+              { icon: BellRing, n: 4 },
+            ].map(({ icon: Icon, n }) => (
+              <div key={n} className="space-y-2">
+                <Icon className="w-5 h-5 text-[var(--accent-text)]" aria-hidden="true" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t(`landing.point${n}Title`)}</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t(`landing.point${n}Desc`)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div aria-hidden="true" className="landing-divider" />
+
+        <LandingGallery />
+
+        <div aria-hidden="true" className="landing-divider" />
+
+        {/* THE TRICKY CASES, including what does not resolve on its own */}
+        <section className="space-y-8">
+          <div className="text-center space-y-2 max-w-xl mx-auto">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] text-[var(--accent-text)]">{t('landing.eyebrowHard')}</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)] font-heading">
+              {t('landing.hardTitle')}
+            </h2>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">{t('landing.hardSubtitle')}</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 rounded-[8px] bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] space-y-3 relative overflow-hidden backdrop-blur-md">
-              <div className="w-9 h-9 rounded-[6px] bg-[var(--accent-primary)]/10 text-[var(--accent-text)] border border-[var(--accent-primary)]/20 flex items-center justify-center font-mono font-bold text-sm">
-                01
+            {[
+              { icon: Layers, n: 1 },
+              { icon: Languages, n: 2 },
+              { icon: Wrench, n: 3 },
+            ].map(({ icon: Icon, n }) => (
+              <div key={n} className="p-6 rounded-[8px] bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] space-y-3 backdrop-blur-md">
+                <Icon className="w-5 h-5 text-[var(--accent-text)]" aria-hidden="true" />
+                <h3 className="text-base font-bold text-[var(--text-primary)] font-heading">{t(`landing.hard${n}Title`)}</h3>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t(`landing.hard${n}Desc`)}</p>
               </div>
-              <h3 className="text-base font-bold text-[var(--text-primary)] font-heading">
-                {t('landing.step1Title')}
-              </h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                {t('landing.step1Desc')}
-              </p>
-            </div>
-
-            <div className="p-6 rounded-[8px] bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] space-y-3 relative overflow-hidden backdrop-blur-md">
-              <div className="w-9 h-9 rounded-[6px] bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center font-mono font-bold text-sm">
-                02
-              </div>
-              <h3 className="text-base font-bold text-[var(--text-primary)] font-heading">
-                {t('landing.step2Title')}
-              </h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                {t('landing.step2Desc')}
-              </p>
-            </div>
-
-            <div className="p-6 rounded-[8px] bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] space-y-3 relative overflow-hidden backdrop-blur-md">
-              <div className="w-9 h-9 rounded-[6px] bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center font-mono font-bold text-sm">
-                03
-              </div>
-              <h3 className="text-base font-bold text-[var(--text-primary)] font-heading">
-                {t('landing.step3Title')}
-              </h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                {t('landing.step3Desc')}
-              </p>
-            </div>
+            ))}
           </div>
+        </section>
+
+        <div aria-hidden="true" className="landing-divider" />
+
+        {/* GUIDE AND FAQ */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-x-8 border-t border-[var(--border-subtle)]">
+          {[
+            { href: '/docs', icon: BookOpen, key: 'guideCard' },
+            { href: '/faq', icon: HelpCircle, key: 'faqCard' },
+          ].map(({ href, icon: Icon, key }) => (
+            <Link
+              key={href}
+              href={href}
+              className="group py-6 flex items-start gap-4 border-b md:border-b-0 border-[var(--border-subtle)] last:border-b-0"
+            >
+              <Icon className="w-6 h-6 text-[var(--accent-text)] shrink-0 mt-0.5" aria-hidden="true" />
+              <span className="space-y-1.5 flex-1">
+                <span className="flex items-center gap-2 text-base font-bold text-[var(--text-primary)] font-heading">
+                  {t(`landing.${key}Title`)}
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
+                <span className="block text-xs text-[var(--text-secondary)] leading-relaxed">{t(`landing.${key}Desc`)}</span>
+              </span>
+            </Link>
+          ))}
         </section>
 
         <CommunityLeaderboard />
       </main>
 
-      {/* FOOTER PANORÁMICO QUE OCUPA TODO EL ANCHO */}
+      {/* FULL-WIDTH PANORAMIC FOOTER */}
       <SiteFooter
-        enlaces={[
+        links={[
           { href: '/faq', label: t('faq.badge') },
           { href: '/terms', label: t('legal.termsTitle') },
           { href: '/privacy', label: t('landing.footerPrivacy') },
           { href: '/docs', label: t('landing.footerDocs') },
         ]}
-        mostrarCookies
-        onAbrirCookies={handleOpenCookieSettings}
+        showCookies
+        onOpenCookies={handleOpenCookieSettings}
       />
     </div>
   );

@@ -15,8 +15,8 @@ export default function GlobalError({
     console.error('SyncSekai Global Root Error:', error);
   }, [error]);
 
-  // Este boundary sustituye al layout raiz, asi que se queda fuera del I18nProvider
-  // que vive en layout.tsx: sin este proveedor propio, t() devolveria la clave en crudo.
+  // This boundary replaces root layout, so it falls outside I18nProvider
+  // that lives in layout.tsx: without its own provider, t() would return raw key.
   return (
     <html lang="en" data-theme="dark">
       <body className="min-h-screen bg-[#0d0f12] text-[#f0f2f5] flex flex-col items-center justify-center p-4 font-sans antialiased">

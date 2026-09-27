@@ -25,15 +25,15 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     const handleResize = () => {
       const width = window.innerWidth;
       if (width < 768) {
-        // En móvil el sidebar fijo está oculto; se maneja con drawer
+        // On mobile the fixed sidebar is hidden; handled with drawer
         setIsCollapsed(false);
         setIsLocked(false);
       } else if (width >= 768 && width < 1150) {
-        // En pantallas medianas / reducidas, forzar colapso a solo iconos y bloquear descolapso
+        // On medium / smaller screens, force collapse to icons only and block expanding
         setIsCollapsed(true);
         setIsLocked(true);
       } else {
-        // En pantallas grandes (>= 1150px), volver automáticamente a tamaño completo
+        // On large screens (>= 1150px), automatically return to full size
         setIsCollapsed(false);
         setIsLocked(false);
       }
@@ -44,13 +44,13 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Cerrar el drawer en móvil cuando cambie la ruta
+  // Close drawer on mobile when route changes
   useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname]);
 
   const toggleCollapsed = () => {
-    // Si la pantalla es mediana (< 1150px), no permitir descolapsar para no romper los contenedores
+    // If screen is medium (< 1150px), prevent expanding to avoid breaking containers
     if (isLocked) return;
     setIsCollapsed((prev) => !prev);
   };

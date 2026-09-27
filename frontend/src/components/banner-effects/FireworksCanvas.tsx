@@ -31,10 +31,10 @@ interface Rocket {
 }
 
 const PALETTES = [
-  ['#ffd700', '#ffae00', '#fff3b0', '#ffffff'], // Oro Real / Celebración
-  ['#ff2a6d', '#ff5e97', '#ffffff', '#ff99c8'], // Rubí & Rosa Neón
-  ['#00f0ff', '#38bdf8', '#7dd3fc', '#ffffff'], // Cian Neón / Hielo
-  ['#a855f7', '#c084fc', '#e9d5ff', '#ffd700'], // Púrpura Imperial & Oro
+  ['#ffd700', '#ffae00', '#fff3b0', '#ffffff'], // Royal Gold / Celebration
+  ['#ff2a6d', '#ff5e97', '#ffffff', '#ff99c8'], // Ruby & Neon Pink
+  ['#00f0ff', '#38bdf8', '#7dd3fc', '#ffffff'], // Neon Cyan / Ice
+  ['#a855f7', '#c084fc', '#e9d5ff', '#ffd700'], // Imperial Purple & Gold
   ['#10b981', '#34d399', '#6ee7b7', '#ffd700'], // Esmeralda & Chispa
 ];
 
@@ -129,13 +129,13 @@ export function FireworksCanvas({ density = 'normal' }: FireworksCanvasProps) {
     const launchInterval = density === 'dense' ? 900 : 1400;
 
     const render = (time: number) => {
-      // Limpiar con ligero rastro transparente para estelas suaves
+      // Clear with slight transparent trail for smooth trails
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
       ctx.fillRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'lighter';
 
-      // Lanzar cohetes periódicamente
+      // Launch rockets periodically
       if (time - lastLaunch > launchInterval + Math.random() * 500) {
         launchRocket();
         lastLaunch = time;
@@ -150,7 +150,7 @@ export function FireworksCanvas({ density = 'normal' }: FireworksCanvasProps) {
         r.x += r.vx;
         r.y += r.vy;
 
-        // Dibujar estela del cohete
+        // Draw rocket trail
         ctx.beginPath();
         for (let j = 0; j < r.trail.length; j++) {
           const t = r.trail[j];
@@ -159,7 +159,7 @@ export function FireworksCanvas({ density = 'normal' }: FireworksCanvasProps) {
           ctx.fill();
         }
 
-        // Cabeza del cohete
+        // Rocket head
         ctx.beginPath();
         ctx.arc(r.x, r.y, 2.2, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
@@ -168,7 +168,7 @@ export function FireworksCanvas({ density = 'normal' }: FireworksCanvasProps) {
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Si llega a la altura objetivo o desacelera, explotar
+        // Explode if target height reached or decelerating
         if (r.y <= r.targetY || r.vy >= -1) {
           const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
           createExplosion(r.x, r.y, palette);
@@ -176,7 +176,7 @@ export function FireworksCanvas({ density = 'normal' }: FireworksCanvasProps) {
         }
       }
 
-      // Actualizar & Dibujar Partículas
+      // Update & Draw Particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.vx *= p.friction;

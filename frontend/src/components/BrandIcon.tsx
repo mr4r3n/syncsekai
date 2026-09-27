@@ -3,16 +3,16 @@
 import React from 'react';
 
 /**
- * Icono de una marca, con la variante correcta para el tema.
+ * Brand icon, with the correct variant for the theme.
  *
- * Varias marcas son monocromas y negras (X, GitHub, TikTok): sobre el tema
- * oscuro desaparecen. Para esas el catálogo trae una segunda variante en
- * blanco, y aquí se pintan las dos dejando que el CSS enseñe la que toca. Se
- * hace con CSS y no leyendo el tema en JavaScript porque el tema se decide en
- * el servidor y en el cliente: leerlo al renderizar daría una discrepancia de
- * hidratación y un parpadeo en la primera pintura.
+ * Several brands are monochrome and black (X, GitHub, TikTok): on the dark
+ * theme they disappear. For those the catalog provides a second variant in
+ * white, and here both are rendered, letting CSS show the appropriate one. It
+ * is done with CSS rather than reading the theme in JavaScript because the theme is decided on
+ * the server and on the client: reading it during render would cause a hydration
+ * mismatch and a flash on first paint.
  *
- * Las reglas .icono-marca-* viven en globals.css.
+ * The .icono-marca-* rules live in globals.css.
  */
 export function BrandIcon({
   icon,
@@ -27,22 +27,22 @@ export function BrandIcon({
   size?: number;
   className?: string;
 }) {
-  const comun = `${className} object-contain shrink-0`;
+  const common = `${className} object-contain shrink-0`;
 
   if (!iconDark) {
-    return <img src={icon} alt={alt} width={size} height={size} className={comun} />;
+    return <img src={icon} alt={alt} width={size} height={size} className={common} />;
   }
 
   return (
     <>
-      <img src={icon} alt={alt} width={size} height={size} className={`${comun} icono-marca-claro`} />
+      <img src={icon} alt={alt} width={size} height={size} className={`${common} icono-marca-claro`} />
       <img
         src={iconDark}
         alt=""
         aria-hidden="true"
         width={size}
         height={size}
-        className={`${comun} icono-marca-oscuro`}
+        className={`${common} icono-marca-oscuro`}
       />
     </>
   );

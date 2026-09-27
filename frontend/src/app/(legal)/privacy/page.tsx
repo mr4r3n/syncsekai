@@ -8,8 +8,8 @@ export default function PrivacyPage() {
   const { t, locale } = useI18n();
   return (
     <LegalDocument
-      documento={PRIVACY[locale === 'es' ? 'es' : 'en']}
-      otro={{ href: '/terms', label: t('legal.termsTitle') }}
+      document={PRIVACY[locale === 'es' ? 'es' : 'en']}
+      other={{ href: '/terms', label: t('legal.termsTitle') }}
     />
   );
 }

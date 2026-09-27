@@ -2,15 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export interface SelectOption {
   value: string;
   label: string;
   badge?: string;
   icon?: React.ReactNode;
-  /** No elegible. Se sigue viendo, apagada, para que se note que existe. */
+  /** Not selectable. Still visible, dimmed, so its presence is clear. */
   disabled?: boolean;
-  /** Por que no se puede elegir, ya traducido. Sale como title. */
+  /** Why it cannot be selected, already translated. Appears as title. */
   disabledReason?: string;
 }
 
@@ -28,11 +29,13 @@ export function CustomSelect({
   options,
   value,
   onChange,
-  placeholder = 'Seleccionar opción...',
+  placeholder,
   className = '',
   triggerClassName = '',
   accentColor = 'cinnabar',
 }: CustomSelectProps) {
+  const { t } = useI18n();
+  const effectivePlaceholder = placeholder ?? t('common.selectOption');
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +90,7 @@ export function CustomSelect({
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
-      {/* Botón Trigger con Glassmorphism */}
+      {/* Trigger Button with Glassmorphism */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -98,7 +101,7 @@ export function CustomSelect({
         <div className="flex items-center gap-2 truncate">
           {selectedOption?.icon}
           <span className="truncate font-medium">
-            {selectedOption ? selectedOption.label : <span className="text-[var(--text-muted)]">{placeholder}</span>}
+            {selectedOption ? selectedOption.label : <span className="text-[var(--text-muted)]">{effectivePlaceholder}</span>}
           </span>
           {selectedOption?.badge && (
             <span className="px-1.5 py-0.5 rounded-[6px] text-[10px] font-mono bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
@@ -113,7 +116,7 @@ export function CustomSelect({
         />
       </button>
 
-      {/* Menú Desplegable Flotante */}
+      {/* Floating Dropdown Menu */}
       {isOpen && (
         <div className="absolute z-[70] left-0 right-0 mt-1.5 max-h-64 overflow-y-auto rounded-[6px] border border-[var(--border-strong)] bg-[var(--popover-solid-bg)] shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-1 space-y-0.5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 custom-scrollbar">
           {options.map((option) => {

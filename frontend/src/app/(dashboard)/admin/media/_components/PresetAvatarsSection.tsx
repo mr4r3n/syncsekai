@@ -26,7 +26,7 @@ export function PresetAvatarsSection({
 }: PresetAvatarsSectionProps) {
   return (
     <>
-        {/* AVATARES PREDETERMINADOS: los que se ofrecen a quien no sube foto */}
+        {/* PRESET AVATARS: offered to users who do not upload a photo */}
         <div className="glass-card p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>

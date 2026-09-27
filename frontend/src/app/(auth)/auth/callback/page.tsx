@@ -33,7 +33,7 @@ export default function AuthCallbackPage() {
 
     api.auth.me()
       .then(() => {
-        showToast(`¡Bienvenido de nuevo, ${username || 'usuario'}!`, 'success');
+        showToast(t('auth.welcomeBack', { username: username || t('common.user') }), 'success');
         window.location.replace(sanitizeTarget(returnTo, '/connections'));
       })
       .catch(() => {

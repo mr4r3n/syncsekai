@@ -87,15 +87,15 @@ export function AdminMappingsListSection({
                       {item.plexTitle}
                     </h3>
                     <span className="badge-pill">
-                      Temporada {item.plexSeason || 1}
+                      {t('catalog.seasonN', { n: item.plexSeason || 1 })}
                     </span>
                     {item.isGlobal && (
                       <span className="px-2 py-0.5 rounded-[4px] text-[10.5px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 shadow-sm shrink-0">
-                        <Globe className="w-3 h-3" /> GLOBAL OFICIAL
+                        <Globe className="w-3 h-3" /> {t('admin.globalOfficialUpper')}
                       </span>
                     )}
                     <span className="text-xs font-mono text-[var(--text-muted)] shrink-0">
-                      Por: @{item.user?.username || 'Sistema'}
+                      {t('admin.byAuthorWithAt', { author: item.user?.username || t('admin.system') })}
                     </span>
                   </div>
 
@@ -111,13 +111,13 @@ export function AdminMappingsListSection({
                     )}
                     <span className="text-[var(--text-muted)]">•</span>
                     <span className="text-[var(--text-muted)]">
-                      Confianza: {Math.round((item.confidenceScore || 0.95) * 100)}%
+                      {t('admin.confidenceScore', { score: Math.round((item.confidenceScore || 0.95) * 100) })}
                     </span>
                   </p>
                 </div>
               </div>
 
-              {/* LADO DERECHO EN MÓVIL: BADGE + BOTÓN 3 PUNTOS */}
+              {/* RIGHT SIDE ON MOBILE: BADGE + 3-DOT BUTTON */}
               <div className="flex md:hidden items-center justify-between gap-2 pt-2 border-t border-[var(--glass-border)]">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {item.isGlobal && (
@@ -126,7 +126,7 @@ export function AdminMappingsListSection({
                     </span>
                   )}
                   <span className={isApproved ? 'badge-action-success text-[10.5px]' : 'badge-action-warning text-[10.5px]'}>
-                    {isApproved ? 'Vinculado' : 'Pendiente'}
+                    {isApproved ? t('mappings.linked') : t('mappings.pending')}
                   </span>
                 </div>
 
@@ -142,7 +142,7 @@ export function AdminMappingsListSection({
 
               {/* LADO DERECHO EN ESCRITORIO (md:): ACCIONES ADMIN */}
               <div className="hidden md:flex items-center flex-wrap gap-2 shrink-0 justify-end">
-                {/* Botón Convertir en Global / Revocar Global */}
+                {/* Make Global / Revoke Global Button */}
                 <button
                   onClick={() => handleToggleGlobal(item.id)}
                   className={`btn-secondary text-xs font-mono flex items-center gap-1.5 ${
@@ -152,27 +152,27 @@ export function AdminMappingsListSection({
                   }`}
                   title={
                     item.isGlobal
-                      ? 'Revocar estado Global Oficial'
+                      ? t('admin.revokeOfficialGlobalStatus')
                       : t('admin.makeOfficialGlobal')
                   }
                 >
                   <Globe className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{item.isGlobal ? 'Global ✔' : t('mappings.makeGlobal')}</span>
+                  <span>{item.isGlobal ? t('admin.globalChecked') : t('mappings.makeGlobal')}</span>
                 </button>
 
-                {/* Botón Aprobar (Si está pendiente) */}
+                {/* Approve Button (If pending) */}
                 {!isApproved && (
                   <button
                     onClick={() => handleApprove(item.id)}
                     className="btn-primary flex items-center gap-1 text-xs"
-                    title="Aprobar mapeo"
+                    title={t('admin.approveMappingTitle')}
                   >
                     <Check className="w-3 h-3 stroke-[3]" />
-                    <span>Aprobar</span>
+                    <span>{t('admin.approve')}</span>
                   </button>
                 )}
 
-                {/* Botón Editar */}
+                {/* Edit Button */}
                 <button
                   onClick={() => handleOpenEditModal(item)}
                   className="btn-secondary btn-icon"
@@ -181,7 +181,7 @@ export function AdminMappingsListSection({
                   <Edit3 className="w-4 h-4 text-[var(--accent-text)]" />
                 </button>
 
-                {/* Botón Eliminar */}
+                {/* Delete Button */}
                 <button
                   onClick={() => handleDelete(item)}
                   className="btn-danger btn-icon"

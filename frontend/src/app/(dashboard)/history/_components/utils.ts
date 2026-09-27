@@ -3,8 +3,8 @@ function getMonthStartDayOffset(year: number, month: number) {
   return (day + 6) % 7; // Monday = 0, ..., Sunday = 6
 }
 
-/** "September 2026" o "septiembre de 2026" según el idioma activo. */
-function etiquetaMes(year: number, month: number, locale: string) {
+/** "September 2026" or localized month name based on active language. */
+function monthLabel(year: number, month: number, locale: string) {
   return new Date(year, month, 1).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', { month: 'long', year: 'numeric' });
 }
 
@@ -41,30 +41,30 @@ function getHeatmapTierClass(tier: number, isLight: boolean) {
 }
 
 /**
- * Texto de estado de cada tracker, ya traducido.
+ * Status text for each tracker, already translated.
  *
- * Vive aqui y no dentro de SyncStatus porque ese componente no debe conocer el
- * sistema de traduccion: recibe cadenas, no claves.
+ * Lives here rather than in SyncStatus because that component should not know
+ * about the translation system: it receives strings, not keys.
  */
-function etiquetasSync(item: any, t: (k: string, v?: any) => string) {
-  const texto = (estado: string, tracker: string) =>
-    estado === 'SUCCESS'
+function syncLabels(item: any, t: (k: string, v?: any) => string) {
+  const text = (status: string, tracker: string) =>
+    status === 'SUCCESS'
       ? t('history.syncedOn', { tracker })
-      : estado === 'FAILED'
+      : status === 'FAILED'
       ? t('history.syncFailedOn', { tracker })
       : t('history.notConfiguredOn', { tracker });
 
   return {
-    anilist: texto(item.anilistStatus, 'AniList'),
-    mal: texto(item.malStatus, 'MyAnimeList'),
-    kitsu: texto(item.kitsuStatus, 'Kitsu'),
+    anilist: text(item.anilistStatus, 'AniList'),
+    mal: text(item.malStatus, 'MyAnimeList'),
+    kitsu: text(item.kitsuStatus, 'Kitsu'),
   };
 }
 
 export {
   getMonthStartDayOffset,
-  etiquetaMes,
+  monthLabel,
   formatDateReadable,
   getHeatmapTierClass,
-  etiquetasSync,
+  syncLabels,
 };

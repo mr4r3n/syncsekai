@@ -155,7 +155,7 @@ export default function RulesSettingsPage() {
     }
   };
 
-  // Cálculo del tiempo de disparo para el simulador
+  // Trigger time calculation for simulator
   const calculateTriggerTime = () => {
     const totalSeconds = sampleDurationMinutes * 60;
     const triggerSeconds = Math.round((totalSeconds * completionPercentage) / 100);
@@ -172,7 +172,7 @@ export default function RulesSettingsPage() {
     >
       <Topbar rootLabel={t('topbar.settings')} currentLabel={t('rules.title')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -200,7 +200,7 @@ export default function RulesSettingsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* COLUMNA IZQUIERDA: PARÁMETROS Y FORMULARIO (7 COLS) */}
+            {/* LEFT COLUMN: PARAMETERS AND FORM (7 COLS) */}
             <div className="lg:col-span-7 space-y-6">
               <div className="glass-card p-6 sm:p-7 space-y-6">
                 <div className="flex items-center gap-3.5">
@@ -214,7 +214,7 @@ export default function RulesSettingsPage() {
                 </div>
 
                 <form onSubmit={handleSavePreferences} className="space-y-5 pt-1">
-                  {/* Slider: Porcentaje mínimo de scrobble */}
+                  {/* Slider: Minimum scrobble percentage */}
                   <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
@@ -234,7 +234,7 @@ export default function RulesSettingsPage() {
                       className="w-full accent-[var(--accent-primary)] cursor-pointer h-2 bg-[var(--bg-surface-elevated)] rounded-[6px]"
                     />
 
-                    {/* Presets rápidos */}
+                    {/* Quick presets */}
                     <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)] pt-1">
                       <span>{t('rules.flexible')}</span>
                       <div className="flex items-center gap-1.5">
@@ -363,7 +363,7 @@ export default function RulesSettingsPage() {
                     />
                   </div>
 
-                  {/* Barra de progreso de simulación */}
+                  {/* Simulation progress bar */}
                   <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2.5">
                     <div className="flex items-center justify-between text-xs font-mono">
                       <span className="text-[var(--text-muted)] flex items-center gap-1.5">
@@ -391,7 +391,7 @@ export default function RulesSettingsPage() {
                 </div>
               </div>
 
-              {/* CARD: POLÍTICAS DE CALIDAD */}
+              {/* CARD: QUALITY POLICIES */}
               <div className="glass-card p-6 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)] font-heading">
                   <ShieldCheck className="w-4 h-4 text-sky-400" />

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { BookOpen, Radio, Menu, Bell, Check, Trash2, ExternalLink, AlertTriangle, Info, UserPlus, LifeBuoy, X, History, CheckCheck, Loader2, TreePine, Sparkles, Ghost, Flame, Heart } from 'lucide-react';
-import { describirNotificacion } from '@/lib/notificaciones';
+import { describeNotification } from '@/lib/notifications';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from '@/components/SidebarProvider';
@@ -30,10 +30,10 @@ export function Topbar({
   const router = useRouter();
   const { t } = useI18n();
   const { showUndoToast, showToast } = useToast();
-  // Los valores por defecto no pueden salir de t(): se evaluan en el ambito de
-  // parametros, antes de que el hook exista.
-  const rootTexto = rootLabel ?? t('topbar.rootConfig');
-  const currentTexto = currentLabel ?? t('topbar.connectionsHub');
+  // Default values cannot come from t(): evaluated in parameter
+  // scope, before hook exists.
+  const rootText = rootLabel ?? t('topbar.rootConfig');
+  const currentText = currentLabel ?? t('topbar.connectionsHub');
   const themeEffect = useActiveThemeEffect();
   const { toggleMobile } = useSidebar();
   const { confirmNavigation } = useUnsavedChanges();
@@ -118,7 +118,7 @@ export function Topbar({
     }
   };
 
-  /** Quita el aviso de la campana; sigue en /notifications hasta que se borre allí. */
+  /** Dismisses notice from bell; stays in /notifications until deleted there. */
   const handleDismiss = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const aviso = notifications.find((n: any) => n.id === id);
@@ -195,10 +195,10 @@ export function Topbar({
               ADMIN
             </span>
           ) : (
-            <span className="text-[var(--text-muted)] hidden sm:inline truncate font-medium">{rootTexto}</span>
+            <span className="text-[var(--text-muted)] hidden sm:inline truncate font-medium">{rootText}</span>
           )}
           <span className="text-[var(--text-muted)] opacity-50 hidden sm:inline">/</span>
-          <span className="font-semibold text-[var(--text-primary)] truncate tracking-tight font-heading">{currentTexto}</span>
+          <span className="font-semibold text-[var(--text-primary)] truncate tracking-tight font-heading">{currentText}</span>
         </div>
       </div>
 
@@ -305,32 +305,32 @@ export function Topbar({
                   </div>
                 ) : (
                   notifications.map((n) => {
-                    const d = describirNotificacion(n, t, isAdmin);
-                    const Icono =
-                      d.icono === 'alerta' ? AlertTriangle : d.icono === 'usuario' ? UserPlus : d.icono === 'ticket' ? LifeBuoy : Info;
-                    const colorIcono =
-                      d.icono === 'alerta' ? 'text-amber-400' : d.icono === 'usuario' ? 'text-emerald-400' : d.icono === 'ticket' ? 'text-sky-400' : 'text-blue-400';
-                    const puedeNavegar = !!d.accion;
+                    const d = describeNotification(n, t, isAdmin);
+                    const Icon =
+                      d.icon === 'alert' ? AlertTriangle : d.icon === 'user' ? UserPlus : d.icon === 'ticket' ? LifeBuoy : Info;
+                    const iconColor =
+                      d.icon === 'alert' ? 'text-amber-400' : d.icon === 'user' ? 'text-emerald-400' : d.icon === 'ticket' ? 'text-sky-400' : 'text-blue-400';
+                    const canNavigate = !!d.action;
                     return (
                       <div
                         key={n.id}
-                        role={puedeNavegar ? 'button' : undefined}
-                        tabIndex={puedeNavegar ? 0 : undefined}
+                        role={canNavigate ? 'button' : undefined}
+                        tabIndex={canNavigate ? 0 : undefined}
                         onKeyDown={(e) => {
-                          if (puedeNavegar && (e.key === 'Enter' || e.key === ' ')) {
+                          if (canNavigate && (e.key === 'Enter' || e.key === ' ')) {
                             e.preventDefault();
-                            irA(n, d.accion!.href);
+                            irA(n, d.action!.href);
                           }
                         }}
-                        onClick={() => (puedeNavegar ? irA(n, d.accion!.href) : handleMarkAsRead(n.id))}
+                        onClick={() => (canNavigate ? irA(n, d.action!.href) : handleMarkAsRead(n.id))}
                         className={`group p-3.5 text-xs transition-colors hover:bg-[var(--popover-solid-hover)] cursor-pointer flex flex-col gap-1.5 ${
                           !n.isRead ? 'bg-[var(--color-brand-primary)]/5 font-medium' : 'opacity-85'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <Icono className={`w-4 h-4 shrink-0 ${colorIcono}`} aria-hidden="true" />
-                            <span className="font-bold text-[var(--text-primary)] truncate font-heading">{d.titulo}</span>
+                            <Icon className={`w-4 h-4 shrink-0 ${iconColor}`} aria-hidden="true" />
+                            <span className="font-bold text-[var(--text-primary)] truncate font-heading">{d.title}</span>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <span className="text-[10px] text-[var(--text-muted)] font-mono">{formatRelativeTime(n.createdAt)}</span>
@@ -345,9 +345,9 @@ export function Topbar({
                           </div>
                         </div>
 
-                        <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed line-clamp-2">{d.mensaje}</p>
+                        <p className="text-[11.5px] text-[var(--text-secondary)] leading-relaxed line-clamp-2">{d.message}</p>
 
-                        {d.accion && (
+                        {d.action && (
                           <div className="pt-1 flex items-center gap-2">
                             {d.acceptMappingId && (
                               <button
@@ -361,12 +361,12 @@ export function Topbar({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                irA(n, d.accion!.href);
+                                irA(n, d.action!.href);
                               }}
                               className="px-2.5 py-1.5 rounded-[6px] text-xs font-semibold bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] flex items-center gap-1.5 transition-all cursor-pointer"
                             >
                               <ExternalLink className="w-3 h-3" aria-hidden="true" />
-                              <span>{d.accion.etiqueta}</span>
+                              <span>{d.action.label}</span>
                             </button>
                           </div>
                         )}
@@ -389,8 +389,8 @@ export function Topbar({
           )}
         </div>
 
-        {/* En movil bajan al cajon lateral: aqui eran dos de los cuatro
-            botones que apretaban el titulo de la pagina contra el borde. */}
+        {/* On mobile they move to side drawer: here they were two of four
+            buttons squeezing page title against edge. */}
         <div className="hidden md:flex items-center gap-2.5">
           <LanguageToggle />
           <ThemeToggle />

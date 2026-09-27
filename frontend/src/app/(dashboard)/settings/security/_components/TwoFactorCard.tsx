@@ -60,7 +60,7 @@ export function TwoFactorCard({
 }: TwoFactorCardProps) {
   return (
     <>
-      {/* CARD 2: AUTENTICACIÓN EN DOS PASOS (2FA) */}
+      {/* CARD 2: TWO-FACTOR AUTHENTICATION (2FA) */}
       <div className="glass-card p-6 sm:p-7 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3.5">
@@ -92,10 +92,10 @@ export function TwoFactorCard({
         </div>
 
         {!twoFactorEnabled ? (
-          /* OPCIONES DE ACTIVACIÓN DE 2FA */
+          /* 2FA ACTIVATION OPTIONS */
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Opción A: App Autenticadora */}
+              {/* Option A: Authenticator App */}
               <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-3 flex flex-col justify-between">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
@@ -115,7 +115,7 @@ export function TwoFactorCard({
                 </button>
               </div>
 
-              {/* Opción B: Código por Correo */}
+              {/* Option B: Email Code */}
               <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-3 flex flex-col justify-between">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
@@ -136,7 +136,7 @@ export function TwoFactorCard({
               </div>
             </div>
 
-            {/* MODAL / SUB-SECCIÓN: CONFIGURACIÓN TOTP CON QR */}
+            {/* MODAL / SUB-SECTION: TOTP SETUP WITH QR */}
             {totpSetupData && (
               <div className="p-5 rounded-[6px] border border-sky-500/30 bg-sky-500/5 space-y-4 animate-in fade-in">
                 <div className="flex items-center justify-between border-b border-sky-500/20 pb-3">
@@ -200,7 +200,7 @@ export function TwoFactorCard({
               </div>
             )}
 
-            {/* SUB-SECCIÓN: CONFIRMACIÓN EMAIL OTP */}
+            {/* SUB-SECTION: EMAIL OTP CONFIRMATION */}
             {emailOtpRequested && (
               <form onSubmit={handleEnableEmailOtp} className="p-5 rounded-[6px] border border-purple-500/30 bg-purple-500/5 space-y-4 animate-in fade-in">
                 <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
@@ -216,7 +216,7 @@ export function TwoFactorCard({
                 </div>
 
                 <p className="text-xs text-[var(--text-secondary)]">
-                  Hemos enviado un código temporal a tu dirección de correo electrónico ({userProfile?.email}).
+                  {t('security.tempCodeSentToEmail', { email: userProfile?.email || '' })}
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3">

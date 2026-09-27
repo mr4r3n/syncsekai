@@ -35,11 +35,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
-    // /login, /register y /forgot-password se retiran del sitemap a propósito.
+    // /login, /register, and /forgot-password are intentionally omitted from sitemap.
     //
-    // Son formularios sin contenido indexable: no pueden posicionar para ninguna
-    // consulta y, al incluirlos, el sitemap deja de ser una lista de "esto es lo
-    // que merece la pena rastrear" y pasa a ser un volcado de rutas. Google sigue
-    // pudiendo rastrearlas —robots.txt las permite— simplemente no se le sugieren.
+    // Forms without indexable content: cannot rank for any query
+    // and including them turns sitemap from a curated list of "worth crawling"
+    // pages into a raw route dump. Google can still crawl them—robots.txt
+    // allows it—they are simply not suggested.
   ];
 }

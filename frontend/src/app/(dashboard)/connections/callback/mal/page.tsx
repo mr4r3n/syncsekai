@@ -27,7 +27,7 @@ function MalCallbackContent() {
 
     if (errorParam) {
       setStatus('error');
-      setErrorMessage(`MyAnimeList reportó un error: ${errorParam}`);
+      setErrorMessage(t('connections.trackerReportedError', { tracker: 'MyAnimeList', error: errorParam }));
       return;
     }
 
@@ -43,7 +43,7 @@ function MalCallbackContent() {
       const res = await api.mal.handleOAuthCallback({ code, codeVerifier });
       setUserData(res);
       setStatus('success');
-      showToast(`¡Cuenta de MyAnimeList (@${res.remoteUsername || 'Usuario'}) vinculada con éxito!`, 'success');
+      showToast(t('connections.trackerLinkedSuccess', { tracker: 'MyAnimeList', username: res.remoteUsername || t('common.user') }), 'success');
 
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('mal_code_verifier');

@@ -75,7 +75,7 @@ function TickerMessage({ message, ctaUrl, isExternalCta, ctaTarget }: { message:
   }, [message, measure]);
 
   const isOverflowing = overflowDistance > 0;
-  // Duración calculada según distancia (velocidad de lectura cómoda ~28px/segundo + 5s de pausa total)
+  // Duration calculated by distance (comfortable reading speed ~28px/second + 5s total pause)
   const animDuration = isOverflowing ? Math.max(7, Math.round(overflowDistance / 28) + 5) : 0;
 
   const content = (
@@ -159,7 +159,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
 
   const needsSidebarPadding = !isPreview && !isAuthPage;
 
-  // Cargar anuncio público si no es modo preview
+  // Load public announcement if not in preview mode
   useEffect(() => {
     if (isPreview) {
       setData(previewData || null);
@@ -173,7 +173,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
       .then((res: any) => {
         if (!isMounted) return;
         if (res && res.id) {
-          // Verificar si el usuario lo cerró anteriormente
+          // Check if the user dismissed it previously
           const storageKey = `plexsync_banner_dismissed_${res.id}`;
           const dismissedRaw = localStorage.getItem(storageKey);
 
@@ -188,7 +188,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
                 setIsDismissed(true);
               }
             } catch {
-              // Si el formato es viejo, ignorar
+              // If format is old, ignore
             }
           }
           setData(res);
@@ -203,7 +203,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
         if (isMounted) setIsLoaded(true);
       });
 
-    // Escuchar evento de actualización en tiempo real desde el panel de admin
+    // Listen for real-time update event from admin panel
     const handleUpdate = (e: any) => {
       if (e.detail) {
         setData(e.detail);
@@ -223,19 +223,19 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
     };
   }, [isPreview, previewData]);
 
-  // Si está en preview, actualizar cuando cambien los datos
+  // If in preview, update when data changes
   useEffect(() => {
     if (isPreview) {
       setData(previewData || null);
     }
   }, [previewData, isPreview]);
 
-  // Si no hay datos, o no está activo, o ya fue descartado, no mostrar nada
+  // If no data, or not active, or already dismissed, show nothing
   if (!isLoaded) return null;
   if (!data || !data.message) return null;
   if (!isPreview && (!data.isActive || isDismissed)) return null;
 
-  // Manejar el cierre suave (animación hacia arriba)
+  // Handle smooth close (upward animation)
   const handleDismiss = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsClosing(true);
@@ -272,7 +272,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
     containerStyle.backgroundPosition = 'center';
   }
 
-  // Resolver URL del archivo multimedia (GIF o Imagen)
+  // Resolve media file URL (GIF or Image)
   const getFullMediaUrl = (url?: string | null) => {
     if (!url) return null;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -295,18 +295,18 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
       }`}
       style={containerStyle}
     >
-      {/* Capa de Oscurecimiento sutil si el fondo es imagen/gif para garantizar legibilidad */}
+      {/* Subtle darkening layer if background is image/gif to ensure readability */}
       {(bgType === 'IMAGE' || bgType === 'GIF') && (
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] pointer-events-none" />
       )}
       
-      {/* Motor de Partículas y Efectos de Temporada */}
+      {/* Particle Engine and Seasonal Effects */}
       <BannerParticleEngine effectType={data.effectType} />
 
       <div className="relative z-10 w-full px-3.5 sm:px-6 md:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 sm:gap-4 text-xs sm:text-[14px] font-medium min-w-0 min-h-[46px] sm:min-h-[56px]">
-        {/* Contenido Central: En móvil solo texto a pantalla completa */}
+        {/* Central Content: On mobile, full-screen text only */}
         <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
-          {/* Media Izquierda (Solo Desktop) */}
+          {/* Left Media (Desktop only) */}
           {data.mediaUrl && data.mediaPosition === 'LEFT' && !isMobilePreview && (
             <img
               src={getFullMediaUrl(data.mediaUrl)!}
@@ -317,7 +317,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
             />
           )}
 
-          {/* Badge Destacado (Solo Desktop) */}
+          {/* Featured Badge (Desktop only) */}
           {data.badgeText && !isMobilePreview && (
             <span
               className="hidden sm:inline-flex px-2.5 py-1 rounded-[5px] font-bold text-xs tracking-wider uppercase shadow-sm shrink-0 items-center gap-1 leading-normal select-none"
@@ -330,7 +330,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
             </span>
           )}
 
-          {/* Mensaje Principal: Ocupa todo el ancho en móvil con ticker suave y pausas */}
+          {/* Main Message: Takes full width on mobile with smooth ticker and pauses */}
           <TickerMessage
             message={data.message}
             ctaUrl={data.ctaUrl}
@@ -338,7 +338,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
             ctaTarget={data.ctaTarget}
           />
 
-          {/* Media Derecha (Solo Desktop) */}
+          {/* Right Media (Desktop only) */}
           {data.mediaUrl && data.mediaPosition === 'RIGHT' && !isMobilePreview && (
             <img
               src={getFullMediaUrl(data.mediaUrl)!}
@@ -350,9 +350,9 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
           )}
         </div>
 
-        {/* Acciones: CTA Button (Solo Desktop) y Botón Cerrar (Siempre visible) */}
+        {/* Actions: CTA Button (Desktop only) and Close Button (Always visible) */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Botón CTA Compacto (Móvil) */}
+          {/* Compact CTA Button (Mobile) */}
           {data.ctaText && data.ctaUrl && !isMobilePreview && (
             <div className="inline-flex sm:hidden">
               {isExternalCta ? (
@@ -388,7 +388,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
             </div>
           )}
 
-          {/* Botón CTA Completo (Desktop) */}
+          {/* Full CTA Button (Desktop) */}
           {data.ctaText && data.ctaUrl && !isMobilePreview && (
             <div className="hidden sm:inline-flex">
               {isExternalCta ? (
@@ -426,7 +426,7 @@ export function AnnouncementBanner({ previewData, isPreview = false, isMobilePre
             </div>
           )}
 
-          {/* Botón de Cierre (X) - Siempre presente a la derecha */}
+          {/* Close Button (X) - Always present on the right */}
           {(data.isClosable !== false || isPreview) && (
             <button
               type="button"

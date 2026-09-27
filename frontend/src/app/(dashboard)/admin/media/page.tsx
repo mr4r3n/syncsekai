@@ -25,11 +25,11 @@ export default function AdminMediaPage() {
 
   const [loading, setLoading] = useState(true);
   /*
-   * Si la carga falla, la lista se queda vacia y la pantalla decia "no hay
-   * medios que coincidan": una mentira sobre unos ficheros que si estan. Hay
-   * que distinguir "cargado y vacio" de "no se pudo cargar".
+   * If load fails, list remains empty and screen showed "no matching
+   * media": deceptive regarding files that actually exist. Must
+   * distinguish "loaded and empty" from "failed to load".
    */
-  const [errorCarga, setErrorCarga] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
   const [totalFiles, setTotalFiles] = useState(0);
@@ -37,7 +37,7 @@ export default function AdminMediaPage() {
   const [totalLinked, setTotalLinked] = useState(0);
   const [totalOrphans, setTotalOrphans] = useState(0);
 
-  // Filtros, Búsqueda, Ordenamiento & Paginación
+  // Filters, Search, Sorting & Pagination
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'LINKED' | 'ORPHAN'>('ALL');
@@ -61,7 +61,7 @@ export default function AdminMediaPage() {
   const [purgeOrphansModalOpen, setPurgeOrphansModalOpen] = useState(false);
   const [isPurgingOrphans, setIsPurgingOrphans] = useState(false);
 
-  // Cargar estado de página y categoría guardados (URL o localStorage)
+  // Load saved page and category state (URL or localStorage)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -135,7 +135,7 @@ export default function AdminMediaPage() {
   const loadMedia = async () => {
     try {
       setLoading(true);
-      setErrorCarga(false);
+      setLoadError(false);
       const meRes = await api.auth.me().catch(() => null);
       const meUser = meRes?.user || meRes;
       if (!meUser || meUser.role !== 'ADMIN') {
@@ -157,7 +157,7 @@ export default function AdminMediaPage() {
         else setSelectedItem(null);
       }
     } catch (err: any) {
-      setErrorCarga(true);
+      setLoadError(true);
       showToast(`${t('admin.loadMediaError')} ` + err.message, 'error');
     } finally {
       setLoading(false);
@@ -173,8 +173,8 @@ export default function AdminMediaPage() {
 
   const handlePresetFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    // El input se limpia siempre: sin esto, volver a elegir el mismo fichero
-    // tras un fallo no dispararia el evento y pareceria que el boton no hace nada.
+    // Input is always cleared: without this, reselecting same file
+    // after failure would not trigger event and button would appear non-responsive.
     e.target.value = '';
     if (!file) return;
 
@@ -195,8 +195,8 @@ export default function AdminMediaPage() {
   const handleRemovePreset = (preset: string) => {
     setPresetAvatars((prev) => prev.filter((p) => p !== preset));
     showUndoToast(t('common.deletingItem', { name: preset }), {
-      alDeshacer: () => setPresetAvatars((prev) => [...prev, preset]),
-      alExpirar: async () => {
+      onUndo: () => setPresetAvatars((prev) => [...prev, preset]),
+      onExpire: async () => {
         try {
           const res = await api.admin.removePresetAvatar(preset);
           setPresetAvatars(res.avatars || []);
@@ -216,17 +216,17 @@ export default function AdminMediaPage() {
 
   const handleConfirmDelete = () => {
     if (!itemToDelete) return;
-    const fichero = itemToDelete;
+    const file = itemToDelete;
     setDeleteModalOpen(false);
     setItemToDelete(null);
-    if (selectedItem?.filename === fichero.filename) setSelectedItem(null);
-    setMediaList((prev) => prev.filter((m) => m.filename !== fichero.filename));
-    showUndoToast(t('common.deletingItem', { name: fichero.filename }), {
-      alDeshacer: () => loadMedia(),
-      alExpirar: async () => {
+    if (selectedItem?.filename === file.filename) setSelectedItem(null);
+    setMediaList((prev) => prev.filter((m) => m.filename !== file.filename));
+    showUndoToast(t('common.deletingItem', { name: file.filename }), {
+      onUndo: () => loadMedia(),
+      onExpire: async () => {
         try {
-          await api.admin.deleteMedia(fichero.filename);
-          showToast(t('admin.fileDeleted', { name: fichero.filename }), 'success');
+          await api.admin.deleteMedia(file.filename);
+          showToast(t('admin.fileDeleted', { name: file.filename }), 'success');
         } catch (err: any) {
           showToast(`${t('admin.deleteFileError')} ` + err.message, 'error');
         }
@@ -238,8 +238,8 @@ export default function AdminMediaPage() {
   const handleConfirmPurge = () => {
     setPurgeModalOpen(false);
     showUndoToast(t('admin.purgingCache'), {
-      alDeshacer: () => {},
-      alExpirar: async () => {
+      onUndo: () => {},
+      onExpire: async () => {
         try {
           setIsPurging(true);
           const res = await api.admin.purgeMedia();
@@ -258,8 +258,8 @@ export default function AdminMediaPage() {
   const handleConfirmPurgeOrphans = () => {
     setPurgeOrphansModalOpen(false);
     showUndoToast(t('admin.purgingOrphans'), {
-      alDeshacer: () => {},
-      alExpirar: async () => {
+      onUndo: () => {},
+      onExpire: async () => {
         try {
           setIsPurgingOrphans(true);
           const res = await api.admin.purgeOrphanMedia();
@@ -276,7 +276,7 @@ export default function AdminMediaPage() {
   };
 
 
-  // Filtrado Universal y Ordenamiento Multicriterio
+  // Universal Filtering and Multi-criteria Sorting
   const filteredMedia = mediaList
     .filter((item) => {
       const matchesCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
@@ -397,7 +397,7 @@ export default function AdminMediaPage() {
 
           <MediaGridSection
             loading={loading}
-            errorCarga={errorCarga}
+            loadError={loadError}
             loadMedia={loadMedia}
             filteredMedia={filteredMedia}
             paginatedMedia={paginatedMedia}

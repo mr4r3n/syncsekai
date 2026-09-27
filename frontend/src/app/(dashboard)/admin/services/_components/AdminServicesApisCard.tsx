@@ -30,8 +30,8 @@ export function AdminServicesApisCard({
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />{t('admin.allApisVerified')}</span>
       </div>
 
-      {/* Una fila por servicio: las latencias quedan alineadas y se pueden
-          comparar. La latencia va en texto normal; el estado lo da la pastilla. */}
+      {/* One row per service: latencies align and can be
+          compared. Latency is normal text; status is shown by pill. */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-x-8">
         {loading ? (
           [...Array(6)].map((_, i) => (
@@ -59,8 +59,8 @@ export function AdminServicesApisCard({
                   {apiInfo.name}
                 </span>
 
-                {/* La direccion sobrevive solo si sobra sitio: es el dato
-                    menos urgente de los cuatro. */}
+                {/* Address survives only if extra space exists: least
+                    urgent datum of the four. */}
                 <span className="hidden sm:block flex-1 min-w-0 text-[10.5px] font-mono text-[var(--text-muted)] truncate">
                   {apiInfo.endpoint || apiInfo.details}
                 </span>

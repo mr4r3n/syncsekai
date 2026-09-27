@@ -48,7 +48,7 @@ export default function ConfirmDeletePage() {
               <Loader2 className="w-7 h-7 animate-spin" />
             </div>
             <h1 className="text-lg font-bold text-[var(--text-primary)] font-heading">
-              Verificando Enlace Seguro
+              {t('auth.verifyingSecureLink')}
             </h1>
             <p className="text-xs text-[var(--text-secondary)]">{t('auth.pleaseWaitValidating')}</p>
           </div>
@@ -77,7 +77,7 @@ export default function ConfirmDeletePage() {
               <p>
                 <strong className="text-[var(--text-primary)]">{t('auth.changedYourMind')}</strong>
               </p>
-              <p>{t('auth.changedYourMindDesc')}{' '}<strong className="text-emerald-400">"Cancelar eliminación"</strong> en la pantalla de inicio o en Ajustes &gt; Seguridad para reactivar tu cuenta inmediatamente.
+              <p>{t('auth.changedYourMindDesc')}{' '}<strong className="text-emerald-400">"{t('auth.cancelDeletionButton')}"</strong>{' '}{t('auth.cancelDeletionAction')}
               </p>
             </div>
 

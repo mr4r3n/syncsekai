@@ -12,8 +12,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { ListRow, ListRows } from '@/components/ListRow';
-import { SyncStatus, SyncSummary, type TrackersVinculados } from '@/components/SyncStatus';
-import { etiquetasSync } from './utils';
+import { SyncStatus, SyncSummary, type LinkedTrackers } from '@/components/SyncStatus';
+import { syncLabels } from './utils';
 import { HistoryPagination } from './HistoryPagination';
 
 interface HistoryListProps {
@@ -36,7 +36,7 @@ interface HistoryListProps {
   deletingId: string | null;
   setActiveHistorySheetItem: (item: any) => void;
   resolveCoverUrl: (cover: string | null) => string | null;
-  vinculados: TrackersVinculados;
+  linked: LinkedTrackers;
   handleDeleteAndRevert: (item: any) => void;
   totalPages: number;
   page: number;
@@ -67,7 +67,7 @@ export function HistoryList({
   deletingId,
   setActiveHistorySheetItem,
   resolveCoverUrl,
-  vinculados,
+  linked,
   handleDeleteAndRevert,
   totalPages,
   page,
@@ -83,7 +83,7 @@ export function HistoryList({
       <div className="xl:col-span-8 space-y-4 min-w-0">
         {/* TARJETA DE CONTENEDOR DE SCROBBLES */}
         <div className="glass-card -mx-4 sm:mx-0 rounded-none sm:rounded-[10px] border-x-0 sm:border-x px-0 py-4 sm:p-5 space-y-4">
-          {/* BARRA SUPERIOR: SELECCIÓN + TÍTULO ACTIVIDAD RECIENTE + FILTROS DE ESTADO */}
+          {/* TOP BAR: SELECTION + RECENT ACTIVITY TITLE + STATUS FILTERS */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 px-3 sm:px-0 border-b border-[var(--glass-border)]">
             <div className="flex items-center gap-3">
               <button
@@ -111,7 +111,7 @@ export function HistoryList({
               </span>
             </div>
 
-            {/* FILTRO DE ESTADO: TODO / ÉXITOS / ERRORES */}
+            {/* STATUS FILTER: ALL / SUCCESSES / ERRORS */}
             <div className="flex items-center gap-1 p-1 rounded-[6px] bg-[var(--bg-app)] border border-[var(--border-subtle)] text-xs font-mono self-start sm:self-auto">
               <button
                 type="button"
@@ -193,14 +193,14 @@ export function HistoryList({
                       })
                     : item.viewedAt;
 
-                // S02E15: dos digitos siempre, para que la columna no
-                // baile entre el episodio 9 y el 10.
-                const dosDigitos = (n: number) => String(n).padStart(2, '0');
-                const codigoEpisodio = `S${dosDigitos(item.seasonNumber || 1)}E${dosDigitos(
+                // S02E15: two digits always, preventing column jitter
+                // between episode 9 and 10.
+                const twoDigits = (n: number) => String(n).padStart(2, '0');
+                const episodeCode = `S${twoDigits(item.seasonNumber || 1)}E${twoDigits(
                   item.episodeNumber || 0,
                 )}`;
 
-                const fechaCorta =
+                const shortDate =
                   typeof item.viewedAt === 'string'
                     ? new Date(item.viewedAt).toLocaleDateString([], {
                         month: 'short',
@@ -209,9 +209,9 @@ export function HistoryList({
                     : item.viewedAt;
 
                 const resolvedCover = resolveCoverUrl(item.coverImage);
-                const fallo =
+                const failed =
                   item.anilistStatus === 'FAILED' || item.malStatus === 'FAILED';
-                const sinMapear =
+                const unmapped =
                   !item.isMapped &&
                   !item.anilistMediaId &&
                   (item.anilistStatus === 'SKIPPED' ||
@@ -224,7 +224,7 @@ export function HistoryList({
                     selected={isSelected}
                     onSelect={() => handleToggleSelect(item.id)}
                     selectDisabled={isBatchProcessing}
-                    tone={fallo ? 'danger' : 'default'}
+                    tone={failed ? 'danger' : 'default'}
                     onOpen={() => setActiveHistorySheetItem(item)}
                     openLabel={t('history.openScrobbleOptions')}
                     media={
@@ -248,15 +248,15 @@ export function HistoryList({
                       )
                     }
                     title={item.showTitle}
-                    // El orden manda: en movil sobreviven los dos
-                    // primeros. De los tres datos que situan un scrobble
-                    // -que anime, que episodio y cuando- el primero va
-                    // en el titulo y los otros dos abren esta linea.
+                    // Order matters: on mobile the first two
+                    // survive. Of the three scrobble coordinates—anime,
+                    // episode, and timestamp—the first is in title
+                    // and the others open this line.
                     meta={[
-                      codigoEpisodio,
-                      // Corta en movil, con hora en escritorio.
+                      episodeCode,
+                      // Short on mobile, with time on desktop.
                       <>
-                        <span className="md:hidden">{fechaCorta}</span>
+                        <span className="md:hidden">{shortDate}</span>
                         <span className="hidden md:inline">{formattedDate}</span>
                       </>,
                       item.librarySectionTitle || t('history.libraryUnknown'),
@@ -266,24 +266,24 @@ export function HistoryList({
                     ]}
                     status={
                       <>
-                        {/* En movil una sola pieza: el detalle por
-                            tracker esta a un toque, en la hoja. */}
+                        {/* Single piece on mobile: per-tracker
+                            details are one tap away in sheet. */}
                         <SyncSummary
                           className="md:hidden"
-                          vinculados={vinculados}
+                          linked={linked}
                           anilist={item.anilistStatus}
                           mal={item.malStatus}
                           kitsu={item.kitsuStatus}
-                          resumen={
-                            fallo
+                          summary={
+                            failed
                               ? t('history.syncSummaryFailed')
                               : t('history.syncSummary', {
                                   ok: [
-                                    vinculados.anilist && item.anilistStatus === 'SUCCESS',
-                                    vinculados.mal && item.malStatus === 'SUCCESS',
-                                    vinculados.kitsu && item.kitsuStatus === 'SUCCESS',
+                                    linked.anilist && item.anilistStatus === 'SUCCESS',
+                                    linked.mal && item.malStatus === 'SUCCESS',
+                                    linked.kitsu && item.kitsuStatus === 'SUCCESS',
                                   ].filter(Boolean).length,
-                                  total: [vinculados.anilist, vinculados.mal, vinculados.kitsu].filter(
+                                  total: [linked.anilist, linked.mal, linked.kitsu].filter(
                                     Boolean,
                                   ).length,
                                 })
@@ -291,17 +291,17 @@ export function HistoryList({
                         />
                         <SyncStatus
                           className="hidden md:flex"
-                          vinculados={vinculados}
+                          linked={linked}
                           anilist={item.anilistStatus}
                           mal={item.malStatus}
                           kitsu={item.kitsuStatus}
-                          etiquetas={etiquetasSync(item, t)}
+                          labels={syncLabels(item, t)}
                         />
                       </>
                     }
                     actions={
                       <div className="hidden md:flex items-center gap-1.5">
-                        {sinMapear && (
+                        {unmapped && (
                           <Link
                             href={`/mappings?search=${encodeURIComponent(item.showTitle)}&season=${item.seasonNumber || 1}`}
                             className="w-8 h-8 rounded-[var(--radius-sm)] bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 border border-purple-500/35 flex items-center justify-center transition-colors shrink-0"

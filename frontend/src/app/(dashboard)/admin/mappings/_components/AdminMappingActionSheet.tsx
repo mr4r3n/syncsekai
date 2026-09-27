@@ -27,7 +27,7 @@ export function AdminMappingActionSheet({
       isOpen={!!activeAdminMappingSheetItem}
       onClose={() => setActiveAdminMappingSheetItem(null)}
       title={activeAdminMappingSheetItem.plexTitle}
-      subtitle={`Temporada ${activeAdminMappingSheetItem.plexSeason || 1} • Por: @${activeAdminMappingSheetItem.user?.username || 'Sistema'}`}
+      subtitle={t('admin.mappingSeasonBy', { season: activeAdminMappingSheetItem.plexSeason || 1, author: activeAdminMappingSheetItem.user?.username || t('admin.system') })}
       headerImage={
         activeAdminMappingSheetItem.coverImage ? (
           <img
@@ -49,7 +49,7 @@ export function AdminMappingActionSheet({
               : 'badge-pill text-[10px] font-mono'
           }
         >
-          {activeAdminMappingSheetItem.isGlobal ? 'Global Oficial' : 'Usuario'}
+          {activeAdminMappingSheetItem.isGlobal ? t('admin.officialGlobal') : t('common.user')}
         </span>
       }
       actions={[
@@ -61,7 +61,7 @@ export function AdminMappingActionSheet({
           onClick: () => handleOpenEditModal(activeAdminMappingSheetItem),
         },
         {
-          label: activeAdminMappingSheetItem.isGlobal ? 'Revocar Mapeo Global' : t('mappings.promoteToGlobal'),
+          label: activeAdminMappingSheetItem.isGlobal ? t('mappings.revokeGlobalMapping') : t('mappings.promoteToGlobal'),
           sublabel: activeAdminMappingSheetItem.isGlobal
             ? t('admin.revertToStandardMapping')
             : t('admin.masterMappingApplied'),
@@ -72,7 +72,7 @@ export function AdminMappingActionSheet({
         ...(!activeAdminMappingSheetItem.isApproved
           ? [
               {
-                label: 'Aprobar Mapeo',
+                label: t('admin.approveMappingTitle'),
                 sublabel: t('admin.approveToEnableSync'),
                 icon: Check,
                 variant: 'success' as const,

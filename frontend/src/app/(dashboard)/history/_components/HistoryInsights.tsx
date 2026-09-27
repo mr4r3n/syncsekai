@@ -5,17 +5,17 @@ import {
   Zap,
   Clock,
 } from 'lucide-react';
-import type { HeatmapResponse } from './tipos';
+import type { HeatmapResponse } from './types';
 
 interface HistoryInsightsProps {
   heatmapData: HeatmapResponse | null;
-  resumen: any;
+  summary: any;
   t: (key: string, values?: any) => string;
 }
 
 export function HistoryInsights({
   heatmapData,
-  resumen,
+  summary,
   t,
 }: HistoryInsightsProps) {
   return (
@@ -42,11 +42,11 @@ export function HistoryInsights({
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="text-xs font-bold text-[var(--text-primary)] font-heading">
-              {t('history.mainTracker')}: {resumen?.trackerPrincipal?.nombre || t('history.noData')}
+              {t('history.mainTracker')}: {summary?.topTracker?.name || t('history.noData')}
             </h4>
             <p className="text-[11px] text-[var(--text-muted)]">
-              {resumen?.trackerPrincipal
-                ? t('history.mainTrackerShare', { p: resumen.trackerPrincipal.porcentaje })
+              {summary?.topTracker
+                ? t('history.mainTrackerShare', { p: summary.topTracker.percentage })
                 : t('history.noTrackerYet')}
             </p>
           </div>
@@ -59,10 +59,10 @@ export function HistoryInsights({
           <div className="min-w-0 flex-1">
             <h4 className="text-xs font-bold text-[var(--text-primary)] font-heading">{t('history.mostActiveTime')}</h4>
             <p className="text-[11px] text-[var(--text-muted)]">
-              {resumen?.franjaActiva
+              {summary?.activeSlot
                 ? t('history.activeRange', {
-                    desde: String(resumen.franjaActiva.desde).padStart(2, '0'),
-                    hasta: String(resumen.franjaActiva.hasta).padStart(2, '0'),
+                    from: String(summary.activeSlot.from).padStart(2, '0'),
+                    to: String(summary.activeSlot.to).padStart(2, '0'),
                   })
                 : t('history.noActivityYet')}
             </p>

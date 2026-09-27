@@ -48,7 +48,7 @@ export function TemplateGallerySection({
             </button>
           </div>
 
-          {/* Categorías de Filtro */}
+          {/* Filter Categories */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             <button
               type="button"
@@ -59,7 +59,7 @@ export function TemplateGallerySection({
                   : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
               }`}
             >
-              <span>Todas</span>
+              <span>{t('announcements.categoryAll')}</span>
               <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold bg-[var(--bg-surface-elevated)] border border-[var(--border-subtle)]">
                 {presets.length}
               </span>
@@ -74,7 +74,7 @@ export function TemplateGallerySection({
                   : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
               }`}
             >
-              <span>Festivas &amp; Temporadas</span>
+              <span>{t('announcements.categoryFestive')}</span>
               <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300">
                 {presets.filter((p) => p.category === 'FESTIVE').length}
               </span>
@@ -104,7 +104,7 @@ export function TemplateGallerySection({
                   : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
               }`}
             >
-              <span>Informativas &amp; Estado</span>
+              <span>{t('announcements.categoryInfo')}</span>
               <span className="px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold bg-blue-500/20 text-blue-300">
                 {presets.filter((p) => p.category === 'INFO').length}
               </span>
@@ -126,7 +126,7 @@ export function TemplateGallerySection({
             </button>
           </div>
 
-          {/* LISTADO DE PLANTILLAS DEL SISTEMA FILTRADAS */}
+          {/* FILTERED SYSTEM TEMPLATES LIST */}
           {selectedCategory !== 'CUSTOM' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-4 gap-3">
               {(selectedCategory === 'ALL'
@@ -171,7 +171,7 @@ export function TemplateGallerySection({
                   <div>
                     <h3 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('announcements.noCustomTemplates')}</h3>
                     <p className="text-xs text-[var(--text-muted)] mt-1 max-w-md mx-auto">
-                      Personaliza los colores, textos, efectos o programación de tu banner y pulsa en "Guardar como Plantilla" para reutilizarlo cuando quieras.
+                      {t('announcements.noCustomTemplatesDesc')}
                     </p>
                   </div>
                   <button
@@ -201,7 +201,7 @@ export function TemplateGallerySection({
                           </span>
                         </div>
 
-                        {/* Botón Eliminar Plantilla */}
+                        {/* Delete Template Button */}
                         <button
                           type="button"
                           onClick={(e) => handleDeleteCustomPreset(preset.id, preset.name, e)}

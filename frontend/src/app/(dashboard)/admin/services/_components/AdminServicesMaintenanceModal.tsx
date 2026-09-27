@@ -6,7 +6,7 @@ import { Wrench, X, ExternalLink, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface AdminServicesMaintenanceModalProps {
-  propsMantenimiento: Record<string, any>;
+  maintenanceProps: Record<string, any>;
   setShowMaintenanceModal: (val: boolean) => void;
   mEnabled: boolean;
   setMEnabled: (val: boolean) => void;
@@ -17,7 +17,7 @@ interface AdminServicesMaintenanceModalProps {
 }
 
 export function AdminServicesMaintenanceModal({
-  propsMantenimiento,
+  maintenanceProps,
   setShowMaintenanceModal,
   mEnabled,
   setMEnabled,
@@ -31,7 +31,7 @@ export function AdminServicesMaintenanceModal({
   return (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div
-            {...propsMantenimiento}
+            {...maintenanceProps}
             className="w-full max-w-lg p-6 sm:p-7 rounded-[8px] border border-[var(--glass-border)] bg-[var(--bg-surface-elevated)] backdrop-blur-xl shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
               <div className="flex items-center gap-2.5">
@@ -53,11 +53,11 @@ export function AdminServicesMaintenanceModal({
             </div>
 
             <div className="space-y-4 text-xs">
-              {/* Switch de Activación */}
+              {/* Activation Switch */}
               <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between">
                 <div>
                   <span className="font-bold text-sm text-[var(--text-primary)] block">
-                    {mEnabled ? '🟠 Modo Mantenimiento ACTIVADO' : '🟢 Modo Mantenimiento DESACTIVADO'}
+                    {mEnabled ? t('admin.maintenanceModeActivated') : t('admin.maintenanceModeDeactivated')}
                   </span>
                   <span className="text-[11px] text-[var(--text-muted)]">
                     {mEnabled
@@ -89,7 +89,7 @@ export function AdminServicesMaintenanceModal({
                 />
               </div>
 
-              {/* Enlace para Previsualizar Pantalla */}
+              {/* Preview Screen Link */}
               <div className="pt-1 flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)]">
                 <span>{t('admin.wantToPreview')}</span>
                 <Link

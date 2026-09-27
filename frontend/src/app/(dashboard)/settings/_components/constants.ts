@@ -1,22 +1,22 @@
 import type { ThemeSwatch } from './types';
 
 /**
- * Traduce nombres de paleta antiguos a los actuales.
+ * Translates legacy palette names to current ones.
  *
- * Las paletas se llamaban por el producto del que se copió su aspecto. Ese
- * nombre ya está guardado en localStorage y en settings.themePalette de la base
- * de datos, así que renombrarlas a secas dejaría a esos usuarios con una paleta
- * inexistente y el fondo por defecto. Aquí se traducen al vuelo.
+ * Palettes were named after products from which appearance was copied. That
+ * name is already stored in localStorage and in settings.themePalette in database,
+ * so renaming directly would leave users with nonexistent palette and default
+ * background. Here they are translated on the fly.
  */
-const PALETAS_HEREDADAS: Record<string, string> = {
+const LEGACY_PALETTES: Record<string, string> = {
   'discord-dark': 'grafito',
   'discord-ash': 'carbon',
   'discord-light': 'marfil',
 };
 
-export function normalizarPaleta(paleta?: string | null): string {
-  if (!paleta) return 'sync';
-  return PALETAS_HEREDADAS[paleta] ?? paleta;
+export function normalizePalette(palette?: string | null): string {
+  if (!palette) return 'sync';
+  return LEGACY_PALETTES[palette] ?? palette;
 }
 
 export const THEME_SWATCHES: ThemeSwatch[] = [
@@ -28,12 +28,12 @@ export const THEME_SWATCHES: ThemeSwatch[] = [
     palette: 'marfil',
     mode: 'light',
   },
-  // Los nombres visibles estaban intercambiados respecto al color que aplican:
-  // "Oscuro" pintaba #313338 (gris) y "Ceniza" pintaba #111214 (casi negro).
-  // Venía de heredar la nomenclatura del producto del que se copió el aspecto,
-  // donde el tema llamado "oscuro" es precisamente el gris.
-  // Se corrigen las etiquetas; los `id` se conservan porque están guardados en
-  // localStorage, y las paletas renombradas se traducen en normalizarPaleta().
+  // Visible names were swapped relative to color applied:
+  // "Dark" rendered #313338 (gray) and "Ash" rendered #111214 (near black).
+  // Inherited naming from product whose look was mirrored,
+  // where theme called "dark" is precisely that gray.
+  // Labels corrected; `id` values preserved as stored in
+  // localStorage, with renamed palettes translated in normalizePalette().
   {
     id: 'oscuro',
     name: 'settings.themeAsh',
@@ -77,4 +77,4 @@ export const THEME_SWATCHES: ThemeSwatch[] = [
   },
 ];
 
-export { PALETAS_HEREDADAS };
+export { LEGACY_PALETTES };

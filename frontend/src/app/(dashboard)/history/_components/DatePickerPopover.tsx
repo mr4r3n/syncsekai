@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react';
-import type { MonthRecord } from './tipos';
-import { getMonthStartDayOffset, etiquetaMes, formatDateReadable } from './utils';
+import type { MonthRecord } from './types';
+import { getMonthStartDayOffset, monthLabel, formatDateReadable } from './utils';
 
 interface DatePickerProps {
   currentDate: string;
@@ -59,7 +59,7 @@ function DatePickerPopover({
           : 'bg-[#222225] border-zinc-700 text-zinc-100 shadow-black/70'
       }`}
     >
-      {/* Cabecera con selector de mes */}
+      {/* Header with month selector */}
       <div
         className={`flex items-center justify-between border-b pb-2 ${
           isLightMode ? 'border-zinc-200' : 'border-zinc-700'
@@ -84,7 +84,7 @@ function DatePickerPopover({
             isLightMode ? 'text-zinc-900' : 'text-white'
           }`}
         >
-          {etiquetaMes(monthInfo.year, monthInfo.month, locale)}
+          {monthLabel(monthInfo.year, monthInfo.month, locale)}
         </span>
 
         <button
@@ -104,7 +104,7 @@ function DatePickerPopover({
         </button>
       </div>
 
-      {/* Cabeceras de días de semana */}
+      {/* Weekday headers */}
       <div
         className={`grid grid-cols-7 text-center text-[10px] font-mono font-bold ${
           isLightMode ? 'text-zinc-600' : 'text-zinc-400'
@@ -119,7 +119,7 @@ function DatePickerPopover({
         <span>DO</span>
       </div>
 
-      {/* Rejilla de días */}
+      {/* Days grid */}
       <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
         {Array.from({ length: paddingSlots }).map((_, idx) => (
           <div key={`pad-${idx}`} className="h-7" />
@@ -158,9 +158,9 @@ function DatePickerPopover({
               className={`h-7 w-7 mx-auto rounded-[4px] flex items-center justify-center transition-all cursor-pointer ${dayStyle}`}
               title={
                 isBeforeMin
-                  ? 'Fecha bloqueada: Sin registros de historial (mín: 15/01/2026)'
+                  ? t('history.dateLockedNoRecords', { minDate: formatDateReadable(minDate) })
                   : isAfterMax
-                  ? 'Fecha futura'
+                  ? t('history.futureDate')
                   : dateStr
               }
             >
@@ -170,7 +170,7 @@ function DatePickerPopover({
         })}
       </div>
 
-      {/* Pie con advertencia de bloqueo y botón de cerrar */}
+      {/* Footer with lock warning and close button */}
       <div
         className={`flex items-center justify-between pt-2 border-t text-[10.5px] font-mono ${
           isLightMode ? 'border-zinc-200' : 'border-zinc-700'
@@ -182,7 +182,7 @@ function DatePickerPopover({
           }`}
         >
           <Lock className={`w-3 h-3 ${isLightMode ? 'text-amber-700' : 'text-amber-400'}`} />
-          <span>Límite: {formatDateReadable(minDate)} - {formatDateReadable(maxDate)}</span>
+          <span>{t('history.limitLabel')}: {formatDateReadable(minDate)} - {formatDateReadable(maxDate)}</span>
         </span>
         <button
           type="button"

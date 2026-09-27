@@ -38,7 +38,7 @@ export function HistoryHeader({
 }: HistoryHeaderProps) {
   return (
     <>
-      {/* CABECERA CON BÚSQUEDA Y CONTROLES (ANCHO COMPLETO) */}
+      {/* HEADER WITH SEARCH AND CONTROLS (FULL WIDTH) */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)] font-heading">
@@ -49,7 +49,7 @@ export function HistoryHeader({
           </p>
         </div>
 
-        {/* BÚSQUEDA Y CONTROLES */}
+        {/* SEARCH AND CONTROLS */}
         <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap sm:flex-nowrap w-full sm:w-auto">
           <form
             onSubmit={handleSearchSubmit}
@@ -76,7 +76,7 @@ export function HistoryHeader({
             )}
           </form>
 
-          {/* Selector de Elementos por Página */}
+          {/* Items per Page Selector */}
           <div className="w-28 sm:w-32 shrink-0">
             <CustomSelect
               value={String(limit)}

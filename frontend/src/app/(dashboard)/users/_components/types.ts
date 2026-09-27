@@ -1,3 +1,3 @@
-type CampoOrden = 'username' | 'status' | 'role' | 'createdAt' | 'lastActiveAt';
+type SortField = 'username' | 'status' | 'role' | 'createdAt' | 'lastActiveAt';
 
-export type { CampoOrden };
+export type { SortField };

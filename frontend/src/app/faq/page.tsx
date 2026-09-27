@@ -8,9 +8,9 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { useI18n } from '@/i18n/I18nProvider';
 import { SiteFooter } from '@/components/SiteFooter';
 
-// Encabezados y párrafos planos a propósito, sin acordeón: el contenido queda
-// visible para lectores de pantalla y para el rastreador sin depender de JS.
-const PREGUNTAS = Array.from({ length: 14 }, (_, i) => String(i + 1));
+// Plain headings and paragraphs intentionally, no accordion: content remains
+// visible to screen readers and crawlers without relying on JS.
+const QUESTIONS = Array.from({ length: 14 }, (_, i) => String(i + 1));
 
 export default function FaqPage() {
   const { t } = useI18n();
@@ -59,7 +59,7 @@ export default function FaqPage() {
         </div>
 
         <div className="space-y-4">
-          {PREGUNTAS.map((n) => (
+          {QUESTIONS.map((n) => (
             <section
               key={n}
               className="p-5 sm:p-6 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-2"
@@ -92,7 +92,7 @@ export default function FaqPage() {
       </main>
 
       <SiteFooter
-        enlaces={[
+        links={[
           { href: '/terms', label: t('legal.termsTitle') },
           { href: '/privacy', label: t('legal.privacyTitle') },
           { href: '/docs', label: t('landing.footerDocs') },

@@ -11,8 +11,7 @@ export function LanguageToggle() {
     setLocale(next);
   };
 
-  const currentLabel = locale === 'es' ? 'Español' : 'English';
-  const nextLabel = locale === 'es' ? 'English' : 'Español';
+  const nextLabel = locale === 'es' ? t('language.en') : t('language.es');
 
   return (
     <button

@@ -5,8 +5,8 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  // Sin `alternates`: el canonical relativo del layout raíz ya resuelve
-  // /terms y /privacy a su propia URL.
+  // Without `alternates`: relative canonical from root layout already resolves
+  // /terms and /privacy to their own URL.
 };
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {

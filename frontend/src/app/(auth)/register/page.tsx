@@ -39,10 +39,10 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  // null mientras carga: el formulario no se esconde por un fallo de red.
-  const [registroAbierto, setRegistroAbierto] = useState<boolean | null>(null);
+  // null while loading: form does not hide due to network error.
+  const [registrationOpen, setRegistrationOpen] = useState<boolean | null>(null);
   useEffect(() => {
-    api.setup.getSiteSettings().then((s) => setRegistroAbierto(s.registrationOpen)).catch(() => setRegistroAbierto(true));
+    api.setup.getSiteSettings().then((s) => setRegistrationOpen(s.registrationOpen)).catch(() => setRegistrationOpen(true));
   }, []);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [registeredSuccess, setRegisteredSuccess] = useState<any>(null);
@@ -57,7 +57,7 @@ export default function RegisterPage() {
       if (error) {
         if (error.includes('NOT_CONFIGURED')) {
           const provName = error.split('_')[0];
-          showToast(`El proveedor ${provName} no está configurado aún en backend/.env`, 'info');
+          showToast(t('auth.providerNotConfigured', { provider: provName }), 'info');
         } else if (error === 'ACCESS_DENIED') {
           showToast(t('auth.socialSignupCancelled'), 'info');
         } else {
@@ -153,7 +153,7 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        {/* Centro: Texto Editorial & Declaración de Propósito */}
+        {/* Center: Editorial Copy & Purpose Statement */}
         <div className="my-auto py-10 space-y-8 relative z-10 max-w-xl">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono text-sky-400 bg-sky-500/10 border border-sky-500/20">
@@ -202,7 +202,7 @@ export default function RegisterPage() {
       {/* PANEL DERECHO: FORMULARIO DE REGISTRO                     */}
       {/* ========================================================= */}
       <div className="col-span-1 lg:col-span-6 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 xl:p-14 min-h-screen relative z-10">
-        {/* Top Header que ocupa el ancho completo */}
+        {/* Top Header taking full width */}
         <div className="flex items-center justify-between w-full">
           <Link
             href="/"
@@ -277,7 +277,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => handleSocialRegister('Google')}
-                    disabled={!!socialLoading || loading || registroAbierto !== true}
+                    disabled={!!socialLoading || loading || registrationOpen !== true}
                     className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
                     title={t('auth.signUpGoogle')}
                   >
@@ -305,7 +305,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => handleSocialRegister('Discord')}
-                    disabled={!!socialLoading || loading || registroAbierto !== true}
+                    disabled={!!socialLoading || loading || registrationOpen !== true}
                     className="py-2.5 px-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-strong)] transition-all flex items-center justify-center gap-2 text-xs font-semibold text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer hover:-translate-y-0.5 active:translate-y-0 shadow-xs"
                     title={t('auth.signUpDiscord')}
                   >
@@ -323,14 +323,14 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {registroAbierto === false && (
+              {registrationOpen === false && (
                 <div className="p-4 rounded-[var(--radius-md)] bg-[var(--status-warning-bg)] border border-[var(--status-warning)]/30 text-sm text-[var(--text-primary)]">
                   {t('auth.registrationClosed')}
                 </div>
               )}
 
-              {/* Oculto hasta saber si el registro está abierto: si no, parpadea antes del aviso. */}
-              <form suppressHydrationWarning onSubmit={handleRegister} className={`space-y-4 ${registroAbierto === true ? '' : 'hidden'}`}>
+              {/* Hidden until registration status known: otherwise, flashes before notice. */}
+              <form suppressHydrationWarning onSubmit={handleRegister} className={`space-y-4 ${registrationOpen === true ? '' : 'hidden'}`}>
                 {formError && (
                   <div
                     role="alert"
@@ -365,13 +365,13 @@ export default function RegisterPage() {
                       required
                       autoComplete="username"
                       spellCheck={false}
-                      placeholder="tu_usuario"
+                      placeholder={t('auth.usernamePlaceholder')}
                       className="w-full bg-transparent text-sm text-[var(--text-primary)] outline-none"
                     />
                   </div>
                 </div>
 
-                {/* Correo Electrónico */}
+                {/* Email */}
                 <div className="space-y-1.5" suppressHydrationWarning>
                   <label htmlFor="register-email" className="text-xs font-semibold text-[var(--text-secondary)]">
                     {t('auth.email')}
@@ -400,7 +400,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Contraseña */}
+                {/* Password */}
                 <div className="space-y-1.5" suppressHydrationWarning>
                   <label htmlFor="register-password" className="text-xs font-semibold text-[var(--text-secondary)]">
                     {t('auth.password')} ({t('auth.passwordRequirements')})
@@ -443,7 +443,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Botón de Envío */}
+                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -465,7 +465,7 @@ export default function RegisterPage() {
           </div>
         </main>
 
-        {/* Footer que ocupa todo el ancho */}
+        {/* Footer taking full width */}
         <div className="w-full flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)] border-t border-[var(--border-subtle)] pt-4" suppressHydrationWarning>
           <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">{t('legal.termsTitle')}</Link>
           <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">

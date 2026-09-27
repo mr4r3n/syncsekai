@@ -23,7 +23,7 @@ export function AdminTicketsKpis({ stats }: AdminTicketsKpisProps) {
           {stats?.pendingStaff ?? 0}
         </p>
         <span className="text-[11px] text-[var(--text-muted)]">
-          {stats?.open ?? 0} abiertos • {stats?.inProgress ?? 0} en curso
+          {t('admin.openAndInProgress', { open: stats?.open ?? 0, inProgress: stats?.inProgress ?? 0 })}
         </span>
       </div>
 
@@ -55,7 +55,7 @@ export function AdminTicketsKpis({ stats }: AdminTicketsKpisProps) {
 
       <div className="p-4 rounded-[8px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-1 shadow-sm">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-[var(--text-muted)] font-medium">Resueltos Hoy</span>
+          <span className="text-xs text-[var(--text-muted)] font-medium">{t('admin.resolvedToday')}</span>
           <div className="w-7 h-7 rounded-[4px] bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
             <CheckCircle2 className="w-4 h-4" />
           </div>
@@ -64,7 +64,7 @@ export function AdminTicketsKpis({ stats }: AdminTicketsKpisProps) {
           {stats?.todayResolved ?? 0}
         </p>
         <span className="text-[11px] text-[var(--text-muted)]">
-          {stats?.resolved ?? 0} resueltos histórico
+          {t('admin.historicalResolved', { count: stats?.resolved ?? 0 })}
         </span>
       </div>
     </div>

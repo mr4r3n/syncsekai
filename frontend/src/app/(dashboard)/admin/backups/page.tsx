@@ -60,11 +60,11 @@ export default function AdminBackupsPage() {
   // Delete modal state
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
-  // Semántica de diálogo y gestión de foco de los modales de esta vista.
-  const { dialogProps: propsCrear } = useModalA11y(Boolean(showCreateModal), () => setShowCreateModal(false));
-  const { dialogProps: propsRestaurar } = useModalA11y(Boolean(restoreTarget), () => setRestoreTarget(null));
-  const { dialogProps: propsSubir } = useModalA11y(Boolean(showUploadModal), () => setShowUploadModal(false));
-  const { dialogProps: propsBorrar } = useModalA11y(Boolean(deleteTarget), () => setDeleteTarget(null));
+  // Dialog semantics and focus management for modals in this view.
+  const { dialogProps: createProps } = useModalA11y(Boolean(showCreateModal), () => setShowCreateModal(false));
+  const { dialogProps: restoreProps } = useModalA11y(Boolean(restoreTarget), () => setRestoreTarget(null));
+  const { dialogProps: uploadProps } = useModalA11y(Boolean(showUploadModal), () => setShowUploadModal(false));
+  const { dialogProps: deleteProps } = useModalA11y(Boolean(deleteTarget), () => setDeleteTarget(null));
 
   useEffect(() => {
     loadBackupsData();
@@ -100,7 +100,7 @@ export default function AdminBackupsPage() {
     try {
       setCreating(true);
       const res = await api.admin.createBackup(creatingType);
-      showToast(`¡Copia de seguridad ${res.filename} generada con éxito!`, 'success');
+      showToast(t('backups.backupGeneratedSuccess', { filename: res.filename }), 'success');
       setShowCreateModal(false);
       await loadBackupsData();
     } catch (err: any) {
@@ -130,12 +130,12 @@ export default function AdminBackupsPage() {
     }
   };
 
-  // El fichero se trae entero antes de ofrecerlo: en uno grande pasan segundos
-  // sin señal, así que el botón gira mientras tanto.
-  const [descargando, setDescargando] = useState<string | null>(null);
+  // File is fetched entirely before offering: on large backups seconds pass
+  // without signal, so button spins meanwhile.
+  const [downloading, setDownloading] = useState<string | null>(null);
   const handleDownload = (filename: string) => {
-    if (descargando) return;
-    setDescargando(filename);
+    if (downloading) return;
+    setDownloading(filename);
     api.admin
       .downloadBackup(filename)
       .then((blob) => {
@@ -152,7 +152,7 @@ export default function AdminBackupsPage() {
       .catch((err) => {
         showToast(`${t('backups.downloadError')} ` + err.message, 'error');
       })
-      .finally(() => setDescargando(null));
+      .finally(() => setDownloading(null));
   };
 
   const handleRestore = async () => {
@@ -160,7 +160,7 @@ export default function AdminBackupsPage() {
     try {
       setRestoring(true);
       const res = await api.admin.restoreBackup(restoreTarget.filename);
-      showToast(`¡Restauración exitosa! Se procesaron ${res.restoredRecords} registros.`, 'success');
+      showToast(t('backups.restoreSuccessRecords', { count: res.restoredRecords }), 'success');
       setRestoreTarget(null);
       await loadBackupsData();
     } catch (err: any) {
@@ -178,7 +178,7 @@ export default function AdminBackupsPage() {
     try {
       setUploading(true);
       const res = await api.admin.uploadAndRestoreBackup(uploadFile);
-      showToast(`¡Archivo restaurado con éxito! Se procesaron ${res.restoredRecords} registros.`, 'success');
+      showToast(t('backups.uploadRestoreSuccessRecords', { count: res.restoredRecords }), 'success');
       setShowUploadModal(false);
       setUploadFile(null);
       await loadBackupsData();
@@ -191,15 +191,15 @@ export default function AdminBackupsPage() {
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-    const copia = deleteTarget;
+    const backup = deleteTarget;
     setDeleteTarget(null);
-    setBackups((prev) => prev.filter((b) => b.filename !== copia.filename));
-    showUndoToast(t('common.deletingItem', { name: copia.filename }), {
-      alDeshacer: () => loadBackupsData(),
-      alExpirar: async () => {
+    setBackups((prev) => prev.filter((b) => b.filename !== backup.filename));
+    showUndoToast(t('common.deletingItem', { name: backup.filename }), {
+      onUndo: () => loadBackupsData(),
+      onExpire: async () => {
         try {
-          await api.admin.deleteBackup(copia.filename);
-          showToast(t('backups.backupDeleted', { name: copia.filename }), 'info');
+          await api.admin.deleteBackup(backup.filename);
+          showToast(t('backups.backupDeleted', { name: backup.filename }), 'info');
         } catch (err: any) {
           showToast(`${t('backups.deleteBackupError')} ` + err.message, 'error');
         }
@@ -244,7 +244,7 @@ export default function AdminBackupsPage() {
             setShowCreateModal={setShowCreateModal}
           />
 
-          {/* BANNER GUÍA DE MIGRACIÓN */}
+          {/* MIGRATION GUIDE BANNER */}
           <AdminBackupsMigrationBanner />
 
           {/* STATS OVERVIEW CARDS */}
@@ -254,9 +254,9 @@ export default function AdminBackupsPage() {
             schedule={schedule}
           />
 
-          {/* GRID DE DOS COLUMNAS: CONFIGURACIÓN CRON + LISTA DE BACKUPS */}
+          {/* TWO-COLUMN GRID: CRON CONFIGURATION + BACKUPS LIST */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            {/* COLUMNA 1: CONFIGURACIÓN DE PROGRAMACIÓN */}
+            {/* COLUMN 1: SCHEDULE CONFIGURATION */}
             <AdminBackupsScheduleCard
               handleSaveSchedule={handleSaveSchedule}
               schedule={schedule}
@@ -274,7 +274,7 @@ export default function AdminBackupsPage() {
               setShowCreateModal={setShowCreateModal}
               formatDateTime={formatDateTime}
               handleDownload={handleDownload}
-              descargando={descargando}
+              downloading={downloading}
               setRestoreTarget={setRestoreTarget}
               setDeleteTarget={setDeleteTarget}
             />
@@ -286,7 +286,7 @@ export default function AdminBackupsPage() {
       {/* ========================================================= */}
       {showCreateModal && (
         <AdminBackupCreateModal
-          propsCrear={propsCrear}
+          createProps={createProps}
           setShowCreateModal={setShowCreateModal}
           creatingType={creatingType}
           setCreatingType={setCreatingType}
@@ -296,11 +296,11 @@ export default function AdminBackupsPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: CONFIRMAR RESTAURACIÓN                             */}
+      {/* MODAL: CONFIRM RESTORE                                    */}
       {/* ========================================================= */}
       {restoreTarget && (
         <AdminBackupRestoreModal
-          propsRestaurar={propsRestaurar}
+          restoreProps={restoreProps}
           setRestoreTarget={setRestoreTarget}
           restoreTarget={restoreTarget}
           restoring={restoring}
@@ -309,11 +309,11 @@ export default function AdminBackupsPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: SUBIR Y RESTAURAR ARCHIVO EXTERNO                 */}
+      {/* MODAL: UPLOAD AND RESTORE EXTERNAL FILE                   */}
       {/* ========================================================= */}
       {showUploadModal && (
         <AdminBackupUploadModal
-          propsSubir={propsSubir}
+          uploadProps={uploadProps}
           setShowUploadModal={setShowUploadModal}
           setUploadFile={setUploadFile}
           uploadFile={uploadFile}
@@ -324,11 +324,11 @@ export default function AdminBackupsPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: CONFIRMAR ELIMINACIÓN                              */}
+      {/* MODAL: CONFIRM DELETION                                   */}
       {/* ========================================================= */}
       {deleteTarget && (
         <AdminBackupDeleteModal
-          propsBorrar={propsBorrar}
+          deleteProps={deleteProps}
           setDeleteTarget={setDeleteTarget}
           deleteTarget={deleteTarget}
           handleDelete={handleDelete}

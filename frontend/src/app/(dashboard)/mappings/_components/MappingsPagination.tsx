@@ -29,7 +29,7 @@ export function MappingsPagination({
 }: MappingsPaginationProps) {
   return (
     <div className="pt-4 px-3 sm:px-0 border-t border-[var(--glass-border)] flex flex-col md:flex-row items-center justify-between gap-4">
-      {/* Selector de Límite & Conteo */}
+      {/* Limit Selector & Count */}
       <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-muted)] flex-wrap">
         <span>
           {t('mappings.showingRange', { from: (page - 1) * limit + 1, to: Math.min(page * limit, filteredMappings.length), total: filteredMappings.length })}
@@ -53,10 +53,10 @@ export function MappingsPagination({
         </div>
       </div>
 
-      {/* Controles de Navegación de Página */}
+      {/* Page Navigation Controls */}
       {totalPages > 1 && (
         <div className="flex items-center gap-1.5">
-          {/* Ir a Primera Página */}
+          {/* Go to First Page */}
           <button
             onClick={() => changePage(1)}
             disabled={page === 1 || loading}
@@ -66,7 +66,7 @@ export function MappingsPagination({
             <ChevronsLeft className="w-3.5 h-3.5" />
           </button>
 
-          {/* Página Anterior */}
+          {/* Previous Page */}
           <button
             onClick={() => changePage(Math.max(1, page - 1))}
             disabled={page === 1 || loading}
@@ -76,7 +76,7 @@ export function MappingsPagination({
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
 
-          {/* Números de Página */}
+          {/* Page Numbers */}
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             let pageNum = page;
             if (totalPages <= 5) {
@@ -105,7 +105,7 @@ export function MappingsPagination({
             );
           })}
 
-          {/* Página Siguiente */}
+          {/* Next Page */}
           <button
             onClick={() => changePage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages || loading}
@@ -115,7 +115,7 @@ export function MappingsPagination({
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
 
-          {/* Ir a Última Página */}
+          {/* Go to Last Page */}
           <button
             onClick={() => changePage(totalPages)}
             disabled={page === totalPages || loading}
@@ -127,7 +127,7 @@ export function MappingsPagination({
         </div>
       )}
 
-      {/* Salto Directo a Página */}
+      {/* Direct Jump to Page */}
       {totalPages > 1 && (
         <form
           onSubmit={(e) => {

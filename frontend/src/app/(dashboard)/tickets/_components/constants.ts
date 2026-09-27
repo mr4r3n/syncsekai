@@ -25,9 +25,9 @@ interface TicketItem {
   } | null;
 }
 
-// Estos mapas viven a nivel de modulo, donde no existe el hook: guardan la CLAVE
-// y se traducen en el render con t(). Un valor desconocido se devuelve tal cual,
-// asi que las categorias que no esten en el mapa siguen mostrandose.
+// These maps live at module level, where hook does not exist: store KEY
+// and translate during render via t(). Unknown value is returned as-is,
+// ensuring unmapped categories continue displaying.
 const CATEGORY_LABELS: Record<string, { label: string; desc: string }> = {
   TECHNICAL: { label: 'tickets.catTechnical', desc: 'tickets.catTechnicalDesc' },
   SCROBBLE_SYNC: { label: 'tickets.catScrobble', desc: 'tickets.catScrobbleDesc' },

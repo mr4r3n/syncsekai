@@ -51,9 +51,9 @@ export function AnimeDetailModal({
   const { showToast } = useToast();
   const { t } = useI18n();
 
-  // Ficha de anime: foco dentro al abrir, Tab acotado y foco devuelto a la tarjeta.
-  const cerrarFicha = useCallback(() => setSelectedAnime(null), []);
-  const { dialogProps } = useModalA11y(Boolean(selectedAnime), cerrarFicha);
+  // Anime sheet: focus inside on open, Tab trapped, and focus returned to card.
+  const closeDetail = useCallback(() => setSelectedAnime(null), []);
+  const { dialogProps } = useModalA11y(Boolean(selectedAnime), closeDetail);
   const [franchiseSeasons, setFranchiseSeasons] = useState<any[]>([]);
   const [loadingFranchise, setLoadingFranchise] = useState(false);
   const [linkSearchOpen, setLinkSearchOpen] = useState(false);
@@ -83,7 +83,7 @@ export function AnimeDetailModal({
     }
   };
 
-  // Al seleccionar un anime, inicializar la temporada activa (cerrado en móvil por defecto)
+  // When selecting anime, initialize active season (closed on mobile by default)
   useEffect(() => {
     if (selectedAnime) {
       const activeSeasonIdx = Math.max(0, Number(selectedAnime.seasonNumber || 1) - 1);
@@ -126,7 +126,7 @@ export function AnimeDetailModal({
         .toLowerCase();
     };
 
-    // 1. Detección inmediata en memoria desde el catálogo cargado para cero lag
+    // 1. Immediate in-memory detection from loaded catalog for zero lag
     const currentBase = extractBase(selectedAnime.title || selectedAnime.romajiTitle);
     let localMatches: any[] = [selectedAnime];
     if (currentBase.length >= 4 && catalog.length > 0) {
@@ -150,7 +150,7 @@ export function AnimeDetailModal({
       .then((response) => {
         if (cancelled) return;
         const seasons = response.seasons?.length ? response.seasons : localMatches;
-        // Merge con coincidencias locales
+        // Merge with local matches
         const mapById = new Map<string, any>();
         for (const item of localMatches) {
           const key = String(item.anilistId || item.malId || item.id);
@@ -187,11 +187,11 @@ export function AnimeDetailModal({
     return () => clearTimeout(timer);
   }, [franchiseSeasons, selectedAnime]);
 
-  // Manejar cambio de calificación con estrellas en vivo (escala 0 a 10) sincronizando todos los trackers
+  // Handle live star rating change (0 to 10 scale) synchronizing all trackers
   const handleRate = async (newScore: number) => {
     if (!selectedAnime) return;
     if (selectedAnime.inUserList === false) {
-      showToast(`Esta temporada todavía no está en tu lista. Ábrela en ${selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList'} para añadirla primero.`, 'info');
+      showToast(t('catalog.seasonNotOnListOpenTracker', { tracker: selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList' }), 'info');
       return;
     }
     setSavingRating(true);
@@ -219,7 +219,7 @@ export function AnimeDetailModal({
       const trackersMsg = res?.updatedTrackers?.length > 0
         ? res.updatedTrackers.join(' y ')
         : (selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList');
-      showToast(`¡Calificación (${newScore.toFixed(1)}/10) sincronizada en ${trackersMsg}!`, 'success');
+      showToast(t('catalog.scoreSynced', { score: newScore.toFixed(1), trackers: trackersMsg }), 'success');
     } catch (err: any) {
       showToast(`${t('catalog.saveRatingError')} ` + err.message, 'error');
     } finally {
@@ -239,10 +239,10 @@ export function AnimeDetailModal({
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-5xl max-h-[92vh] lg:h-[88vh] lg:max-h-[850px] rounded-t-[16px] sm:rounded-[8px] border border-[var(--glass-border)] overflow-y-auto overscroll-contain shadow-[var(--glass-shadow-lg)] flex flex-col relative backdrop-blur-2xl bg-[var(--glass-bg)] text-[var(--text-primary)] cursor-default my-0 sm:my-auto outline-none"
       >
-        {/* Tirador táctil móvil estilo Android */}
+        {/* Android-style mobile touch handle */}
         <div className="w-12 h-1.5 rounded-full bg-white/25 mx-auto mt-3 mb-1 sm:hidden shrink-0" />
 
-        {/* Botón cerrar flotante arriba a la derecha */}
+        {/* Floating close button top right */}
         <button
           onClick={() => setSelectedAnime(null)}
           className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-[6px] bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)] transition-colors z-30 backdrop-blur-md cursor-pointer"
@@ -252,7 +252,7 @@ export function AnimeDetailModal({
           <X className="w-4 h-4" />
         </button>
 
-        {/* GRID PRINCIPAL: Flex en móvil, Grid 12 col en desktop */}
+        {/* MAIN GRID: Flex on mobile, 12 col Grid on desktop */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 flex-1 min-h-0 lg:overflow-hidden">
           <AnimeModalSidebar
             selectedAnime={selectedAnime}
@@ -283,7 +283,7 @@ export function AnimeDetailModal({
               </div>
             )}
 
-            {/* 2.1 CABECERA SUPERIOR DERECHA: Progreso y Temporadas de la Saga */}
+            {/* 2.1 TOP RIGHT HEADER: Progress and Franchise Seasons */}
             <AnimeModalSeasonsBar
               selectedAnime={selectedAnime}
               setSelectedAnime={setSelectedAnime}
@@ -303,7 +303,7 @@ export function AnimeDetailModal({
               getSeasonNumber={getSeasonNumber}
             />
 
-            {/* 2.2 ACORDEÓN DE EPISODIOS: Flujo natural en móvil, scroll independiente en desktop */}
+            {/* 2.2 EPISODE ACCORDION: Natural flow on mobile, independent scroll on desktop */}
             <AnimeModalEpisodes
               selectedAnime={selectedAnime}
               setSelectedAnime={setSelectedAnime}
@@ -314,7 +314,7 @@ export function AnimeDetailModal({
               getSeasonNumber={getSeasonNumber}
             />
 
-            {/* 2.3 BARRA DE SINCRONIZACIÓN MULTIPROVEEDOR MINIMALISTA (Siempre al final del contenido) */}
+            {/* 2.3 MINIMALIST MULTI-PROVIDER SYNC BAR (Always at end of content) */}
             <AnimeModalSyncFooter
               selectedAnime={selectedAnime}
               catalogResponse={catalogResponse}

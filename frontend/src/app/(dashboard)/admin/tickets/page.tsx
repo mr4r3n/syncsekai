@@ -36,7 +36,7 @@ export default function AdminTicketsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Ticket Seleccionado (Drawer / Modal de Gestión)
+  // Selected Ticket (Drawer / Management Modal)
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [activeTicket, setActiveTicket] = useState<any>(null);
   const [loadingTicketDetail, setLoadingTicketDetail] = useState(false);
@@ -52,7 +52,7 @@ export default function AdminTicketsPage() {
   const [replyStatus, setReplyStatus] = useState<string>('WAITING_USER');
   const [sendingReply, setSendingReply] = useState(false);
 
-  // Semántica de diálogo y gestión de foco del modal de esta vista.
+  // Dialog semantics and focus management for this view's modal.
   const { dialogProps: propsDrawer } = useModalA11y(Boolean(selectedTicketId), () => handleAttemptCloseDrawer());
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -149,7 +149,7 @@ export default function AdminTicketsPage() {
     showToast(t('admin.ticketsAndMetricsUpdated'), 'success');
   };
 
-  // Abrir detalle del ticket
+  // Open ticket details
   const handleOpenTicketDetail = async (ticketId: string) => {
     setSelectedTicketId(ticketId);
     try {
@@ -207,7 +207,7 @@ export default function AdminTicketsPage() {
     try {
       await api.admin.tickets.updateStatus(selectedTicketId, { status: newStatus });
       setActiveTicket((prev: any) => prev ? { ...prev, status: newStatus } : null);
-      showToast(`Estado actualizado a ${STATUS_STYLES[newStatus]?.label || newStatus}`, 'info');
+      showToast(t('admin.statusUpdatedTo', { status: t(STATUS_STYLES[newStatus]?.label || newStatus) }), 'info');
       loadStats();
       loadTickets();
     } catch (err: any) {
@@ -220,7 +220,7 @@ export default function AdminTicketsPage() {
     try {
       await api.admin.tickets.updateStatus(selectedTicketId, { priority: newPriority });
       setActiveTicket((prev: any) => prev ? { ...prev, priority: newPriority } : null);
-      showToast(`Prioridad actualizada a ${PRIORITY_STYLES[newPriority]?.label || newPriority}`, 'info');
+      showToast(t('admin.priorityUpdatedTo', { priority: t(PRIORITY_STYLES[newPriority]?.label || newPriority) }), 'info');
       loadTickets();
     } catch (err: any) {
       showToast(err.message || t('admin.updatePriorityError'), 'error');
@@ -235,8 +235,8 @@ export default function AdminTicketsPage() {
     setActiveTicket(null);
     setTickets((prev) => prev.filter((tk) => tk.id !== id));
     showUndoToast(t('common.deletingItem', { name: ticket?.subject || `#${id.slice(0, 8)}` }), {
-      alDeshacer: () => loadTickets(),
-      alExpirar: async () => {
+      onUndo: () => loadTickets(),
+      onExpire: async () => {
         try {
           await api.admin.tickets.delete(id);
           showToast(t('admin.ticketDeleted'), 'info');
@@ -293,7 +293,7 @@ export default function AdminTicketsPage() {
         />
       </main>
 
-      {/* DRAWER / MODAL DE GESTIÓN DE TICKET SELECCIONADO */}
+      {/* SELECTED TICKET MANAGEMENT DRAWER / MODAL */}
       {selectedTicketId && (
         <AdminTicketDrawer
           isDrawerClosing={isDrawerClosing}
@@ -322,7 +322,7 @@ export default function AdminTicketsPage() {
         />
       )}
 
-      {/* LIGHTBOX MODAL PARA VER FOTO EN TAMAÑO COMPLETO */}
+      {/* LIGHTBOX MODAL FOR FULL-SIZE PHOTO */}
       {previewImageUrl && (
         <AdminTicketImagePreviewModal
           previewImageUrl={previewImageUrl}
@@ -330,13 +330,13 @@ export default function AdminTicketsPage() {
         />
       )}
 
-      {/* CONFIRMACIÓN DE DESCARTAR BORRADOR DEL DRAWER */}
+      {/* DISCARD DRAWER DRAFT CONFIRMATION */}
       <ConfirmModal
         isOpen={showDiscardPrompt}
-        title="Descartar borrador"
-        description="Tienes una respuesta o nota escrita sin enviar en este ticket. ¿Deseas descartar el texto y cerrar el panel de gestión?"
-        confirmText="Descartar y Cerrar"
-        cancelText="Continuar redactando"
+        title={t('admin.discardDraft')}
+        description={t('admin.discardDraftDrawerDesc')}
+        confirmText={t('tickets.discardAndClose')}
+        cancelText={t('tickets.continueWriting')}
         variant="warning"
         onConfirm={() => {
           setShowDiscardPrompt(false);

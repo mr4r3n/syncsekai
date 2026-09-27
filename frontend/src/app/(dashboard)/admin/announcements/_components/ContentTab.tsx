@@ -86,7 +86,7 @@ export function ContentTab({
                   </div>
                 </div>
 
-                {/* Botón de Acción (CTA) */}
+                {/* Call to Action (CTA) Button */}
                 <div className="space-y-3 pt-3 border-t border-[var(--border-subtle)]">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] font-mono">{t('announcements.ctaButton')}</h3>
 

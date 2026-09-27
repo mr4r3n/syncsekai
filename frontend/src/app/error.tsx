@@ -54,7 +54,7 @@ export default function ErrorPage({
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex flex-col justify-between selection:bg-rose-500/20 selection:text-rose-300 relative overflow-hidden transition-colors duration-300">
-      {/* Luces difuminadas de fondo en tono cálido/alerta */}
+      {/* Blurred background lights in warm/warning tone */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-gradient-to-tr from-rose-500/15 via-amber-500/10 to-red-500/10 rounded-full blur-[110px] pointer-events-none" />
 
       {/* HEADER SUPERIOR */}
@@ -75,7 +75,7 @@ export default function ErrorPage({
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-[6px] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer shadow-sm"
-            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            title={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
             aria-label={t('errors.themeToggle')}
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
@@ -86,7 +86,7 @@ export default function ErrorPage({
       {/* CONTENIDO PRINCIPAL */}
       <main className="w-full max-w-xl mx-auto px-4 py-8 flex flex-col items-center text-center z-10 my-auto">
         <div className="glass-card p-7 sm:p-10 w-full space-y-6 shadow-2xl relative border-rose-500/20">
-          {/* Badge y Código 500 */}
+          {/* Badge and 500 Code */}
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[6px] text-xs font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 select-none">
               <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
@@ -107,7 +107,7 @@ export default function ErrorPage({
             <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed max-w-md mx-auto">{t('errors.boundaryDesc')}</p>
           </div>
 
-          {/* Botones de Acción */}
+          {/* Action Buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => reset()}
@@ -134,7 +134,7 @@ export default function ErrorPage({
             </Link>
           </div>
 
-          {/* Detalles Técnicos Colapsables */}
+          {/* Collapsible Technical Details */}
           <div className="pt-4 border-t border-[var(--border-subtle)] space-y-3 text-left">
             <button
               onClick={() => setShowDetails(!showDetails)}

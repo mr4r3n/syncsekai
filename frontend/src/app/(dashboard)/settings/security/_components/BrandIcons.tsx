@@ -1,6 +1,6 @@
 'use client';
 
-// --- ICONOS VECTORIALES DE MARCAS Y CLIENTES ---
+// --- VECTOR BRAND AND CLIENT ICONS ---
 function ChromeBrandIcon({ className = "w-8 h-8" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none">

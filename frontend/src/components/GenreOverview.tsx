@@ -52,15 +52,15 @@ export function GenreOverview({
         <div className="py-8 text-center text-xs font-mono text-[var(--text-muted)]">{t('admin.notEnoughSynced')}</div>
       ) : (
         <div className="space-y-4 w-full flex-1 flex flex-col justify-center">
-          {/* TOP 5 GENEROS
+          {/* TOP 5 GENRES
 
-              En movil van en lista y no en cinco columnas. Cinco columnas en
-              375 px son 60 px por hueco, y ahi "Adventure" o "Psychological"
-              se quedaban en "A…": el nombre del genero es justo el dato que
-              hay que leer. En lista cada uno tiene la fila entera.
+              On mobile they appear as a list instead of five columns. Five columns on
+              375 px give 60 px per slot, where "Adventure" or "Psychological"
+              were truncated to "A…": the genre name is the exact data that
+              needs to be read. In list view, each one gets the full row.
 
-              En escritorio se mantienen las tarjetas, que dejan comparar los
-              cinco de un vistazo. */}
+              On desktop the cards remain, allowing comparison of all
+              five at a glance. */}
           <div className="flex flex-col gap-1.5 sm:hidden">
             {topGenres.map((genre) => (
               <div

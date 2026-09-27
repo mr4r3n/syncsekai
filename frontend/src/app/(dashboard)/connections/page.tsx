@@ -32,16 +32,16 @@ export default function ConnectionsPage() {
   const [showServerModal, setShowServerModal] = useState(false);
 
   /*
-   * Que servidores estan desplegados, y solo importa en movil.
+   * Which servers are expanded, relevant on mobile only.
    *
-   * Los tres se pintan enteros -cabecera, bibliotecas, webhook y ayuda-, que en
-   * 375 px son 3320 px de pagina: cuatro pantallas de scroll para llegar a las
-   * cuentas de anime, que estan al final. En escritorio caben de sobra y no se
-   * tocan.
+   * All three render completely—header, libraries, webhook, and help—which at
+   * 375 px spans 3320 px of page: four scroll screens to reach anime
+   * accounts at the bottom. On desktop there is ample space and they remain
+   * untouched.
    *
-   * Arrancan cerrados: se entra aqui a mirar o cambiar UNO.
+   * Start closed: one enters here to view or change ONE.
    */
-  const [servidoresAbiertos, setServidoresAbiertos] = useState<Record<string, boolean>>({});
+  const [openServers, setOpenServers] = useState<Record<string, boolean>>({});
   const [showJellyfinModal, setShowJellyfinModal] = useState(false);
   const [showEmbyModal, setShowEmbyModal] = useState(false);
   const [showAnilistModal, setShowAnilistModal] = useState(false);
@@ -54,12 +54,12 @@ export default function ConnectionsPage() {
   const [selectedLibraries, setSelectedLibraries] = useState<string[]>([]);
   const [savingLibraries, setSavingLibraries] = useState(false);
 
-  // Selección de librerías de Jellyfin (estado propio, misma forma que el de Plex)
+  // Jellyfin library selection (own state, same shape as Plex)
   const [availableJellyfinLibraries, setAvailableJellyfinLibraries] = useState<any[]>([]);
   const [selectedJellyfinLibraries, setSelectedJellyfinLibraries] = useState<string[]>([]);
   const [savingJellyfinLibraries, setSavingJellyfinLibraries] = useState(false);
 
-  // Selección de librerías de Emby (estado propio, misma forma que el de Jellyfin)
+  // Emby library selection (own state, same shape as Jellyfin)
   const [availableEmbyLibraries, setAvailableEmbyLibraries] = useState<any[]>([]);
   const [selectedEmbyLibraries, setSelectedEmbyLibraries] = useState<string[]>([]);
   const [savingEmbyLibraries, setSavingEmbyLibraries] = useState(false);
@@ -109,7 +109,7 @@ export default function ConnectionsPage() {
       if (monitored.length > 0) {
         setSelectedLibraries(monitored);
       }
-      showToast(`Categorías actualizadas desde Plex (${libs.length} detectadas)`, 'success');
+      showToast(t('connections.categoriesUpdatedFromPlex', { count: libs.length }), 'success');
     } catch (err: any) {
       showToast(`${t('connections.queryPlexLibrariesError')} ` + err.message, 'error');
     } finally {
@@ -156,34 +156,34 @@ export default function ConnectionsPage() {
     try {
       const res = await api.connections.runHealthCheck();
 
-      /* Se muestra lo que contestó el backend: un tracker sin vincular devuelve
-       * latencia 0, y un valor por defecto aquí lo haría parecer conectado. */
-      const lineas = ([
+      /* Shows backend response: an unlinked tracker returns
+       * latency 0, and a default value here would make it appear connected. */
+      const lines = ([
         ['AniList', res.services?.anilist],
         ['MyAnimeList', res.services?.mal],
         ['Kitsu', res.services?.kitsu],
       ] as Array<[string, any]>)
         .filter(([, s]) => s)
-        .map(([nombre, s]) => {
-          const conectado = s.connected ?? s.status === 'connected';
+        .map(([name, s]) => {
+          const connected = s.connected ?? s.status === 'connected';
           const ms = Number(s.latencyMs);
-          const estado = !conectado
+          const status = !connected
             ? t('connections.healthNotLinked')
             : Number.isFinite(ms) && ms > 0
             ? t('connections.healthConnected', { ms })
             : t('connections.healthFailed');
-          return t('connections.healthLine', { service: nombre, estado });
+          return t('connections.healthLine', { service: name, status });
         });
 
       showToast(
-        lineas.length > 0
-          ? `${t('connections.healthDone')} — ${lineas.join(' · ')}`
+        lines.length > 0
+          ? `${t('connections.healthDone')} — ${lines.join(' · ')}`
           : t('connections.healthNothingLinked'),
         'info',
       );
       loadHubData();
     } catch (err: any) {
-      showToast('Diagnóstico: ' + err.message, 'info');
+      showToast(t('connections.diagnosticPrefix') + err.message, 'info');
     } finally {
       setIsRefreshing(false);
     }
@@ -271,7 +271,7 @@ export default function ConnectionsPage() {
         isRefreshing={isRefreshing}
       />
 
-      {/* HEADER DE LA SECCIÓN (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* SECTION HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <ConnectionsHeader
         activeServicesCount={activeServicesCount}
         setShowTesterModal={setShowTesterModal}
@@ -280,7 +280,7 @@ export default function ConnectionsPage() {
         loading={loading}
       />
 
-      {/* CONTENIDO PRINCIPAL: USO COMPLETO DEL CONTENEDOR */}
+      {/* MAIN CONTENT: FULL CONTAINER USAGE */}
       <main className="w-full px-4 sm:px-6 md:px-8 py-6 sm:py-8 space-y-8 min-w-0">
         {loading ? (
           <div className="py-32 flex flex-col items-center justify-center gap-3">
@@ -289,7 +289,7 @@ export default function ConnectionsPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* BANNER DE RECONEXIÓN REQUERIDA (Para cuentas heredadas o sesiones antiguas) */}
+            {/* RECONNECTION REQUIRED BANNER (For legacy accounts or older sessions) */}
             {hubData?.reconnectionRequiredCount > 0 && (
               <ConnectionsReauthBanner hubData={hubData} />
             )}
@@ -298,8 +298,8 @@ export default function ConnectionsPage() {
             <PlexConnectionCard
               hubData={hubData}
               isPlexConnected={isPlexConnected}
-              servidoresAbiertos={servidoresAbiertos}
-              setServidoresAbiertos={setServidoresAbiertos}
+              openServers={openServers}
+              setOpenServers={setOpenServers}
               setShowServerModal={setShowServerModal}
               setShowPlexModal={setShowPlexModal}
               loadHubData={loadHubData}
@@ -317,8 +317,8 @@ export default function ConnectionsPage() {
             <JellyfinConnectionCard
               hubData={hubData}
               isJellyfinConnected={isJellyfinConnected}
-              servidoresAbiertos={servidoresAbiertos}
-              setServidoresAbiertos={setServidoresAbiertos}
+              openServers={openServers}
+              setOpenServers={setOpenServers}
               setShowJellyfinModal={setShowJellyfinModal}
               loadHubData={loadHubData}
               availableJellyfinLibraries={availableJellyfinLibraries}
@@ -334,8 +334,8 @@ export default function ConnectionsPage() {
             <EmbyConnectionCard
               hubData={hubData}
               isEmbyConnected={isEmbyConnected}
-              servidoresAbiertos={servidoresAbiertos}
-              setServidoresAbiertos={setServidoresAbiertos}
+              openServers={openServers}
+              setOpenServers={setOpenServers}
               setShowEmbyModal={setShowEmbyModal}
               loadHubData={loadHubData}
               availableEmbyLibraries={availableEmbyLibraries}
@@ -347,7 +347,7 @@ export default function ConnectionsPage() {
               handleToggleEmbyLibrary={handleToggleEmbyLibrary}
             />
 
-            {/* 4. SECCIÓN: CUENTAS DE ANIME VINCULADAS */}
+            {/* 4. SECTION: LINKED ANIME ACCOUNTS */}
             <AnimeTrackersSection
               hubData={hubData}
               isAnilistConnected={isAnilistConnected}
@@ -359,7 +359,7 @@ export default function ConnectionsPage() {
               loadHubData={loadHubData}
             />
 
-            {/* SECCIÓN COMPLEMENTARIA: PORTABILIDAD DE BIBLIOTECA (EXPORTAR & IMPORTAR) */}
+            {/* COMPLEMENTARY SECTION: LIBRARY PORTABILITY (EXPORT & IMPORT) */}
             <LibraryPortabilityCard loadHubData={loadHubData} />
           </div>
         )}

@@ -59,7 +59,7 @@ export function ScrobbleTesterModal({ isOpen, onClose, onSuccess }: ScrobbleTest
     }
   };
 
-  // Foco dentro al abrir, Tab acotado al diálogo y foco devuelto al cerrar.
+  // Focus inside on open, Tab trapped in the dialog, and focus returned on close.
   const { dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
@@ -167,7 +167,7 @@ export function ScrobbleTesterModal({ isOpen, onClose, onSuccess }: ScrobbleTest
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label htmlFor="test-episode-number" className="font-bold text-[var(--text-primary)]">
-                Episodio #
+                {t('simulator.episodeNumber')}
               </label>
               <input
                 id="test-episode-number"
@@ -183,7 +183,7 @@ export function ScrobbleTesterModal({ isOpen, onClose, onSuccess }: ScrobbleTest
 
             <div className="space-y-1.5">
               <label htmlFor="test-view-percentage" className="font-bold text-[var(--text-primary)]">
-                % Visto ({viewPercentage}%)
+                {t('simulator.viewPercentage', { pct: viewPercentage })}
               </label>
               <input
                 id="test-view-percentage"

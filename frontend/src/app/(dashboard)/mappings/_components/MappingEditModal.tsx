@@ -2,7 +2,7 @@ import React from 'react';
 import { Sparkles, X, Minus, Plus, Search, Loader2, Check } from 'lucide-react';
 
 interface MappingEditModalProps {
-  propsMapeo: any;
+  mappingProps: any;
   setShowModal: (show: boolean) => void;
   isNewMapping: boolean;
   handleSaveMapping: (e: React.FormEvent) => Promise<void>;
@@ -22,7 +22,7 @@ interface MappingEditModalProps {
 }
 
 export function MappingEditModal({
-  propsMapeo,
+  mappingProps,
   setShowModal,
   isNewMapping,
   handleSaveMapping,
@@ -43,7 +43,7 @@ export function MappingEditModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
       <div
-        {...propsMapeo}
+        {...mappingProps}
         className="relative w-full max-w-2xl rounded-[10px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-2xl shadow-[var(--glass-shadow-lg)] p-6 space-y-6 text-[var(--text-primary)] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-2.5">
@@ -52,7 +52,7 @@ export function MappingEditModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-[var(--text-primary)] font-heading">
-                {isNewMapping ? 'Crear Mapeo Manual' : t('mappings.editAnimeLink')}
+                {isNewMapping ? t('mappings.createManual') : t('mappings.editAnimeLink')}
               </h2>
               <p className="text-xs text-[var(--text-muted)]">{t('mappings.modalIntro')}</p>
             </div>
@@ -67,7 +67,7 @@ export function MappingEditModal({
         </div>
 
         <form onSubmit={handleSaveMapping} className="space-y-5">
-          {/* Título en Plex y Temporada */}
+          {/* Title in Plex and Season */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="sm:col-span-2 space-y-1.5">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">{t('mappings.plexServerTitle')}</label>
@@ -83,7 +83,7 @@ export function MappingEditModal({
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">
-                Temporada Servidor
+                {t('mappings.serverSeason')}
               </label>
               <div className="relative flex items-center">
                 <input
@@ -153,7 +153,7 @@ export function MappingEditModal({
               </button>
             </div>
 
-            {/* Resultados de búsqueda */}
+            {/* Search results */}
             {remoteResults.length > 0 && (
               <div className="max-h-60 overflow-y-auto space-y-1.5 p-2 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] mt-2">
                 {remoteResults.map((anime) => {
@@ -191,7 +191,7 @@ export function MappingEditModal({
             )}
           </div>
 
-          {/* Acciones del Modal */}
+          {/* Modal Actions */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border-subtle)]">
             <button
               type="button"

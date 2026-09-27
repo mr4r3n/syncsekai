@@ -111,16 +111,16 @@ export default function BlacklistPage() {
   };
 
   const handleRemoveTitle = (id: string, title: string) => {
-    const entrada = blacklist.find((item) => item.id === id);
+    const entry = blacklist.find((item) => item.id === id);
     setBlacklist((prev) => prev.filter((item) => item.id !== id));
     showUndoToast(t('common.deletingItem', { name: title }), {
-      alDeshacer: () => setBlacklist((prev) => (entrada ? [...prev, entrada] : prev)),
-      alExpirar: async () => {
+      onUndo: () => setBlacklist((prev) => (entry ? [...prev, entry] : prev)),
+      onExpire: async () => {
         try {
           await api.blacklist.remove(id);
           showToast(t('blacklist.unblocked', { title }), 'info');
         } catch (e: any) {
-          setBlacklist((prev) => (entrada ? [...prev, entrada] : prev));
+          setBlacklist((prev) => (entry ? [...prev, entry] : prev));
           showToast(t('blacklist.unblockError'), 'error');
         }
       },
@@ -170,7 +170,7 @@ export default function BlacklistPage() {
     >
       <Topbar rootLabel={t('navigation.userLibrary')} currentLabel={t('blacklist.title')} />
 
-      {/* HEADER DE LA SECCIÓN (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* SECTION HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-2">
         <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -270,7 +270,7 @@ export default function BlacklistPage() {
                 </form>
               </div>
 
-              {/* LISTA / TABLA DE TÍTULOS PROHIBIDOS */}
+              {/* LIST / TABLE OF BLACKLISTED TITLES */}
               <div className="glass-card p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[var(--glass-border)]">
                   <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ export default function BlacklistPage() {
                   </div>
                 ) : filteredBlacklist.length === 0 ? (
                   <div className="py-8 text-center text-xs text-[var(--text-muted)] font-mono">
-                    No se encontraron coincidencias para &quot;{searchQuery}&quot;
+                    {t('blacklist.noMatchesFor', { query: searchQuery })}
                   </div>
                 ) : (
                     <div className="space-y-2.5">
@@ -327,7 +327,7 @@ export default function BlacklistPage() {
                               </span>
                               <span className="text-[var(--text-muted)]">•</span>
                               <span className="text-[var(--text-muted)] shrink-0">
-                                {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Reciente'}
+                                {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : t('blacklist.recent')}
                               </span>
                             </div>
                           </div>
@@ -347,9 +347,9 @@ export default function BlacklistPage() {
               </div>
             </div>
 
-            {/* COLUMNA DERECHA: EXCLUSIÓN POR GÉNEROS (5 COLS) */}
+            {/* RIGHT COLUMN: GENRE EXCLUSION (5 COLS) */}
             <div className="lg:col-span-5 space-y-6">
-              {/* CARD: SELECTOR DE GÉNEROS EXCLUIDOS */}
+              {/* CARD: EXCLUDED GENRES SELECTOR */}
               <div className="glass-card p-6 sm:p-7 space-y-5">
                 <div className="flex items-center justify-between pb-2 border-b border-[var(--glass-border)]">
                   <div className="flex items-center gap-2.5">
@@ -363,7 +363,7 @@ export default function BlacklistPage() {
 
                 <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('blacklist.genreExclusionDesc')}</p>
 
-                {/* Acciones Rápidas */}
+                {/* Quick Actions */}
                 <div className="flex items-center gap-2 flex-wrap pt-1">
                   <button
                     type="button"
@@ -383,7 +383,7 @@ export default function BlacklistPage() {
                   </button>
                 </div>
 
-                {/* CHIPS DE GÉNEROS INTERACTIVOS */}
+                {/* INTERACTIVE GENRE CHIPS */}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {AVAILABLE_GENRES.map((genre) => {
                     const isSelected = blockedGenres.includes(genre.id);
@@ -418,7 +418,7 @@ export default function BlacklistPage() {
                 </div>
               </div>
 
-              {/* CARD INFORMATIVO: POLÍTICA DE PRIVACIDAD */}
+              {/* INFORMATIONAL CARD: PRIVACY POLICY */}
               <div className="glass-card p-6 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
                   <Info className="w-4 h-4 text-sky-400" />

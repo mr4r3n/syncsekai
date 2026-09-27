@@ -1,27 +1,43 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { PageTransition } from './PageTransition';
+import { DemoBar } from './DemoBar';
+import { isDemo, DEMO_PAGES } from '@/lib/demo';
 
 /**
- * El sidebar vive aquí, una sola vez para todo el panel: montarlo en cada
- * página lo desmontaba en cada navegación y parpadeaba. Al ser
- * `position: fixed` no necesita vivir en el árbol de cada página.
+ * The sidebar lives here, once for the entire panel: mounting it on each
+ * page unmounted it on every navigation and caused flickering. Being
+ * `position: fixed`, it does not need to live in each page's tree.
  *
- * /docs es la excepción: es pública y decide ELLA MISMA si mostrar el
- * sidebar (con sesión) o una cabecera pública (visitante anónimo, ver
- * AuthGuard). Si el sidebar se montara aquí también para /docs, alguien con
- * sesión vería dos sidebars superpuestos.
+ * /docs is the exception: it is public and decides ITSELF whether to show the
+ * sidebar (authenticated session) or a public header (anonymous visitor, see
+ * AuthGuard). If the sidebar were mounted here for /docs as well, an authenticated
+ * user would see two overlapping sidebars.
  */
 export function DashboardChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const showPersistentSidebar = !pathname.startsWith('/docs');
+
+  // Demo mode (lib/demo.ts): read after mounting, and pages outside the demo
+  // go to the catalog instead of asking for data the recording does not have.
+  const [demo, setDemo] = useState(false);
+  useEffect(() => {
+    const on = isDemo();
+    setDemo(on);
+    if (on && !pathname.startsWith('/docs') && !DEMO_PAGES.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
+      router.replace('/catalog');
+    }
+  }, [pathname, router]);
 
   return (
     <>
       {showPersistentSidebar && <Sidebar />}
       <PageTransition>{children}</PageTransition>
+      {demo && <DemoBar />}
     </>
   );
 }

@@ -66,7 +66,7 @@ export function SavePresetModal({
               </button>
             </div>
 
-            {/* Mini Vista Previa de la Configuración Actual */}
+            {/* Mini Preview of Current Configuration */}
             <div className="p-3.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-2">
               <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)] block">{t('announcements.designSummary')}</span>
               <div
@@ -101,7 +101,7 @@ export function SavePresetModal({
                   autoFocus
                   value={newPresetName}
                   onChange={(e) => setNewPresetName(e.target.value)}
-                  placeholder="Ej. Oferta Especial Black Friday, Anuncio Anime Verano..."
+                  placeholder={t('announcements.templateNamePlaceholder')}
                   className="w-full h-10 sm:h-11 px-3.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-xs sm:text-sm text-[var(--text-primary)] focus:border-[#FF634A] outline-none"
                 />
               </div>

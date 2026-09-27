@@ -12,10 +12,10 @@ export function useCatalogStatus() {
   const { t } = useI18n();
 
   /**
-   * Icono de cada estado. En la lista el estado va como icono y no como
-   * texto: "Completed" gastaba 75 de los 375 px de una fila estrecha, y el
-   * dato cabe en un simbolo. El nombre sigue en el title y en la etiqueta
-   * accesible, asi que no se pierde para quien no interpreta el icono.
+   * Icon for each status. In list view, status appears as icon rather than
+   * text: "Completed" consumed 75 of 375 px in a narrow row, whereas a
+   * symbol fits cleanly. Name remains in title and accessible label,
+   * preserving meaning for those who cannot interpret the icon.
    */
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -92,7 +92,7 @@ export function useCatalogStatus() {
         };
       default:
         return {
-          label: status || 'Desconocido',
+          label: status || t('common.unknown'),
           className: 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] border-[var(--border-subtle)]',
           badgeClass: 'bg-zinc-900/85 text-zinc-300 border-zinc-700/50 shadow-md',
           dotClass: 'bg-zinc-400',

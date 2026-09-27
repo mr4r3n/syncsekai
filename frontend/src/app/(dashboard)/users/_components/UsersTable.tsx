@@ -1,26 +1,26 @@
 import React from 'react';
 import { Crown, Lock, Unlock, Trash2, Edit3, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { Switch } from '@/components/Switch';
-import { Paginacion } from '@/components/Paginacion';
-import { SERVICIOS_USUARIO } from './constants';
+import { Pagination } from '@/components/Pagination';
+import { USER_SERVICES } from './constants';
 import { getAvatarSrc } from './utils';
-import type { CampoOrden } from './types';
+import type { SortField } from './types';
 
 interface UsersTableProps {
   vista: 'lista' | 'tarjetas';
   loading: boolean;
-  orden: { campo: CampoOrden; asc: boolean };
-  ordenarPor: (campo: CampoOrden) => void;
-  usuariosPagina: any[];
-  usuariosOrdenados: any[];
-  porPagina: number;
-  setPorPagina: (n: number) => void;
-  paginaActual: number;
-  setPagina: (p: number) => void;
-  totalPaginas: number;
-  fechaAlta: (iso?: string) => string;
-  haceCuanto: (iso?: string | null) => string;
-  esReciente: (iso?: string) => boolean;
+  sort: { field: SortField; asc: boolean };
+  sortBy: (sortField: SortField) => void;
+  pageUsers: any[];
+  sortedUsers: any[];
+  perPage: number;
+  setPerPage: (n: number) => void;
+  currentPage: number;
+  setPage: (p: number) => void;
+  totalPages: number;
+  registrationDate: (iso?: string) => string;
+  timeAgo: (iso?: string | null) => string;
+  isRecent: (iso?: string) => boolean;
   handleToggleBlock: (userId: string, currentSuspended: boolean, username: string) => void;
   handleToggleRole: (userId: string, currentRole: string) => void;
   handleOpenEdit: (u: any) => void;
@@ -31,18 +31,18 @@ interface UsersTableProps {
 export function UsersTable({
   vista,
   loading,
-  orden,
-  ordenarPor,
-  usuariosPagina,
-  usuariosOrdenados,
-  porPagina,
-  setPorPagina,
-  paginaActual,
-  setPagina,
-  totalPaginas,
-  fechaAlta,
-  haceCuanto,
-  esReciente,
+  sort,
+  sortBy,
+  pageUsers,
+  sortedUsers,
+  perPage,
+  setPerPage,
+  currentPage,
+  setPage,
+  totalPages,
+  registrationDate,
+  timeAgo,
+  isRecent,
   handleToggleBlock,
   handleToggleRole,
   handleOpenEdit,
@@ -65,24 +65,24 @@ export function UsersTable({
                   ['createdAt', 'users.colJoined', ''],
                   ['lastActiveAt', 'users.colLastActive', ''],
                   [null, 'users.adminActions', 'text-right'],
-                ] as Array<[CampoOrden | null, string, string]>
-              ).map(([campo, clave, extra]) => (
-                <th key={clave} scope="col" className={`py-3 px-4 font-semibold ${extra}`}>
-                  {campo ? (
+                ] as Array<[SortField | null, string, string]>
+              ).map(([sortField, labelKey, extra]) => (
+                <th key={labelKey} scope="col" className={`py-3 px-4 font-semibold ${extra}`}>
+                  {sortField ? (
                     <button
                       type="button"
-                      onClick={() => ordenarPor(campo)}
+                      onClick={() => sortBy(sortField)}
                       className="inline-flex items-center gap-1 uppercase hover:text-[var(--text-primary)] cursor-pointer"
                     >
-                      {t(clave)}
-                      {orden.campo === campo ? (
-                        orden.asc ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                      {t(labelKey)}
+                      {sort.field === sortField ? (
+                        sort.asc ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
                       ) : (
                         <ChevronsUpDown className="w-3 h-3 opacity-40" />
                       )}
                     </button>
                   ) : (
-                    t(clave)
+                    t(labelKey)
                   )}
                 </th>
               ))}
@@ -107,15 +107,15 @@ export function UsersTable({
                   <td className="py-3.5 px-4 text-right"><div className="skeleton h-7 w-24 ml-auto rounded-[6px]" /></td>
                 </tr>
               ))
-            ) : usuariosPagina.length === 0 ? (
+            ) : pageUsers.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-[var(--text-muted)] font-mono">{t('users.noUsersFound')}</td>
               </tr>
             ) : (
-              usuariosPagina.map((u, i) => {
+              pageUsers.map((u, i) => {
                 const isSuspended = u.permissions?.isSuspended;
                 const avatarSrc = getAvatarSrc(u.avatarUrl);
-                const vinculados = SERVICIOS_USUARIO.filter((sv) => !!u.connections?.[sv.id]);
+                const linked = USER_SERVICES.filter((sv) => !!u.connections?.[sv.id]);
 
                 return (
                   <tr
@@ -138,7 +138,7 @@ export function UsersTable({
                             {u.role === 'ADMIN' && (
                               <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" aria-label={t('users.administrator')} />
                             )}
-                            {esReciente(u.createdAt) && (
+                            {isRecent(u.createdAt) && (
                               <span className="text-[9.5px] font-mono font-bold text-sky-400 bg-sky-500/10 px-1.5 py-px rounded-[4px] shrink-0">{t('users.newBadge')}</span>
                             )}
                           </div>
@@ -155,7 +155,7 @@ export function UsersTable({
                           onChange={() => handleToggleBlock(u.id, isSuspended, u.username)}
                           ariaLabel={isSuspended ? t('users.unblockAndReactivate') : t('users.blockAccountAccess')}
                         />
-                        {/* Ancho fijo: ACTIVE y BLOCKED miden distinto y movían lo de al lado. */}
+                        {/* Fixed width: ACTIVE and BLOCKED differ in length and shifted adjacent items. */}
                         <span className={`min-w-[4.75rem] justify-center ${isSuspended ? 'badge-status-danger' : 'badge-status-success'}`}>
                           {isSuspended ? t('users.stateBlocked') : t('users.stateActive')}
                         </span>
@@ -188,20 +188,20 @@ export function UsersTable({
 
                     {/* Servicios vinculados */}
                     <td className="py-3 px-4">
-                      {vinculados.length === 0 ? (
+                      {linked.length === 0 ? (
                         <span className="text-[var(--text-muted)] font-mono">—</span>
                       ) : (
                         <div className="flex items-center gap-1 font-mono text-[10.5px]">
-                          {vinculados.map(({ id, corto, nombre, color }) => {
-                            const detalle = u.connections?.[`${id}Server`] || u.connections?.[`${id}User`];
+                          {linked.map(({ id, short, name, color }) => {
+                            const detail = u.connections?.[`${id}Server`] || u.connections?.[`${id}User`];
                             return (
                               <span
                                 key={id}
-                                title={t('users.linkedTo', { service: nombre, detail: detalle || t('users.connected') })}
+                                title={t('users.linkedTo', { service: name, detail: detail || t('users.connected') })}
                                 className="h-5 px-1.5 rounded-[4px] inline-flex items-center justify-center font-bold bg-current/10"
                                 style={{ color: `var(${color})` }}
                               >
-                                {corto}
+                                {short}
                               </span>
                             );
                           })}
@@ -210,10 +210,10 @@ export function UsersTable({
                     </td>
 
                     {/* Alta */}
-                    <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{fechaAlta(u.createdAt)}</td>
+                    <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{registrationDate(u.createdAt)}</td>
 
-                    {/* Última actividad */}
-                    <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{haceCuanto(u.lastActiveAt)}</td>
+                    {/* Last activity */}
+                    <td className="py-3 px-4 font-mono text-[11px] text-[var(--text-secondary)] whitespace-nowrap">{timeAgo(u.lastActiveAt)}</td>
 
                     {/* Acciones */}
                     <td className="py-3 px-4 text-right">
@@ -254,16 +254,16 @@ export function UsersTable({
         </table>
       </div>
 
-      {/* Pie: filas por página y paginación */}
-      {!loading && usuariosOrdenados.length > 0 && (
+      {/* Footer: rows per page and pagination */}
+      {!loading && sortedUsers.length > 0 && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-[var(--glass-border)] text-[11px] font-mono text-[var(--text-muted)]">
           <div className="flex items-center gap-2">
             <span>{t('users.rowsPerPage')}</span>
             <select
-              value={porPagina}
+              value={perPage}
               onChange={(e) => {
-                setPorPagina(Number(e.target.value));
-                setPagina(1);
+                setPerPage(Number(e.target.value));
+                setPage(1);
               }}
               className="glass-input !h-7 !w-auto !px-2 text-[11px]"
               aria-label={t('users.rowsPerPage')}
@@ -274,19 +274,19 @@ export function UsersTable({
             </select>
             <span>
               {t('users.showingRange', {
-                from: (paginaActual - 1) * porPagina + 1,
-                to: Math.min(paginaActual * porPagina, usuariosOrdenados.length),
-                total: usuariosOrdenados.length,
+                from: (currentPage - 1) * perPage + 1,
+                to: Math.min(currentPage * perPage, sortedUsers.length),
+                total: sortedUsers.length,
               })}
             </span>
           </div>
-          <Paginacion
-            pagina={paginaActual}
-            totalPaginas={totalPaginas}
-            onCambio={setPagina}
-            resumen={t('common.page', { page: paginaActual, total: totalPaginas })}
-            etiquetaAnterior={t('common.previous')}
-            etiquetaSiguiente={t('common.next')}
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            onChange={setPage}
+            summary={t('common.page', { page: currentPage, total: totalPages })}
+            prevLabel={t('common.previous')}
+            nextLabel={t('common.next')}
           />
         </div>
       )}

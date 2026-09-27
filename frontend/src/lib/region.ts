@@ -1,16 +1,16 @@
 /**
- * Nombre de país en el idioma de la interfaz a partir del código ISO.
+ * Country name in interface language from ISO code.
  *
- * El backend guarda el nombre en español (viene de su tabla ISO); pintar el
- * código con `Intl.DisplayNames` da el nombre en el idioma activo sin
- * mantener otra tabla. Si el código no es válido, se devuelve lo que llegó.
+ * Backend stores name in Spanish (from its ISO table); rendering
+ * code with `Intl.DisplayNames` gives name in active language without
+ * maintaining another table. If code is invalid, original value is returned.
  */
-export function nombreRegion(code: string | undefined | null, locale: string, fallback = ''): string {
+export function regionName(code: string | undefined | null, locale: string, fallback = '', style: 'long' | 'short' = 'long'): string {
   if (!code || !/^[A-Za-z]{2}$/.test(code)) return fallback;
   try {
-    const nombre = new Intl.DisplayNames([locale], { type: 'region' }).of(code.toUpperCase());
-    // Un código que no existe (XX) vuelve tal cual: no es un nombre.
-    return nombre && nombre !== code.toUpperCase() ? nombre : fallback;
+    const name = new Intl.DisplayNames([locale], { type: 'region', style }).of(code.toUpperCase());
+    // Non-existent code (XX) returned as-is: not a name.
+    return name && name !== code.toUpperCase() ? name : fallback;
   } catch {
     return fallback;
   }

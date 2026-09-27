@@ -41,11 +41,11 @@ export const viewport: Viewport = {
 };
 
 /**
- * Nombre, título y descripción salen de Ajustes del sitio (SystemSetting) y se
- * leen en el servidor al generar la página. Si el backend no responde se usan
- * los valores por defecto: la portada no debe caer por esto.
+ * Name, title, and description come from Site Settings (SystemSetting) and are
+ * read on the server when generating the page. If backend does not respond, default
+ * values are used: the homepage must not crash over this.
  */
-async function leerAjustesSitio() {
+async function readSiteSettings() {
   const backend =
     process.env.INTERNAL_BACKEND_URL ||
     (process.env.NODE_ENV === 'production' ? 'http://backend:4000' : 'http://127.0.0.1:4000');
@@ -58,48 +58,48 @@ async function leerAjustesSitio() {
   }
 }
 
-// 56 y 143 caracteres: Google corta el título sobre los 60 y la descripción sobre los 155.
-const TITULO_POR_DEFECTO = 'SyncSekai — Plex, Jellyfin & Emby to AniList, MAL & Kitsu';
-const DESCRIPCION_POR_DEFECTO =
+// 56 and 143 characters: Google truncates title around 60 and description around 155.
+const DEFAULT_TITLE = 'SyncSekai — Plex, Jellyfin & Emby to AniList, MAL & Kitsu';
+const DEFAULT_DESCRIPTION =
   'Automatically sync anime from Plex, Jellyfin & Emby to AniList, MyAnimeList (MAL) and Kitsu. No install, works from any device.';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const ajustes = await leerAjustesSitio();
-  const nombre = ajustes?.siteName || 'SyncSekai';
-  const titulo = ajustes?.siteTitle || TITULO_POR_DEFECTO;
-  const descripcion = ajustes?.siteDescription || DESCRIPCION_POR_DEFECTO;
-  // La versión cambia la URL del icono al subir uno nuevo, para saltar la caché del navegador.
-  const v = ajustes?.iconVersion ? `?v=${ajustes.iconVersion}` : '';
+  const settings = await readSiteSettings();
+  const name = settings?.siteName || 'SyncSekai';
+  const title = settings?.siteTitle || DEFAULT_TITLE;
+  const description = settings?.siteDescription || DEFAULT_DESCRIPTION;
+  // The version changes icon URL when uploading a new one, to bypass browser cache.
+  const v = settings?.iconVersion ? `?v=${settings.iconVersion}` : '';
   return {
     ...META_BASE,
-    // Sin icon.png ni favicon.ico en app/: esos generan sus propias etiquetas
-    // con un hash fijo y el navegador no se enteraría de un icono nuevo.
+    // No icon.png or favicon.ico in app/: those generate their own tags
+    // with a fixed hash and browser would not detect a new icon.
     icons: {
       icon: [{ url: `/icon.png${v}`, type: 'image/png' }],
       shortcut: '/favicon.ico',
       apple: `/apple-touch-icon.png${v}`,
     },
-    title: { default: titulo, template: `%s | ${nombre}` },
-    description: descripcion,
-    applicationName: nombre,
-    publisher: nombre,
-    openGraph: { ...META_BASE.openGraph, title: titulo, description: descripcion, siteName: nombre },
-    twitter: { ...META_BASE.twitter, title: titulo, description: descripcion },
+    title: { default: title, template: `%s | ${name}` },
+    description,
+    applicationName: name,
+    publisher: name,
+    openGraph: { ...META_BASE.openGraph, title, description, siteName: name },
+    twitter: { ...META_BASE.twitter, title, description },
   };
 }
 
 const META_BASE: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://syncsekai.com'),
-  // Los metadatos van en ingles, no en castellano, aunque la interfaz siga siendo
-  // bilingue. El cambio de idioma es solo de cliente, asi que Google indexa una
-  // unica version: conviene que sea la del publico que de verdad busca. Las
-  // consultas que llegan estan en ingles y Estados Unidos aporta 32 de 53 visitas.
-  // Esto NO altera lo que ve el usuario: la interfaz sigue siendo bilingue.
-  title: { default: TITULO_POR_DEFECTO, template: '%s | SyncSekai' },
-  description: DESCRIPCION_POR_DEFECTO,
-  // Google ignora meta keywords desde 2009. Se mantiene la lista porque
-  // no cuesta nada y algún buscador menor la lee, pero no esperes posición de aquí:
-  // lo que posiciona son el title, la description y el texto visible de la página.
+  // Metadata is in English, not Spanish, even though interface remains
+  // bilingual. Language toggle is client-only, so Google indexes a
+  // single version: best to target the audience actively searching. Inbound
+  // search queries are in English and United States accounts for 32 of 53 visits.
+  // This does NOT alter what user sees: interface remains bilingual.
+  title: { default: DEFAULT_TITLE, template: '%s | SyncSekai' },
+  description: DEFAULT_DESCRIPTION,
+  // Google has ignored meta keywords since 2009. The list is kept because
+  // it costs nothing and minor search engines read it, but expect no ranking from here:
+  // ranking drivers are title, description, and visible page text.
   keywords: [
     'SyncSekai',
     'Plex Anime Sync',
@@ -138,10 +138,10 @@ const META_BASE: Metadata = {
   category: 'technology',
   classification: 'Software, Anime Tracking, Media Synchronization',
   alternates: {
-    // Relativo a propósito: Next lo resuelve contra metadataBase y la ruta actual,
-    // así que cada página declara su propia URL canónica. Escrito a mano apuntaba
-    // a la raíz, y como el layout raíz lo hereda todo, /terms y /privacy le decían
-    // a Google que eran copias de la portada y quedaban fuera del índice.
+    // Relative on purpose: Next resolves it against metadataBase and current route,
+    // so each page declares its own canonical URL. Hardcoding pointed
+    // to root, and since root layout inherits everything, /terms and /privacy told
+    // Google they were homepage copies and were dropped from the index.
     canonical: './',
   },
   openGraph: {
@@ -152,17 +152,17 @@ const META_BASE: Metadata = {
     description:
       'Real-time sync between Plex, Jellyfin, Emby and your AniList, MyAnimeList and Kitsu lists.',
     siteName: 'SyncSekai',
-    // Sin `images` aquí a propósito: definirlas tiene prioridad sobre el fichero
-    // opengraph-image.tsx y volvería a servirse el logo cuadrado de 800x800, que
-    // las plataformas recortan. Al omitirlas, Next usa la tarjeta 1200x630
-    // generada en app/opengraph-image.tsx, que es la proporción que esperan.
+    // Omitting `images` here intentionally: defining them overrides
+    // opengraph-image.tsx and would serve 800x800 square logo again, which
+    // platforms crop. By omitting them, Next uses the 1200x630 card
+    // generated in app/opengraph-image.tsx, matching expected aspect ratio.
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SyncSekai — Real-time anime scrobbler',
     description:
       'Automatically sync the episodes you watch on Plex, Jellyfin or Emby to AniList, MyAnimeList and Kitsu.',
-    // Igual que arriba: la tarjeta la aporta twitter-image / opengraph-image.
+    // Same as above: the card is provided by twitter-image / opengraph-image.
     creator: '@SyncSekai',
   },
   robots: {
@@ -230,9 +230,9 @@ const jsonLd = {
         price: '0',
         priceCurrency: 'USD',
       },
-      // featureList describe capacidades concretas, que es lo que permite a un
-      // buscador relacionar la ficha con consultas de intención larga del tipo
-      // "sincronizar plex con anilist" en lugar de solo con la marca.
+      // featureList describes specific capabilities, allowing search engines
+      // to match entry with long-tail queries like
+      // "sync plex with anilist" instead of just the brand name.
       featureList: [
         'Syncs Plex, Jellyfin or Emby episode progress to AniList',
         'Syncs Plex, Jellyfin or Emby episode progress to MyAnimeList (MAL)',
@@ -293,12 +293,12 @@ export default async function RootLayout({
           </ToastProvider>
         </I18nProvider>
         {/*
-          Aplica el tema guardado ANTES del primer pintado. El servidor emite
-          siempre data-theme="dark", así que sin esto quien usa el tema claro veía
-          un destello oscuro hasta que hidrataba React. Va con el nonce de la CSP.
-          Al final de <body>, como en la documentación de Next: en <head> React
-          avisa de que el script no se ejecuta al renderizar en cliente, y como
-          hijo directo de <html> no es HTML válido.
+          Applies stored theme BEFORE first paint. Server always outputs
+          data-theme="dark", so without this light theme users saw a dark
+          flash until React hydrated. Included with CSP nonce.
+          Placed at end of <body>, per Next docs: in <head> React warns
+          that script does not run on client render, and as direct child
+          of <html> it is invalid HTML.
         */}
         <Script
           id="theme-initializer"

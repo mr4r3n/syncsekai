@@ -16,10 +16,10 @@ export function SetupStepper({
   const { t } = useI18n();
 
   const steps = [
-    { id: 1, label: 'Dominio & Red', icon: Globe },
+    { id: 1, label: t('setup.domainAndNetwork'), icon: Globe },
     { id: 2, label: t('setup.smtpServer'), icon: Mail },
-    { id: 3, label: 'APIs & Conectores', icon: Key },
-    { id: 4, label: 'SuperAdmin', icon: ShieldCheck },
+    { id: 3, label: t('setup.apisAndConnectors'), icon: Key },
+    { id: 4, label: t('setup.superAdmin'), icon: ShieldCheck },
   ];
 
   return (

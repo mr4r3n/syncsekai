@@ -45,7 +45,7 @@ export function GlobalAtmosphere({
 
     fetchActive();
 
-    // Escuchar eventos en tiempo real disparados desde el Panel de Administración o Banner
+    // Listen for real-time events triggered from Admin Panel or Banner
     const handleUpdate = (e: any) => {
       const data = e.detail;
       if (data && (data.isActive !== false) && data.enableGlobalAtmosphere !== false) {
@@ -61,7 +61,7 @@ export function GlobalAtmosphere({
 
     window.addEventListener('plexsync:announcement-updated', handleUpdate);
 
-    // Polling ligero cada 15s para sincronizar estado global
+    // Light polling every 15s to synchronize global state
     const interval = setInterval(fetchActive, 15000);
 
     return () => {
@@ -70,7 +70,7 @@ export function GlobalAtmosphere({
     };
   }, [isPreview, previewEffectType, previewEnabled, fetchActive]);
 
-  // Generar partículas pre-calculadas para rendimiento óptimo
+  // Generate pre-calculated particles for optimal performance
   const particles = useMemo(() => {
     return Array.from({ length: 22 }, (_, i) => ({
       id: i,
@@ -109,7 +109,7 @@ export function GlobalAtmosphere({
           =================================================================== */}
       {activeEffect === 'SNOWFLAKES' && (
         <>
-          {/* Trineo de Santa Claus con Renos volando por el cielo */}
+          {/* Santa Claus Sleigh with Reindeer flying through the sky */}
           <div className="fixed top-14 sm:top-16 left-0 w-full pointer-events-none overflow-hidden h-28 sm:h-32 z-40">
             <div className="absolute right-0 top-2 animate-flying-sleigh">
               <div className="relative">
@@ -118,7 +118,7 @@ export function GlobalAtmosphere({
                   className="w-56 sm:w-72 h-auto text-amber-200/90 drop-shadow-[0_0_16px_rgba(255,215,0,0.8)]"
                   fill="currentColor"
                 >
-                  {/* Reno 1 (Rudolph con nariz roja brillante) */}
+                  {/* Reindeer 1 (Rudolph with glowing red nose) */}
                   <g transform="translate(0, 12)">
                     <ellipse cx="22" cy="18" rx="11" ry="6" />
                     <path d="M28,16 L38,8 L40,10 L34,18 Z" />
@@ -128,7 +128,7 @@ export function GlobalAtmosphere({
                     <path d="M14,22 L9,33 M17,22 L13,31 M26,22 L33,31 M29,22 L37,30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                   </g>
 
-                  {/* Riendas luminosas conectando los renos */}
+                  {/* Glowing reins connecting reindeer */}
                   <path d="M25,23 Q75,28 110,22 Q155,29 200,24 Q245,30 280,26" stroke="rgba(255,215,0,0.8)" strokeWidth="1.5" strokeDasharray="4,2" fill="none" />
 
                   {/* Reno 2 */}
@@ -161,13 +161,13 @@ export function GlobalAtmosphere({
                   </g>
                 </svg>
 
-                {/* Polvo de estrellas mágicas que deja el trineo */}
+                {/* Magical stardust trailing behind sleigh */}
                 <div className="absolute top-6 -left-8 text-amber-300 animate-twinkle text-xs opacity-75">✦ ⋆ ✧</div>
               </div>
             </div>
           </div>
 
-          {/* Copos de nieve flotando por TODA la altura de la pantalla */}
+          {/* Snowflakes drifting across the FULL screen height */}
           {particles.map((p) => (
             <span
               key={p.id}
@@ -187,7 +187,7 @@ export function GlobalAtmosphere({
       )}
 
       {/* ===================================================================
-          2. OTOÑO DORADO (AUTUMN_LEAVES)
+          2. GOLDEN AUTUMN (AUTUMN_LEAVES)
           =================================================================== */}
       {activeEffect === 'AUTUMN_LEAVES' && (
         <>
@@ -228,7 +228,7 @@ export function GlobalAtmosphere({
           =================================================================== */}
       {activeEffect === 'SPOOKY_BATS' && (
         <>
-          {/* Vuelo de murciélagos en diagonal */}
+          {/* Diagonal bat flight */}
           <div className="fixed top-14 sm:top-20 left-0 w-full pointer-events-none overflow-hidden h-40 z-40">
             <div className="absolute right-0 top-4 animate-bat-fly-ambient">
               <div className="flex items-center gap-8">
@@ -245,18 +245,18 @@ export function GlobalAtmosphere({
             </div>
           </div>
 
-          {/* Araña esquina izquierda descendiendo desde arriba por su hilo */}
+          {/* Left-corner spider descending from above on its thread */}
           <div className="fixed top-0 left-6 sm:left-12 pointer-events-none z-40 animate-spider-drop-left select-none">
-            {/* Hilo de telaraña */}
+            {/* Web thread */}
             <div className="w-[1.5px] h-28 sm:h-36 bg-gradient-to-b from-zinc-500/20 via-zinc-300/60 to-zinc-100/90 mx-auto" />
-            {/* Araña con balanceo */}
+            {/* Spider with swaying */}
             <div className="relative -mt-1 flex flex-col items-center animate-spider-wiggle">
               <svg
                 viewBox="0 0 40 40"
                 className="w-7 h-7 sm:w-8 sm:h-8 text-orange-400 drop-shadow-[0_0_10px_rgba(249,115,22,0.85)]"
                 fill="currentColor"
               >
-                {/* Cuerpo y Cefalotórax */}
+                {/* Body and Cephalothorax */}
                 <ellipse cx="20" cy="20" rx="5.5" ry="6.5" fill="#18181b" stroke="#f97316" strokeWidth="1.6" />
                 <circle cx="20" cy="12" r="3.8" fill="#f97316" />
                 {/* Ojos rojos brillantes */}
@@ -276,11 +276,11 @@ export function GlobalAtmosphere({
             </div>
           </div>
 
-          {/* Araña esquina derecha descendiendo con diferente altura y ritmo */}
+          {/* Right-corner spider descending with different height and rhythm */}
           <div className="fixed top-0 right-8 sm:right-16 pointer-events-none z-40 animate-spider-drop-right select-none">
-            {/* Hilo de telaraña */}
+            {/* Web thread */}
             <div className="w-[1.5px] h-20 sm:h-28 bg-gradient-to-b from-zinc-500/20 via-purple-300/60 to-purple-100/90 mx-auto" />
-            {/* Araña morada con balanceo desfasado */}
+            {/* Purple spider with offset swaying */}
             <div className="relative -mt-1 flex flex-col items-center animate-spider-wiggle-alt">
               <svg
                 viewBox="0 0 40 40"
@@ -306,7 +306,7 @@ export function GlobalAtmosphere({
       )}
 
       {/* ===================================================================
-          4. SAN VALENTÍN (FLOATING_HEARTS)
+          4. VALENTINE'S DAY (FLOATING_HEARTS)
           =================================================================== */}
       {activeEffect === 'FLOATING_HEARTS' && (
         <>
@@ -332,11 +332,11 @@ export function GlobalAtmosphere({
       )}
 
       {/* ===================================================================
-          5. AÑO NUEVO & FIESTA (CONFETTI & FIREWORKS)
+          5. NEW YEAR & PARTY (CONFETTI & FIREWORKS)
           =================================================================== */}
       {(activeEffect === 'CONFETTI' || activeEffect === 'FIREWORKS') && (
         <>
-          {/* Pirotecnia Fotorrealista en Canvas con física de partículas */}
+          {/* Photorealistic Canvas Fireworks with particle physics */}
           <FireworksCanvas density={activeEffect === 'FIREWORKS' ? 'dense' : 'normal'} />
 
           {/* Lluvia de Confeti festivo */}
@@ -362,7 +362,7 @@ export function GlobalAtmosphere({
       )}
 
       {/* ===================================================================
-          6. CYBERPUNK / NEÓN (CYBER_GLOW)
+          6. CYBERPUNK / NEON (CYBER_GLOW)
           =================================================================== */}
       {activeEffect === 'CYBER_GLOW' && (
         <>

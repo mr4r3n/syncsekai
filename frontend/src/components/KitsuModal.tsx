@@ -53,7 +53,7 @@ export function KitsuModal({ isOpen, onClose, onSuccess }: KitsuModalProps) {
     }
   };
 
-  // Foco dentro al abrir, Tab acotado al diálogo y foco devuelto al cerrar.
+  // Focus inside on open, Tab trapped in the dialog, and focus returned on close.
   const { dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;

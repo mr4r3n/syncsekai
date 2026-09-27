@@ -9,13 +9,13 @@ import {
 
 interface HistoryStatsProps {
   total: number;
-  resumen: any;
+  summary: any;
   t: (key: string, values?: any) => string;
 }
 
 export function HistoryStats({
   total,
-  resumen,
+  summary,
   t,
 }: HistoryStatsProps) {
   return (
@@ -36,25 +36,25 @@ export function HistoryStats({
             {total}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] font-mono">
-            {typeof resumen?.variacionMensual === 'number' ? (
+            {typeof summary?.monthlyChange === 'number' ? (
               <>
                 <span
                   className={`font-semibold flex items-center gap-0.5 ${
-                    resumen.variacionMensual >= 0 ? 'text-emerald-400' : 'text-[var(--status-danger)]'
+                    summary.monthlyChange >= 0 ? 'text-emerald-400' : 'text-[var(--status-danger)]'
                   }`}
                 >
                   <TrendingUp
-                    className={`w-3 h-3 ${resumen.variacionMensual < 0 ? 'rotate-180' : ''}`}
+                    className={`w-3 h-3 ${summary.monthlyChange < 0 ? 'rotate-180' : ''}`}
                     aria-hidden="true"
                   />
-                  {resumen.variacionMensual >= 0 ? '+' : ''}
-                  {resumen.variacionMensual}%
+                  {summary.monthlyChange >= 0 ? '+' : ''}
+                  {summary.monthlyChange}%
                 </span>
                 <span className="text-[var(--text-muted)]">{t('history.vsLastMonth')}</span>
               </>
             ) : (
               <span className="text-[var(--text-muted)]">
-                {resumen ? t('history.firstMonth') : t('history.noData')}
+                {summary ? t('history.firstMonth') : t('history.noData')}
               </span>
             )}
           </div>
@@ -70,17 +70,17 @@ export function HistoryStats({
               <Film className="w-3.5 h-3.5" />
             </div>
           </div>
-          {/* Episodios distintos, contados. La duracion real no se guarda,
-              asi que no hay "tiempo visto". */}
+          {/* Distinct episodes, counted. Actual duration is not stored,
+              so there is no "time watched". */}
           <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-[var(--text-primary)] my-1">
-            {typeof resumen?.episodios === 'number' ? resumen.episodios : t('history.noData')}
+            {typeof summary?.episodes === 'number' ? summary.episodes : t('history.noData')}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] font-mono">
             <span className="text-[var(--text-muted)]">{t('history.episodesDistinct')}</span>
           </div>
         </div>
 
-        {/* KPI 3: PRECISIÓN */}
+        {/* KPI 3: ACCURACY */}
         <div className="glass-card p-4 sm:p-5 flex flex-col justify-between min-h-[110px] relative">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{t('history.accuracy')}</span>
@@ -89,18 +89,18 @@ export function HistoryStats({
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-emerald-400 my-1">
-            {typeof resumen?.tasaExito === 'number' ? `${resumen.tasaExito}%` : t('history.noData')}
+            {typeof summary?.successRate === 'number' ? `${summary.successRate}%` : t('history.noData')}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] font-mono">
-            <span className="text-emerald-400 font-semibold">{resumen?.correctos ?? 0}</span>
+            <span className="text-emerald-400 font-semibold">{summary?.successful ?? 0}</span>
             <span className="text-[var(--text-muted)]">{t('history.syncedOk')}</span>
           </div>
         </div>
 
-        {/* La cuarta tarjeta era "Latencia media: 164 ms", un numero fijo.
-            No hay nada que mida el tiempo de cada envio -no se guarda-, asi
-            que la tarjeta desaparece en vez de seguir inventandolo. Las
-            otras tres se reparten el ancho. */}
+        {/* Fourth card was "Average latency: 164 ms", a hardcoded number.
+            Nothing measures delivery latency—not recorded—so
+            the card is removed rather than continuing fabrication. The
+            remaining three share the width. */}
       </div>
     </>
   );

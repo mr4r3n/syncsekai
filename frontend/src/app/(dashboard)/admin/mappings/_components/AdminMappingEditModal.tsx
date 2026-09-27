@@ -4,7 +4,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 
 interface AdminMappingEditModalProps {
   setShowModal: (show: boolean) => void;
-  propsMapeo: Record<string, any>;
+  mappingProps: Record<string, any>;
   isNewMapping: boolean;
   plexTitleInput: string;
   setPlexTitleInput: (val: string) => void;
@@ -24,7 +24,7 @@ interface AdminMappingEditModalProps {
 
 export function AdminMappingEditModal({
   setShowModal,
-  propsMapeo,
+  mappingProps,
   isNewMapping,
   plexTitleInput,
   setPlexTitleInput,
@@ -46,7 +46,7 @@ export function AdminMappingEditModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
       <div
-        {...propsMapeo}
+        {...mappingProps}
         className="w-full max-w-2xl rounded-[6px] border border-[var(--glass-border)] bg-[var(--glass-bg)] p-6 space-y-6 shadow-[var(--glass-shadow-lg)] text-[var(--text-primary)]">
         <div className="flex items-center justify-between pb-3 border-b border-[var(--glass-border)]">
           <div className="flex items-center gap-2.5">
@@ -80,7 +80,7 @@ export function AdminMappingEditModal({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[var(--text-secondary)]">Temporada:</label>
+              <label className="text-xs font-bold text-[var(--text-secondary)]">{t('admin.seasonColon')}</label>
               <div className="relative flex items-center">
                 <input
                   type="number"
@@ -195,7 +195,7 @@ export function AdminMappingEditModal({
                             {r.title?.romaji || r.title?.english}
                           </h4>
                           <p className="text-[10.5px] text-[var(--text-muted)] font-mono">
-                            ID: #{r.id} • {r.format || 'TV'} • {r.episodes ? `${r.episodes} eps` : 'En emisión'}
+                            ID: #{r.id} • {r.format || 'TV'} • {r.episodes ? `${r.episodes} eps` : t('mappings.airing')}
                             {r.seasonYear ? ` • ${r.seasonYear}` : ''}
                           </p>
                         </div>
@@ -204,11 +204,11 @@ export function AdminMappingEditModal({
                       <div className="shrink-0">
                         {isSelected ? (
                           <span className="badge-status-success">
-                            SELECCIONADO
+                            {t('mappings.selectedBadge')}
                           </span>
                         ) : (
                           <span className="badge-pill">
-                            Elegir
+                            {t('mappings.chooseBadge')}
                           </span>
                         )}
                       </div>

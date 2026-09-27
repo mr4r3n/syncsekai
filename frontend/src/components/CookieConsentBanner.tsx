@@ -17,29 +17,29 @@ export function CookieConsentBanner() {
   const [isOpen, setIsOpen] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [preferences, setPreferences] = useState({
-    essential: true, // Siempre true
+    essential: true, // Always true
     themePreferences: true,
   });
 
-  // El banner en sí NO es modal: atrapar el foco en un aviso de cookies impide
-  // leer la política antes de decidir. Ya se anuncia como región con nombre.
-  // El modal de personalización sí lo es, y necesita foco y Escape.
+  // The banner itself is NOT modal: trapping focus in a cookie notice prevents
+  // reading the policy before deciding. It is already announced as a named region.
+  // The customization modal is modal, and requires focus and Escape.
   const { dialogProps: dialogPropsConfig } = useModalA11y(
     showConfigModal,
     () => setShowConfigModal(false),
   );
 
   useEffect(() => {
-    // Comprobar si ya existe consentimiento guardado
+    // Check if consent is already saved
     const saved = localStorage.getItem('plexsync_cookie_consent');
     if (!saved) {
-      // Pequeño retardo para no interferir con la carga inicial
+      // Small delay to avoid interfering with initial load
       const timer = setTimeout(() => setIsOpen(true), 800);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  // Escuchar evento personalizado para re-abrir desde el footer
+  // Listen for custom event to re-open from footer
   useEffect(() => {
     const handleOpenBanner = () => {
       setIsOpen(true);
@@ -71,7 +71,7 @@ export function CookieConsentBanner() {
 
   return (
     <>
-      {/* BANNER FLOTANTE MINIMALISTA EN LA ESQUINA INFERIOR */}
+      {/* MINIMALIST FLOATING BANNER IN BOTTOM CORNER */}
       <div
         role="region"
         aria-label={t('cookies.bannerLabel')}
@@ -122,7 +122,7 @@ export function CookieConsentBanner() {
         </div>
       </div>
 
-      {/* MODAL DE PERSONALIZACIÓN DETALLADA DE COOKIES */}
+      {/* DETAILED COOKIE CUSTOMIZATION MODAL */}
       {showConfigModal && (
         <div
           {...dialogPropsConfig}
@@ -145,7 +145,7 @@ export function CookieConsentBanner() {
             </div>
 
             <div className="space-y-4 text-xs">
-              {/* Cookies Técnicas / Esenciales */}
+              {/* Technical / Essential Cookies */}
               <div className="p-3.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

@@ -31,7 +31,7 @@ export function ScheduleTab({
       startsAt: formData.startsAt || start.toISOString(),
       endsAt: end.toISOString(),
     });
-    showToast(`Programado por ${days} día${days > 1 ? 's' : ''}`, 'info');
+    showToast(t('announcements.scheduledForDays', { n: days }), 'info');
   };
 
   const clearScheduleDates = () => {
@@ -43,7 +43,7 @@ export function ScheduleTab({
     showToast(t('announcements.scheduleRemoved'), 'info');
   };
 
-  // Cálculo de estado de vigencia
+  // Active status calculation
   const scheduleStatus = (() => {
     if (!formData.isActive) {
       return {
@@ -62,15 +62,20 @@ export function ScheduleTab({
         type: 'SCHEDULED',
         badgeClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
         title: t('announcements.scheduledToStart'),
-        message: `Comenzará automáticamente el ${formatReadableDate(t, locale, formData.startsAt)} (en ${days > 0 ? `${days}d ` : ''}${hours}h).`,
+        message: t('announcements.scheduledToStartDesc', {
+          date: formatReadableDate(t, locale, formData.startsAt),
+          remaining: `${days > 0 ? `${days}d ` : ''}${hours}h`,
+        }),
       };
     }
     if (formData.endsAt && new Date(formData.endsAt) < now) {
       return {
         type: 'EXPIRED',
         badgeClass: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
-        title: 'Plazo Expirado',
-        message: `Finalizó el ${formatReadableDate(t, locale, formData.endsAt)}. El banner ya no es visible para los usuarios.`,
+        title: t('announcements.expiredTerm'),
+        message: t('announcements.expiredDesc', {
+          date: formatReadableDate(t, locale, formData.endsAt),
+        }),
       };
     }
     if (formData.endsAt) {
@@ -81,7 +86,10 @@ export function ScheduleTab({
         type: 'ACTIVE_TIMED',
         badgeClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
         title: t('announcements.activeInWindow'),
-        message: `Visible en producción hasta el ${formatReadableDate(t, locale, formData.endsAt)} (restan ${days > 0 ? `${days}d ` : ''}${hours}h).`,
+        message: t('announcements.activeInWindowDesc', {
+          date: formatReadableDate(t, locale, formData.endsAt),
+          remaining: `${days > 0 ? `${days}d ` : ''}${hours}h`,
+        }),
       };
     }
     return {
@@ -94,7 +102,7 @@ export function ScheduleTab({
 
   return (
     <>
-            {/* TAB 4: PROGRAMACIÓN & VIGENCIA (NUEVA SUITE COMPLETA) */}
+            {/* TAB 4: SCHEDULE & VALIDITY (NEW COMPLETE SUITE) */}
             {activeTab === 'schedule' && (
               <div className="space-y-6">
                 {/* TARJETA DE ESTADO EN VIVO */}
@@ -127,7 +135,7 @@ export function ScheduleTab({
                   )}
                 </div>
 
-                {/* BOTONES DE DURACIÓN RÁPIDA */}
+                {/* QUICK DURATION BUTTONS */}
                 <div className="space-y-2.5">
                   <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] font-mono">{t('announcements.setQuickDuration')}</label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
@@ -194,7 +202,7 @@ export function ScheduleTab({
                     />
                     <p className="text-[11px] text-[var(--text-muted)]">
                       {formData.startsAt
-                        ? `Inicio: ${formatReadableDate(t, locale, formData.startsAt)}`
+                        ? t('announcements.startsAtLabel', { date: formatReadableDate(t, locale, formData.startsAt) })
                         : t('announcements.noStartDate')}
                     </p>
                   </div>
@@ -223,7 +231,7 @@ export function ScheduleTab({
                     />
                     <p className="text-[11px] text-[var(--text-muted)]">
                       {formData.endsAt
-                        ? `Fin: ${formatReadableDate(t, locale, formData.endsAt)}`
+                        ? t('announcements.endsAtLabel', { date: formatReadableDate(t, locale, formData.endsAt) })
                         : t('announcements.noEndDate')}
                     </p>
                   </div>

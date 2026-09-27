@@ -896,7 +896,7 @@ input[type="number"] {
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--glass-border);
   background-color: var(--bg-surface);
   color: var(--text-secondary);
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
@@ -1219,14 +1219,6 @@ input::-ms-clear {
   100% {
     background-position: -200% 0;
   }
-}
-
-/* ==========================================================================
-   LEAFLET MAP DARK STYLING
-   ========================================================================== */
-.leaflet-container {
-  background-color: #0c0c0e !important;
-  outline: none;
 }
 
 /* ==========================================================================
@@ -2056,4 +2048,108 @@ button:active:not([class*="translate"]):not([class*="scale"]):not(:disabled),
 
 [data-theme='dark'] .icono-marca-oscuro {
   display: block;
+}
+
+/* ==========================================================================
+   VISITORS MAP (admin/geo, jsVectorMap)
+   CSS beats the fill attributes the library writes, so the theme decides the colours.
+   ========================================================================== */
+.visitors-map .jvm-region {
+  fill: var(--text-muted);
+  fill-opacity: 0.18;
+  transition: fill-opacity 0.15s;
+}
+.visitors-map .jvm-region.has-visits {
+  fill: var(--accent-primary);
+  fill-opacity: var(--share, 0.5);
+}
+.visitors-map .jvm-region.has-visits:hover {
+  fill-opacity: 1;
+}
+.visitors-map .jvm-marker {
+  fill: var(--accent-primary);
+  stroke: var(--text-primary);
+  stroke-opacity: 0.6;
+}
+.visitors-map {
+  --jvm-zoom-btn-bg-color: var(--bg-surface-hover);
+  --jvm-zoom-btn-color: var(--text-primary);
+  --jvm-zoom-btn-size: 26px;
+  --jvm-zoom-btn-radius: 6px;
+}
+/* Height from the map's proportions (aspect-ratio), not the library's height: 100%. */
+.visitors-map.jvm-container {
+  height: auto;
+  overflow: hidden;
+}
+/* The box spans the card; its height follows the map's proportions but, on desktop, is
+   capped by the space left under the page header and counters (~470px), so the whole map
+   fits without scrolling (centred, as the library draws it) and a zoomed map fills the
+   card. ponytail: 470px is measured, not computed; if the header grows, raise it. */
+@media (min-width: 1024px) {
+  .visitors-map.jvm-container {
+    max-height: max(300px, calc(100svh - 470px));
+  }
+}
+/* Two classes, so these win over the library's stylesheet whatever the load order. */
+.visitors-map .jvm-zoom-btn {
+  left: auto;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  border: 1px solid var(--glass-border);
+  font-size: 15px;
+}
+.visitors-map .jvm-zoom-btn.jvm-zoomin { top: auto; bottom: 34px; }
+.visitors-map .jvm-zoom-btn.jvm-zoomout { top: auto; bottom: 0; }
+.visitors-map .jvm-zoom-btn:hover { border-color: var(--accent-primary); }
+/* The tooltip lives in <body>: centred above the cursor, with the tag's triangle pointing at it. */
+/* Through the library's own variables: its stylesheet loads after this one. */
+.jvm-tooltip {
+  --jvm-tooltip-bg-color: transparent;
+  --jvm-tooltip-padding: 0;
+  --jvm-tooltip-shadow: none;
+  --jvm-tooltip-radius: 0;
+  transform: translate(calc(50% + 5px), -8px);
+}
+.visitors-map-tag {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--text-primary);
+  color: var(--bg-app);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.25);
+}
+.visitors-map-tag::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--text-primary);
+  border-bottom: 0;
+}
+
+/* Landing gallery caption: fades in when the screen changes. */
+@keyframes landing-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Landing: discreet line between sections, fading at both ends. */
+.landing-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--text-muted), transparent);
+  opacity: 0.35;
 }

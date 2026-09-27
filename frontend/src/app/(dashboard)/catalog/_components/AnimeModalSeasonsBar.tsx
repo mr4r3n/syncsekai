@@ -68,7 +68,7 @@ export function AnimeModalSeasonsBar({
               Ep. {Math.min(selectedAnime.episodesWatched || 0, selectedAnime.episodesTotal || selectedAnime.episodesWatched || 0)} / {selectedAnime.episodesTotal || '?'}
             </div>
             <div className="text-[10px] text-[var(--text-muted)]">
-              {selectedAnime.progressPercentage}% completado
+              {t('catalog.percentCompleted', { percent: selectedAnime.progressPercentage })}
             </div>
           </div>
           <div className="w-16 sm:w-20 h-1.5 rounded-full bg-[var(--border-subtle)] overflow-hidden">
@@ -80,7 +80,7 @@ export function AnimeModalSeasonsBar({
         </div>
       </div>
 
-      {/* SECCIÓN TEMPORADAS RELACIONADAS (CINTA HORIZONTAL CON SCROLL SIN BARRA VISIBLE Y VINCULACIÓN) */}
+      {/* RELATED SEASONS SECTION (HORIZONTAL RIBBON WITH SCROLLBAR-HIDDEN SCROLL AND LINKING) */}
       <div className="space-y-1.5 shrink-0 relative group">
         <div className="flex items-center justify-between text-xs px-0.5">
           <div className="flex items-center gap-1.5 font-semibold text-[var(--text-primary)] text-[11px]">
@@ -99,22 +99,22 @@ export function AnimeModalSeasonsBar({
               </span>
             )}
 
-            {/* Botón Vincular / Buscar otra temporada */}
+            {/* Link / Search Another Season Button */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setLinkSearchOpen(!linkSearchOpen)}
-                // Sin whitespace-nowrap el texto partía en dos renglones y el
-                // botón crecía a 35px de alto: dominaba una fila que solo es
-                // la etiqueta de la sección, junto a flechas de 24px.
+                // Without whitespace-nowrap text wrapped to two lines and the
+                // button expanded to 35px height: dominated a row meant only as
+                // section label, next to 24px arrows.
                 className="shrink-0 whitespace-nowrap h-6 px-2 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] hover:text-[#01bcf3] hover:border-[#01bcf3]/40 text-[11px] font-medium inline-flex items-center gap-1 transition-colors cursor-pointer"
                 title={t('catalog.searchAndLinkSeason')}
               >
                 <Plus className="w-3 h-3 text-[#01bcf3]" />
-                <span>Vincular temporada</span>
+                <span>{t('catalog.linkSeason')}</span>
               </button>
 
-              {/* Popover de búsqueda de anime */}
+              {/* Anime search popover */}
               {linkSearchOpen && (
                 <div className="absolute right-0 top-full mt-1.5 w-64 sm:w-72 p-2.5 rounded-[8px] border border-[var(--border-strong)] bg-[var(--bg-surface-elevated)] shadow-xl z-50 space-y-2 backdrop-blur-md">
                   <div className="flex items-center justify-between pb-1 border-b border-[var(--border-subtle)]">
@@ -180,7 +180,7 @@ export function AnimeModalSeasonsBar({
                   onClick={() => scrollSeasons('left')}
                   disabled={!canScrollLeft}
                   className="w-5 h-5 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center transition-all cursor-pointer"
-                  title="Ver anteriores"
+                  title={t('catalog.viewPrevious')}
                 >
                   <ChevronLeft className="w-3 h-3" />
                 </button>
@@ -189,7 +189,7 @@ export function AnimeModalSeasonsBar({
                   onClick={() => scrollSeasons('right')}
                   disabled={!canScrollRight}
                   className="w-5 h-5 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] disabled:opacity-25 disabled:cursor-not-allowed flex items-center justify-center transition-all cursor-pointer"
-                  title="Ver siguientes"
+                  title={t('catalog.viewNext')}
                 >
                   <ChevronRight className="w-3 h-3" />
                 </button>
@@ -198,7 +198,7 @@ export function AnimeModalSeasonsBar({
           </div>
         </div>
 
-        {/* Carrusel de Píldoras con scroll horizontal libre sin barra visible */}
+        {/* Pill carousel with free horizontal scroll without visible bar */}
         <div
           ref={seasonsScrollRef}
           onScroll={checkSeasonScroll}

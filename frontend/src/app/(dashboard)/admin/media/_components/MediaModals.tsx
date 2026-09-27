@@ -39,13 +39,13 @@ export function MediaModals({
 }: MediaModalsProps) {
   return (
     <>
-      {/* MODAL CONFIRMAR ELIMINACIÓN INDIVIDUAL */}
+      {/* CONFIRM INDIVIDUAL DELETION MODAL */}
       <ConfirmModal
         isOpen={deleteModalOpen}
         title={t('admin.confirmDeleteMediaFile')}
-        description={`Estás a punto de eliminar "${itemToDelete?.titleEnglish || itemToDelete?.titleRomaji || itemToDelete?.filename}". Esta acción no se puede deshacer.`}
-        confirmText="Eliminar Archivo"
-        cancelText="Cancelar"
+        description={t('admin.confirmDeleteMediaDesc', { title: itemToDelete?.titleEnglish || itemToDelete?.titleRomaji || itemToDelete?.filename })}
+        confirmText={t('admin.deleteFile')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteModalOpen(false)}
@@ -55,22 +55,22 @@ export function MediaModals({
       <ConfirmModal
         isOpen={purgeModalOpen}
         title={t('admin.confirmPurgeCache')}
-        description="Se eliminarán todas las portadas descargadas localmente. La aplicación las descargará de nuevo según sea necesario cuando los usuarios exploren el catálogo o sintonicen animes."
-        confirmText="Purgar Todo"
-        cancelText="Cancelar"
+        description={t('admin.confirmPurgeDesc')}
+        confirmText={t('admin.purgeAll')}
+        cancelText={t('common.cancel')}
         variant="warning"
         loading={isPurging}
         onConfirm={handleConfirmPurge}
         onClose={() => setPurgeModalOpen(false)}
       />
 
-      {/* MODAL CONFIRMAR LIMPIEZA DE PORTADAS HUÉRFANAS */}
+      {/* CONFIRM ORPHAN COVERS CLEANUP MODAL */}
       <ConfirmModal
         isOpen={purgeOrphansModalOpen}
         title={t('admin.confirmCleanOrphans')}
-        description={`Se eliminarán de forma segura las ${totalOrphans} portadas que ya no están vinculadas a ningún anime o historial en la base de datos, liberando almacenamiento sin afectar a tus animes activos.`}
-        confirmText="Limpiar Huérfanas"
-        cancelText="Cancelar"
+        description={t('admin.confirmCleanOrphansDesc', { count: totalOrphans })}
+        confirmText={t('admin.cleanOrphans')}
+        cancelText={t('common.cancel')}
         variant="warning"
         loading={isPurgingOrphans}
         onConfirm={handleConfirmPurgeOrphans}

@@ -32,12 +32,12 @@ export function TicketsFilters({
           {/* Selector de Estados */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
             {[
-              { key: 'ALL', label: 'Todos' },
-              { key: 'OPEN', label: 'Abiertos' },
+              { key: 'ALL', label: t('common.all') },
+              { key: 'OPEN', label: t('tickets.filterOpen') },
               { key: 'WAITING_USER', label: t('tickets.withReply') },
               { key: 'IN_PROGRESS', label: t('tickets.underReview') },
-              { key: 'RESOLVED', label: 'Resueltos' },
-              { key: 'CLOSED', label: 'Cerrados' },
+              { key: 'RESOLVED', label: t('tickets.filterResolved') },
+              { key: 'CLOSED', label: t('tickets.filterClosed') },
             ].map((st) => (
               <button
                 key={st.key}
@@ -57,7 +57,7 @@ export function TicketsFilters({
             ))}
           </div>
 
-          {/* Buscador de Asunto o # de Ticket */}
+          {/* Search Subject or Ticket # */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1 md:w-64">
               <Search className="w-4 h-4 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -73,7 +73,7 @@ export function TicketsFilters({
               />
             </div>
 
-            {/* Filtro de Categoría */}
+            {/* Category Filter */}
             <div className="w-48 shrink-0">
               <CustomSelect
                 value={selectedCategory}

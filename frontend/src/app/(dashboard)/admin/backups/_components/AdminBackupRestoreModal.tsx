@@ -3,7 +3,7 @@ import { AlertTriangle, Loader2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface AdminBackupRestoreModalProps {
-  propsRestaurar: Record<string, any>;
+  restoreProps: Record<string, any>;
   setRestoreTarget: (val: any | null) => void;
   restoreTarget: any;
   restoring: boolean;
@@ -11,7 +11,7 @@ interface AdminBackupRestoreModalProps {
 }
 
 export function AdminBackupRestoreModal({
-  propsRestaurar,
+  restoreProps,
   setRestoreTarget,
   restoreTarget,
   restoring,
@@ -22,7 +22,7 @@ export function AdminBackupRestoreModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
       <div
-        {...propsRestaurar}
+        {...restoreProps}
         className="w-full max-w-md p-6 rounded-[6px] border border-amber-500/40 bg-[var(--bg-surface-elevated)] backdrop-blur-2xl shadow-2xl space-y-5">
         <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-subtle)]">
           <div className="w-10 h-10 rounded-[6px] bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
@@ -36,7 +36,7 @@ export function AdminBackupRestoreModal({
 
         <div className="p-3.5 rounded-[6px] border border-amber-500/20 bg-amber-500/5 space-y-2">
           <div className="text-xs font-mono font-bold text-amber-300">
-            Archivo: {restoreTarget.filename}
+            {t('backups.fileLabel', { filename: restoreTarget.filename })}
           </div>
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('backups.confirmRestoreDetail')}</p>
         </div>

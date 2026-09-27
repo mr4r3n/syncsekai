@@ -35,11 +35,11 @@ export function AnimeModalSyncFooter({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap text-[11px]">
-          {/* Estado Local si no tiene ningún tracker vinculado */}
+          {/* Local State if no tracker is linked */}
           {!selectedAnime.anilistId && !selectedAnime.malId && !selectedAnime.kitsuId && (
             <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] border border-amber-500/30 bg-amber-500/10 text-amber-400 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              <span>Local (Sin trackers)</span>
+              <span>{t('catalog.localNoTrackers')}</span>
             </div>
           )}
 

@@ -31,7 +31,7 @@ export function AnnouncementStudioHeader({
 }: AnnouncementStudioHeaderProps) {
   return (
     <>
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -57,10 +57,10 @@ export function AnnouncementStudioHeader({
                 }`}
               >
                 <Power className="w-4 h-4" />
-                <span>{formData.isActive ? t('announcements.alertActive') : 'Desactivada'}</span>
+                <span>{formData.isActive ? t('announcements.alertActive') : t('announcements.alertInactive')}</span>
               </button>
 
-              {/* Guardar como Nueva Plantilla */}
+              {/* Save as New Template */}
               <button
                 type="button"
                 onClick={() => setIsSavePresetModalOpen(true)}
@@ -71,7 +71,7 @@ export function AnnouncementStudioHeader({
                 <span>{t('announcements.saveAsTemplate')}</span>
               </button>
 
-              {/* Guardar Cambios con Indicador de Cambios Sin Guardar */}
+              {/* Save Changes with Unsaved Changes Indicator */}
               <div className="relative flex items-center">
                 <button
                   type="button"

@@ -41,8 +41,8 @@ export function AdminServicesStatusCards({
             </div>
             <div className="text-xl font-bold font-mono text-emerald-400">{t('admin.stateOperational')}</div>
             <div className="text-[11px] text-[var(--text-muted)] font-mono flex items-center justify-between">
-              <span>Puerto 4000</span>
-              <span className="text-[var(--accent-text)] font-semibold">Latencia: {stats.apiLatency || '4ms'}</span>
+              <span>{t('admin.port4000')}</span>
+              <span className="text-[var(--accent-text)] font-semibold">{t('admin.latency', { latency: stats.apiLatency || '4ms' })}</span>
             </div>
           </div>
 
@@ -90,7 +90,7 @@ export function AdminServicesStatusCards({
             <div className="text-xl font-bold font-mono text-emerald-400">{t('admin.onlineUpper')}</div>
             <div className="text-[11px] text-[var(--text-muted)] font-mono flex items-center justify-between">
               <span>Webhooks &amp; Polling</span>
-              <span className="text-amber-400 font-semibold">{serviceDist.plexServersConnected ?? 0} Servidores</span>
+              <span className="text-amber-400 font-semibold">{t('admin.serversCount', { n: serviceDist.plexServersConnected ?? 0 })}</span>
             </div>
           </div>
 
@@ -106,7 +106,7 @@ export function AdminServicesStatusCards({
             <div className="text-xl font-bold font-mono text-emerald-400">{t('admin.onlineUpper')}</div>
             <div className="text-[11px] text-[var(--text-muted)] font-mono flex items-center justify-between">
               <span>Webhooks &amp; API</span>
-              <span className="text-[var(--brand-jellyfin)] font-semibold">{serviceDist.jellyfinServersConnected ?? 0} Servidores</span>
+              <span className="text-[var(--brand-jellyfin)] font-semibold">{t('admin.serversCount', { n: serviceDist.jellyfinServersConnected ?? 0 })}</span>
             </div>
           </div>
 
@@ -122,7 +122,7 @@ export function AdminServicesStatusCards({
             <div className="text-xl font-bold font-mono text-emerald-400">{t('admin.onlineUpper')}</div>
             <div className="text-[11px] text-[var(--text-muted)] font-mono flex items-center justify-between">
               <span>Polling /Sessions (5s)</span>
-              <span className="text-[var(--brand-emby)] font-semibold">{serviceDist.embyServersConnected ?? 0} Servidores</span>
+              <span className="text-[var(--brand-emby)] font-semibold">{t('admin.serversCount', { n: serviceDist.embyServersConnected ?? 0 })}</span>
             </div>
           </div>
         </>

@@ -25,7 +25,7 @@ export function CatalogPagination({
 }: CatalogPaginationProps) {
   const { t } = useI18n();
 
-  // Renderizador de números de página inteligente
+  // Smart page number renderer
   const renderPaginationButtons = () => {
     const totalPages = pagination.totalPages || 1;
     const current = currentPage;
@@ -83,11 +83,11 @@ export function CatalogPagination({
               key={pageNum}
               onClick={() => handlePageChange(pageNum)}
               disabled={loading}
-              // Este paginador estaba escrito a mano con colores fijos: azul
-              // para la pagina activa y blancos con transparencia para el
-              // resto. Ni era el color de la web -el resto de paginadores usan
-              // el naranja de la marca- ni funcionaba en tema claro, donde un
-              // `text-zinc-300` sobre fondo blanco no se lee.
+              // This paginator was hardcoded with fixed colors: blue
+              // for active page and translucent white for remainder.
+              // Neither matched site palette—other paginators use brand
+              // orange—nor functioned in light theme, where `text-zinc-300`
+              // against white background is unreadable.
               className={`min-w-[36px] h-9 px-2.5 rounded-[var(--radius-md)] text-sm font-mono font-semibold transition-colors border cursor-pointer ${
                 isActive
                   ? 'bg-[var(--accent-primary)] text-white border-transparent shadow-sm'

@@ -13,7 +13,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { CATEGORY_LABELS } from './constants';
 
 interface TicketCreateModalProps {
-  propsCrear: any;
+  createProps: any;
   isModalClosing: boolean;
   handleAttemptCloseModal: () => void;
   handleCreateTicket: (e: React.FormEvent) => Promise<void>;
@@ -38,7 +38,7 @@ interface TicketCreateModalProps {
 }
 
 export function TicketCreateModal({
-  propsCrear,
+  createProps,
   isModalClosing,
   handleAttemptCloseModal,
   handleCreateTicket,
@@ -61,7 +61,7 @@ export function TicketCreateModal({
           onClick={handleAttemptCloseModal}
         >
           <div
-            {...propsCrear}
+            {...createProps}
             className={`w-full max-w-xl rounded-[8px] border border-[var(--border-strong)] bg-[var(--popover-solid-bg)] text-[var(--text-primary)] shadow-2xl p-6 space-y-5 overflow-visible transition-all duration-200 ${
               isModalClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100 animate-in zoom-in-95 duration-150'
             }`}
@@ -103,7 +103,7 @@ export function TicketCreateModal({
                 />
               </div>
 
-              {/* Categoría y Prioridad */}
+              {/* Category and Priority */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] font-mono">{t('tickets.category')}</label>
@@ -125,10 +125,10 @@ export function TicketCreateModal({
                     value={formData.priority}
                     onChange={(val) => setFormData({ ...formData, priority: val })}
                     options={[
-                      { value: 'LOW', label: 'Baja (Consultas menores)' },
-                      { value: 'NORMAL', label: 'Normal (Uso habitual)' },
-                      { value: 'HIGH', label: 'Alta (Problema recurrente)' },
-                      { value: 'URGENT', label: 'Urgente (Bloqueo total)' },
+                      { value: 'LOW', label: t('tickets.priorityLowDesc') },
+                      { value: 'NORMAL', label: t('tickets.priorityNormalDesc') },
+                      { value: 'HIGH', label: t('tickets.priorityHighDesc') },
+                      { value: 'URGENT', label: t('tickets.priorityUrgentDesc') },
                     ]}
                     accentColor="cinnabar"
                     triggerClassName="h-10 sm:h-11"
@@ -172,13 +172,13 @@ export function TicketCreateModal({
                     ) : (
                       <Paperclip className="w-3.5 h-3.5 text-[#FF634A]" />
                     )}
-                    <span>{uploadingAttachment ? 'Subiendo foto...' : 'Adjuntar captura / foto'}</span>
+                    <span>{uploadingAttachment ? t('tickets.uploadingPhoto') : t('tickets.attachScreenshot')}</span>
                   </button>
 
                   <span className="text-[11px] text-[var(--text-muted)]">{t('tickets.fileHint')}</span>
                 </div>
 
-                {/* Previsualización de Fotos en el modal */}
+                {/* Photo Preview in modal */}
                 {modalAttachments.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {modalAttachments.map((att, idx) => (

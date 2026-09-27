@@ -81,7 +81,7 @@ export function AdminTicketDrawer({
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header del Ticket */}
+        {/* Ticket Header */}
         <div className="p-4 sm:p-5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -114,7 +114,7 @@ export function AdminTicketDrawer({
               type="button"
               onClick={handleDeleteTicket}
               className="p-2 rounded-[6px] text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
-              title="Eliminar ticket"
+              title={t('admin.deleteTicketTitle')}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -128,21 +128,21 @@ export function AdminTicketDrawer({
           </div>
         </div>
 
-        {/* CONTROLES RÁPIDOS DE ESTADO & PRIORIDAD */}
+        {/* QUICK STATUS & PRIORITY CONTROLS */}
         {activeTicket && (
           <div className="p-3.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-[var(--text-secondary)] font-medium">Estado:</span>
+              <span className="text-xs text-[var(--text-secondary)] font-medium">{t('admin.statusColon')}</span>
               <div className="w-44">
                 <CustomSelect
                   value={activeTicket.status}
                   onChange={(val) => handleUpdateStatus(val)}
                   options={[
-                    { value: 'OPEN', label: 'Abierto' },
-                    { value: 'WAITING_USER', label: 'Esperando Usuario' },
+                    { value: 'OPEN', label: t('tickets.statusOpen') },
+                    { value: 'WAITING_USER', label: t('admin.waitingUser') },
                     { value: 'IN_PROGRESS', label: t('tickets.underReview') },
-                    { value: 'RESOLVED', label: 'Resuelto' },
-                    { value: 'CLOSED', label: 'Cerrado' },
+                    { value: 'RESOLVED', label: t('tickets.statusResolved') },
+                    { value: 'CLOSED', label: t('tickets.statusClosed') },
                   ]}
                   accentColor="cinnabar"
                 />
@@ -156,10 +156,10 @@ export function AdminTicketDrawer({
                   value={activeTicket.priority}
                   onChange={(val) => handleUpdatePriority(val)}
                   options={[
-                    { value: 'LOW', label: 'Baja' },
-                    { value: 'NORMAL', label: 'Normal' },
-                    { value: 'HIGH', label: 'Alta' },
-                    { value: 'URGENT', label: 'Urgente' },
+                    { value: 'LOW', label: t('tickets.prioLow') },
+                    { value: 'NORMAL', label: t('tickets.prioNormal') },
+                    { value: 'HIGH', label: t('tickets.prioHigh') },
+                    { value: 'URGENT', label: t('tickets.prioUrgent') },
                   ]}
                   accentColor="cinnabar"
                 />
@@ -168,7 +168,7 @@ export function AdminTicketDrawer({
           </div>
         )}
 
-        {/* HILO DE CONVERSACIÓN + NOTAS INTERNAS */}
+        {/* CONVERSATION THREAD + INTERNAL NOTES */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {loadingTicketDetail ? (
             <div className="p-12 flex flex-col items-center justify-center gap-2">
@@ -199,7 +199,7 @@ export function AdminTicketDrawer({
                         </div>
                         <span className="text-xs font-bold text-amber-300">{t('admin.internalNote')}</span>
                         <span className="text-[11px] text-amber-200/70 font-mono">
-                          por {sender.username || 'Admin'}
+                          {t('admin.byAuthor', { author: sender.username || 'Admin' })}
                         </span>
                       </div>
                       <span className="text-[11px] text-amber-200/60 font-mono">
@@ -219,7 +219,7 @@ export function AdminTicketDrawer({
                   key={msg.id || idx}
                   className="flex items-start gap-3 w-full animate-in fade-in slide-in-from-bottom-1 duration-200"
                 >
-                  {/* Avatar del Remitente (Icono anterior) */}
+                  {/* Sender Avatar (Previous icon) */}
                   <div className="shrink-0 pt-0.5">
                     {isStaff ? (
                       <div className="w-8 h-8 rounded-[6px] flex items-center justify-center font-bold text-xs shrink-0 bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-xs">
@@ -229,7 +229,7 @@ export function AdminTicketDrawer({
                       <div className="w-8 h-8 rounded-[6px] overflow-hidden border border-[var(--border-subtle)] shadow-xs bg-[var(--bg-surface-elevated)]">
                         <img
                           src={avatarSrc}
-                          alt={sender.username || 'Usuario'}
+                          alt={sender.username || t('common.user')}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -244,7 +244,7 @@ export function AdminTicketDrawer({
                   <div className="flex flex-col space-y-1.5 max-w-[90%] sm:max-w-[82%]">
                     <div className="flex items-center gap-2 pl-1 flex-wrap">
                       <span className="text-xs font-bold text-[var(--text-primary)]">
-                        {isStaff ? 'SyncSekai Staff' : sender.username || 'Usuario'}
+                        {isStaff ? 'SyncSekai Staff' : sender.username || t('common.user')}
                       </span>
                       {isStaff && (
                         <>
@@ -262,7 +262,7 @@ export function AdminTicketDrawer({
                       </span>
                     </div>
 
-                    {/* Cuerpo de la Burbuja (Sin bordes duros) */}
+                    {/* Bubble Body (No hard borders) */}
                     <div
                       className={`p-3.5 sm:p-4 rounded-[12px] shadow-sm text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-body transition-colors ${
                         isStaff
@@ -272,7 +272,7 @@ export function AdminTicketDrawer({
                     >
                       {msg.content}
 
-                      {/* Fotos / Archivos Adjuntos en el Mensaje */}
+                      {/* Photos / Attachments in Message */}
                       {msg.attachments && msg.attachments.length > 0 && (
                         <div className="flex flex-wrap gap-2 pt-2.5 mt-2 border-t border-[var(--border-subtle)]">
                           {msg.attachments.map((att: any, attIdx: number) => (
@@ -306,7 +306,7 @@ export function AdminTicketDrawer({
 
         {/* FORMULARIO DE RESPUESTA COMPACTO / NOTA INTERNA */}
         <div className="p-3 sm:p-3.5 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-2.5">
-          {/* Input oculto para adjuntar fotos */}
+          {/* Hidden input to attach photos */}
           <input
             type="file"
             ref={fileInputRef}
@@ -327,7 +327,7 @@ export function AdminTicketDrawer({
                     : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-subtle)]'
                 }`}
               >
-                Respuesta Oficial
+                {t('admin.officialReply')}
               </button>
               <button
                 type="button"
@@ -339,19 +339,19 @@ export function AdminTicketDrawer({
                 }`}
               >
                 <Lock className="w-3 h-3" />
-                <span>Nota Interna</span>
+                <span>{t('admin.internalNoteBtn')}</span>
               </button>
             </div>
 
             {!isInternalNote && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] text-[var(--text-muted)]">Estado:</span>
+                <span className="text-[11px] text-[var(--text-muted)]">{t('admin.statusColon')}</span>
                 <div className="w-40">
                   <CustomSelect
                     value={replyStatus}
                     onChange={(val) => setReplyStatus(val)}
                     options={[
-                      { value: 'WAITING_USER', label: 'Esperando Usuario' },
+                      { value: 'WAITING_USER', label: t('admin.waitingUser') },
                       { value: 'IN_PROGRESS', label: t('tickets.underReview') },
                       { value: 'RESOLVED', label: t('admin.markResolved') },
                     ]}
@@ -363,7 +363,7 @@ export function AdminTicketDrawer({
             )}
           </div>
 
-          {/* Previsualización de Fotos Adjuntas */}
+          {/* Preview of Attached Photos */}
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 px-1 pb-1 pt-0.5 border-b border-[var(--border-subtle)]">
               {attachments.map((att, idx) => (
@@ -438,7 +438,7 @@ export function AdminTicketDrawer({
               }`}
             >
               {sendingReply ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">{isInternalNote ? 'Guardar' : 'Enviar'}</span>
+              <span className="hidden sm:inline">{isInternalNote ? t('common.save') : t('admin.send')}</span>
             </button>
           </div>
         </div>

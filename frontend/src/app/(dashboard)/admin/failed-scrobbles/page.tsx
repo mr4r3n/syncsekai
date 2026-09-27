@@ -170,7 +170,7 @@ export default function AdminFailedScrobblesPage() {
     >
       <Topbar rootLabel={t('navigation.systemAdmin')} currentLabel={t('admin.failedScrobblesTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-3">
           <div className="flex items-center gap-2">
@@ -179,10 +179,10 @@ export default function AdminFailedScrobblesPage() {
               className="inline-flex items-center gap-1 text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Servicios &amp; Nodos</span>
+              <span>{t('admin.servicesAndNodes')}</span>
             </Link>
             <span className="text-[var(--text-muted)]">/</span>
-            <span className="text-xs font-mono text-[var(--accent-text)]">Scrobbles Fallidos</span>
+            <span className="text-xs font-mono text-[var(--accent-text)]">{t('admin.failedScrobblesBreadcrumb')}</span>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -202,13 +202,13 @@ export default function AdminFailedScrobblesPage() {
                 onClick={() => loadData(pagination.currentPage, false)}
                 disabled={isRefreshing || loading}
                 className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-2 cursor-pointer"
-                title="Actualizar listado"
+                title={t('admin.refreshList')}
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[var(--accent-text)]' : ''}`}
                   aria-hidden="true"
                 />
-                <span>{isRefreshing ? 'Actualizando…' : 'Refrescar'}</span>
+                <span>{isRefreshing ? t('common.refreshing') : t('common.refresh')}</span>
               </button>
             </div>
           </div>
@@ -250,11 +250,11 @@ export default function AdminFailedScrobblesPage() {
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] font-mono text-[11px] text-[var(--text-muted)] uppercase tracking-wider">
-                        <th scope="col" className="py-3 px-4 font-semibold">Show / Episodio</th>
+                        <th scope="col" className="py-3 px-4 font-semibold">{t('admin.showEpisode')}</th>
                         <th scope="col" className="py-3 px-4 font-semibold">{t('admin.user')}</th>
-                        <th scope="col" className="py-3 px-4 font-semibold">Trackers Afectados</th>
+                        <th scope="col" className="py-3 px-4 font-semibold">{t('admin.affectedTrackers')}</th>
                         <th scope="col" className="py-3 px-4 font-semibold">{t('admin.errorReason')}</th>
-                        <th scope="col" className="py-3 px-4 font-semibold whitespace-nowrap">Fecha / Hora</th>
+                        <th scope="col" className="py-3 px-4 font-semibold whitespace-nowrap">{t('admin.dateTime')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -266,7 +266,7 @@ export default function AdminFailedScrobblesPage() {
                             key={item.id}
                             className="hover:bg-[var(--bg-surface-hover)] transition-colors group"
                           >
-                            {/* Show y Episodio */}
+                            {/* Show and Episode */}
                             <td className="py-3.5 px-4 align-top">
                               <div className="space-y-1">
                                 <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
@@ -287,14 +287,14 @@ export default function AdminFailedScrobblesPage() {
                               </span>
                             </td>
 
-                            {/* Trackers con error */}
+                            {/* Trackers with error */}
                             <td className="py-3.5 px-4 align-top">
                               <div className="flex flex-wrap gap-1.5 max-w-xs">
                                 {item.failedTrackers && item.failedTrackers.length > 0 ? (
                                   item.failedTrackers.map((t) => renderTrackerBadge(t))
                                 ) : (
                                   <span className="text-[11px] text-[var(--text-muted)] font-mono">
-                                    Desconocido
+                                    {t('common.unknown')}
                                   </span>
                                 )}
                               </div>
@@ -345,11 +345,11 @@ export default function AdminFailedScrobblesPage() {
                   </table>
                 </div>
 
-                {/* Barra de Paginación */}
+                {/* Pagination Bar */}
                 {pagination.totalPages > 1 && (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] text-xs font-mono">
                     <span className="text-[var(--text-muted)]">
-                      Página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalItems} fallos totales)
+                      {t('admin.failedPaginationInfo', { page: pagination.currentPage, total: pagination.totalPages, count: pagination.totalItems })}
                     </span>
 
                     <div className="flex items-center gap-2 self-end sm:self-auto">

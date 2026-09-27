@@ -1,5 +1,5 @@
 // ============================================================================
-// CONSTANTES Y HELPERS DE CALENDARIO Y HEATMAP (100% DATOS REALES)
+// CALENDAR & HEATMAP CONSTANTS AND HELPERS (100% REAL DATA)
 // ============================================================================
 interface HeatmapDay {
   day: number;
@@ -14,7 +14,7 @@ interface HeatmapDay {
 interface MonthRecord {
   year: number;
   month: number;
-  /** Se formatea en el cliente con el idioma activo; antes venía del servidor en español. */
+  /** Formatted on client in active language; previously returned from server in Spanish. */
   label?: string;
   totalScrobbles: number;
   daysCount: number;

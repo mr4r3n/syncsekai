@@ -4,95 +4,95 @@ import React from 'react';
 import { MoreVertical } from 'lucide-react';
 
 /**
- * Fila de lista. El mismo esqueleto para historial, mapeos, medios, copias y
- * cualquier otra lista de este estilo.
+ * List row. The same skeleton for history, mappings, media, backups, and
+ * any other list of this style.
  *
- * Existe porque cada una se dibujó a mano y acabaron siendo variantes distintas
- * del mismo concepto: sangrados propios, alturas propias, la misma información
- * ordenada de otra forma en cada pantalla. Arreglarlas una a una sólo garantiza
- * que en unos meses vuelva a haber seis variantes.
+ * Exists because each was drawn by hand and ended up as different variants
+ * of the same concept: custom indents, custom heights, the same information
+ * arranged differently on each screen. Fixing them one by one only guarantees
+ * that in a few months there will be six variants again.
  *
- * ## La jerarquía es la idea, no la decoración
+ * ## Hierarchy is the idea, not decoration
  *
- * Una fila responde a tres preguntas, en este orden: **qué es**, **cuáles son
- * sus datos** y **en qué estado está**. Por eso hay exactamente dos líneas de
- * texto: el título, y una sola línea gris con el resto separado por puntos.
+ * A row answers three questions, in this order: **what it is**, **what its
+ * data are**, and **what state it is in**. That is why there are exactly two lines
+ * of text: the title, and a single gray line with the rest separated by dots.
  *
- * ## Móvil no es esto mismo encogido
+ * ## Mobile is not this shrunk down
  *
- * En pantalla estrecha la fila se reordena: la portada se reduce, los datos
- * secundarios se recortan a los que caben y el bloque de estado baja a una
- * segunda fila propia en lugar de comprimirse hasta ser ilegible.
+ * On narrow screens the row reorders: the cover is reduced, secondary
+ * data are trimmed to what fits, and the status block moves down to its
+ * own second row rather than being compressed until illegible.
  *
- * ## Nada de interactivos anidados
+ * ## No nested interactives
  *
- * La fila entera NO es un botón. Si lo fuera, el checkbox y el menú quedarían
- * dentro de otro control y ni el teclado ni un lector de pantalla sabrían qué
- * se activa. Lo pulsable es el título; los demás controles son hermanos suyos.
+ * The whole row is NOT a button. If it were, the checkbox and menu would sit
+ * inside another control and neither keyboard nor screen reader would know what
+ * is being activated. The clickable element is the title; other controls are its siblings.
  */
 
 /*
- * La geometria de las columnas vive aqui y no en cada sitio: la cabecera y las
- * filas tienen que medir exactamente lo mismo o la tabla deja de serlo.
+ * Column geometry lives here and not in each place: header and
+ * rows must measure exactly the same or the table ceases to be one.
  */
-const REJILLA_META = 'gap-x-3 items-center';
-const LADO_META = 'lg:w-[52%]';
-/* Lo que ocupan la portada y su hueco, para que el rotulo del titulo empiece
- * donde empieza el titulo. */
-const SANGRIA_TITULO = 'pl-[48px]';
+const META_GRID = 'gap-x-3 items-center';
+const META_SIDE = 'lg:w-[52%]';
+/* Space occupied by cover and its gap, so title label starts
+ * where the title starts. */
+const TITLE_INDENT = 'pl-[48px]';
 
 export interface ListRowProps {
-  /** Visual de la izquierda: portada, logo o icono. */
+  /** Left-hand visual: cover, logo, or icon. */
   media?: React.ReactNode;
   /** Texto principal. */
   title: React.ReactNode;
-  /** Distintivo pegado al título (episodio, temporada, tipo). */
+  /** Badge attached to title (episode, season, type). */
   badge?: React.ReactNode;
   /**
-   * Datos secundarios. Se pintan en una sola línea separados por puntos, y los
-   * que no caben se recortan. El orden importa: lo primero es lo que sobrevive
-   * en móvil.
+   * Secondary data. Rendered on a single line separated by dots, and items
+   * that do not fit are trimmed. Order matters: the first item survives
+   * on mobile.
    */
   meta?: React.ReactNode[];
   /**
-   * Reparto de las columnas de la derecha, en formato `grid-template-columns`.
+   * Distribution of right-hand columns, in `grid-template-columns` format.
    *
-   * Con todas iguales, un "TV" de 20 px se quedaba en una celda de 150 y el
-   * hueco entre columnas cortas era enorme. Cada lista sabe cual de sus datos
-   * es largo y cual corto, asi que el reparto lo decide quien la escribe; lo
-   * que NO puede es depender del contenido de cada fila, porque entonces cada
-   * fila mediria distinto y dejaria de ser una tabla.
+   * With all equal, a 20 px "TV" was stuck in a 150 px cell and the
+   * gap between short columns was huge. Each list knows which of its data
+   * is long and which is short, so the distribution is decided by whoever writes it;
+   * what it CANNOT do is depend on row content, because then each row
+   * would measure differently and cease to be a table.
    *
-   * Por defecto, todas iguales.
+   * By default, all equal.
    */
-  metaPlantilla?: string;
+  metaTemplate?: string;
   /**
-   * Pinta los datos a la derecha, junto al estado, en vez de bajo el título.
+   * Renders data to the right, next to status, instead of under the title.
    *
-   * Sirve para filas de una sola linea con el titulo corto y sitio de sobra: en
-   * el catalogo a 2560 px el titulo ocupaba 400 px y los datos colgaban debajo
-   * mientras a la derecha quedaban 1500 px en blanco. En movil no cabe, asi que
-   * ahi vuelven debajo pase lo que pase.
+   * Used for single-line rows with a short title and plenty of space: in
+   * the catalog at 2560 px the title occupied 400 px and data hung below
+   * while 1500 px of whitespace remained to the right. On mobile it doesn't fit,
+   * so there it moves below regardless.
    */
-  metaALaDerecha?: boolean;
-  /** Bloque de estado de la derecha (iconos de sincronización, píldoras). */
+  metaOnRight?: boolean;
+  /** Right-hand status block (sync icons, pills). */
   status?: React.ReactNode;
-  /** Acciones. Si no se pasa `onOpen`, van visibles; si se pasa, van tras el menú. */
+  /** Actions. If `onOpen` is not passed, they are visible; if passed, behind the menu. */
   actions?: React.ReactNode;
 
-  /** Selección múltiple. Si `onSelect` no viene, no se dibuja casilla. */
+  /** Multiple selection. If `onSelect` is omitted, no checkbox is rendered. */
   selected?: boolean;
   onSelect?: () => void;
   selectDisabled?: boolean;
 
-  /** Abre el detalle: convierte el título en botón y, sólo en móvil, añade el menú de la derecha. */
+  /** Opens details: turns title into button and, on mobile only, adds right-hand menu. */
   onOpen?: () => void;
-  /** Etiqueta accesible del menú, ya traducida. */
+  /** Accessible label for the menu, already translated. */
   openLabel?: string;
 
-  /** `compact` para listas largas; `normal` por defecto. */
+  /** `compact` for long lists; `normal` by default. */
   density?: 'compact' | 'normal';
-  /** Marca de error: tiñe el borde sin depender sólo del color. */
+  /** Error marker: tints the border without relying solely on color. */
   tone?: 'default' | 'danger';
   className?: string;
 }
@@ -102,8 +102,8 @@ export function ListRow({
   title,
   badge,
   meta,
-  metaALaDerecha = false,
-  metaPlantilla,
+  metaOnRight = false,
+  metaTemplate,
   status,
   actions,
   selected = false,
@@ -115,19 +115,19 @@ export function ListRow({
   tone = 'default',
   className = '',
 }: ListRowProps) {
-  const compacta = density === 'compact';
+  const compact = density === 'compact';
   const visibles = (meta || []).filter(Boolean);
 
-  // A la derecha los datos van en columnas, y una columna solo se alinea con la
-  // de la fila de abajo si todas las filas tienen las mismas. Por eso aqui los
-  // huecos se conservan como celda vacia en vez de descartarse: bajo el titulo
-  // se filtran, porque ahi lo unico que dejaria un nulo es un "· ·" suelto.
-  const enColumnas = (meta || []).map((dato) => dato ?? '');
+  // On the right, data goes into columns, and a column only aligns with
+  // the one in the row below if all rows share the same ones. That is why here
+  // gaps are preserved as empty cells rather than discarded: under the title
+  // they are filtered out, because there a null would only leave a stray "· ·".
+  const inColumns = (meta || []).map((item) => item ?? '');
 
   return (
     <li
       className={`group relative flex items-center gap-2.5 md:gap-3 rounded-[var(--radius-md)] border px-2.5 transition-colors ${
-        compacta ? 'py-1.5' : 'py-2'
+        compact ? 'py-1.5' : 'py-2'
       } ${
         selected
           ? 'border-[var(--accent-primary)]/40 bg-[var(--nav-active-bg)]'
@@ -143,15 +143,15 @@ export function ListRow({
             checked={selected}
             disabled={selectDisabled}
             onChange={onSelect}
-            // Casilla nativa: foco, teclado y semántica para lectores de pantalla.
+            // Native checkbox: focus, keyboard, and semantics for screen readers.
             className="shrink-0 w-4 h-4 accent-[var(--accent-primary)] cursor-pointer disabled:cursor-default"
           />
         )}
 
         {media && <div className="shrink-0">{media}</div>}
 
-        {/* min-w-0 obligatorio: sin él un título largo empuja el estado fuera
-            de la fila en vez de recortarse. */}
+        {/* Mandatory min-w-0: without it a long title pushes status out
+            of the row instead of truncating. */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 min-w-0">
             {onOpen ? (
@@ -159,7 +159,7 @@ export function ListRow({
                 type="button"
                 onClick={onOpen}
                 className={`min-w-0 text-left font-semibold text-[var(--text-primary)] hover:text-[var(--accent-text)] transition-colors cursor-pointer rounded-[var(--radius-xs)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-primary)] line-clamp-2 md:line-clamp-none md:truncate ${
-                  compacta ? 'text-[13px]' : 'text-sm'
+                  compact ? 'text-[13px]' : 'text-sm'
                 }`}
               >
                 {title}
@@ -167,7 +167,7 @@ export function ListRow({
             ) : (
               <span
                 className={`min-w-0 font-semibold text-[var(--text-primary)] line-clamp-2 md:line-clamp-none md:truncate ${
-                  compacta ? 'text-[13px]' : 'text-sm'
+                  compact ? 'text-[13px]' : 'text-sm'
                 }`}
               >
                 {title}
@@ -177,48 +177,47 @@ export function ListRow({
           </div>
 
           {visibles.length > 0 && (
-            <LineaMeta
-              datos={visibles}
-              className={`mt-0.5 ${metaALaDerecha ? 'lg:hidden' : ''}`}
+            <MetaLine
+              items={visibles}
+              className={`mt-0.5 ${metaOnRight ? 'lg:hidden' : ''}`}
             />
           )}
         </div>
       </div>
 
-      {/* El estado va a la derecha en la misma linea, tambien en movil: darle
-          una fila propia costaba 45 px por elemento y no anadia informacion.
-          Lo que no cabe ahi lo esconde quien llama, porque es quien sabe si esa
-          accion esta repetida en la hoja de detalle. */}
-      {(status || actions || onOpen || (metaALaDerecha && visibles.length > 0)) && (
+      {/* Status goes to the right on the same line, also on mobile: giving it
+          its own row cost 45 px per item and added no information.
+          What does not fit is hidden by caller, who knows if that
+          action is repeated in detail sheet. */}
+      {(status || actions || onOpen || (metaOnRight && visibles.length > 0)) && (
         <div
           className={`flex items-center justify-end gap-2.5 shrink-0 ${
-            metaALaDerecha ? LADO_META : ''
+            metaOnRight ? META_SIDE : ''
           }`}
         >
-          {metaALaDerecha && visibles.length > 0 && (
-            /* Rejilla de columnas iguales, no una linea de datos pegada al
-               borde: la fila mide 2230 px y entre el titulo y el estado
-               quedaban 1400 en blanco. Repartidos en columnas el hueco se llena
-               y ademas los valores quedan uno debajo de otro, que es lo que
-               deja compararlos de un vistazo al recorrer la lista. */
+          {metaOnRight && visibles.length > 0 && (
+            /* Equal-column grid, not a data line stuck to the
+               edge: row measures 2230 px and between title and status
+               1400 were blank. Distributed in columns the gap is filled
+               and values align vertically, allowing them to be
+               compared at a glance when scanning the list. */
             <div
-              style={{ gridTemplateColumns: metaPlantilla || `repeat(${enColumnas.length}, minmax(0, 1fr))` }}
-              className={`hidden lg:grid flex-1 min-w-0 ${REJILLA_META} text-[11px] font-mono text-[var(--text-muted)] tabular-nums`}
+              style={{ gridTemplateColumns: metaTemplate || `repeat(${inColumns.length}, minmax(0, 1fr))` }}
+              className={`hidden lg:grid flex-1 min-w-0 ${META_GRID} text-[11px] font-mono text-[var(--text-muted)] tabular-nums`}
             >
-              {enColumnas.map((dato, i) => (
+              {inColumns.map((item, i) => (
                 <span key={i} className="truncate text-center">
-                  {dato}
+                  {item}
                 </span>
               ))}
             </div>
           )}
           {status}
           {actions}
-          {/* El menu es de movil y solo de movil: ahi la fila esconde las
-              acciones y esto es lo unico que las alcanza. En escritorio no
-              esconde nada -las acciones ya estan a la vista y el titulo abre el
-              detalle-, asi que era un tercer boton que no llevaba a ningun
-              sitio nuevo. */}
+          {/* Menu is mobile-only: there the row hides
+              actions and this is the only way to reach them. On desktop it
+              hides nothing—actions are already visible and title opens
+              details—so it was a third button leading nowhere new. */}
           {onOpen && (
             <button
               type="button"
@@ -237,36 +236,36 @@ export function ListRow({
 }
 
 /**
- * Los datos secundarios, en una linea y separados por puntos.
+ * Secondary data, on a single line and separated by dots.
  *
- * Está aparte porque se pinta en dos sitios -bajo el título o a la derecha- y
- * duplicar el recorte responsive garantizaba que uno de los dos se quedara
- * atrás en cuanto alguien lo tocara.
+ * Kept separate because it is rendered in two places—under title or to the right—and
+ * duplicating responsive truncation guaranteed one would fall behind
+ * as soon as someone touched it.
  */
-function LineaMeta({ datos, className = '' }: { datos: React.ReactNode[]; className?: string }) {
+function MetaLine({ items, className = '' }: { items: React.ReactNode[]; className?: string }) {
   return (
     <div
       className={`flex items-center gap-1.5 min-w-0 text-[11px] font-mono text-[var(--text-muted)] ${className}`}
     >
-      {datos.map((dato, i) => (
+      {items.map((item, i) => (
         <React.Fragment key={i}>
           {i > 0 && (
-            // En móvil caben los dos primeros; del tercero en adelante sólo
-            // aparecen cuando hay ancho de sobra. El orden en que se pasan
-            // decide qué sobrevive.
+            // On mobile the first two fit; from the third onwards they only
+            // appear when there is extra width. The order passed
+            // determines what survives.
             <span aria-hidden="true" className={i > 1 ? 'hidden lg:inline' : ''}>
               ·
             </span>
           )}
-          {/* El primero es el identificador -el episodio, la temporada- y suele
-              ser corto: no se encoge, porque el reparto por igual lo dejaba en
-              "T…" mientras el de al lado, mucho mas largo, apenas perdia nada. */}
+          {/* The first is the identifier—episode, season—and is usually
+              short: it does not shrink, because equal distribution reduced it to
+              "T…" while the adjacent, much longer one, lost almost nothing. */}
           <span
             className={`${i === 0 ? 'shrink-0' : 'truncate min-w-0'} ${
               i > 1 ? 'hidden lg:inline' : ''
             }`}
           >
-            {dato}
+            {item}
           </span>
         </React.Fragment>
       ))}
@@ -275,52 +274,52 @@ function LineaMeta({ datos, className = '' }: { datos: React.ReactNode[]; classN
 }
 
 /**
- * Cabecera de columnas para las listas que pintan los datos a la derecha.
+ * Column header for lists that render data on the right.
  *
- * Con los valores ya alineados, lo unico que faltaba para que esto se lea como
- * una tabla es decir que es cada columna. Solo aparece donde hay sitio para las
- * columnas -de `md` en adelante-, igual que ellas.
+ * With values already aligned, the only missing piece to read this like
+ * a table was identifying each column. Only appears where there is room for the
+ * columns—`md` and up—just like them.
  *
- * Los textos llegan traducidos, como en el resto de estos componentes.
+ * Texts arrive translated, as in the rest of these components.
  */
 export function ListRowsHeader({
-  titulo,
-  columnas,
-  estado,
-  plantilla,
+  title,
+  columns,
+  status,
+  template,
 }: {
-  titulo: string;
-  /** Un rotulo por cada dato de `meta`, en el mismo orden y con los mismos huecos. */
-  columnas: string[];
-  estado?: string;
-  /** El mismo `metaPlantilla` que se le pasa a las filas. */
-  plantilla?: string;
+  title: string;
+  /** A label for each `meta` item, in the same order and with the same gaps. */
+  columns: string[];
+  status?: string;
+  /** The same `metaPlantilla` passed to rows. */
+  template?: string;
 }) {
   return (
     <div className="hidden lg:flex items-center gap-2.5 px-2.5 pb-2 mb-1 border-x border-transparent border-b-[var(--glass-border)] border-b text-[10.5px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
-      <div className={`flex-1 min-w-0 ${SANGRIA_TITULO}`}>{titulo}</div>
+      <div className={`flex-1 min-w-0 ${TITLE_INDENT}`}>{title}</div>
 
-      <div className={`flex items-center gap-2.5 ${LADO_META}`}>
+      <div className={`flex items-center gap-2.5 ${META_SIDE}`}>
         <div
-          style={{ gridTemplateColumns: plantilla || `repeat(${columnas.length}, minmax(0, 1fr))` }}
-          className={`grid flex-1 min-w-0 ${REJILLA_META}`}
+          style={{ gridTemplateColumns: template || `repeat(${columns.length}, minmax(0, 1fr))` }}
+          className={`grid flex-1 min-w-0 ${META_GRID}`}
         >
-          {columnas.map((col, i) => (
+          {columns.map((col, i) => (
             <span key={i} className="truncate text-center">
               {col}
             </span>
           ))}
         </div>
 
-        {estado && <span className="w-[104px] shrink-0 text-center">{estado}</span>}
+        {status && <span className="w-[104px] shrink-0 text-center">{status}</span>}
       </div>
     </div>
   );
 }
 
 /**
- * Contenedor de la lista. Aporta la semántica y el ritmo vertical, para que no
- * lo reinvente cada pantalla.
+ * List container. Provides semantics and vertical rhythm, so each
+ * screen does not reinvent it.
  */
 export function ListRows({
   children,
@@ -328,7 +327,7 @@ export function ListRows({
   className = '',
 }: {
   children: React.ReactNode;
-  /** Nombre de la lista para lectores de pantalla, ya traducido. */
+  /** List name for screen readers, already translated. */
   label?: string;
   className?: string;
 }) {

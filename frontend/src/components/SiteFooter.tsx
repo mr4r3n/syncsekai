@@ -8,59 +8,59 @@ import { BrandIcon } from './BrandIcon';
 import { useI18n } from '@/i18n/I18nProvider';
 
 /**
- * Pie de la web pública, compartido por todas las páginas. Es el único sitio
- * donde se pintan las redes y los sitios recomendados, que se configuran desde
- * Panel > Enlaces.
+ * Footer of public site, shared by all pages. Only place
+ * where networks and recommended sites are rendered, configured from
+ * Dashboard > Links.
  *
- * Lo que no está activado no llega hasta aquí: el endpoint público sólo
- * devuelve lo habilitado. Ocultarlo por CSS no serviría de nada, porque
- * «oculto» en un navegador es abrir las herramientas de desarrollo y leerlo.
+ * Disabled items do not reach here: public endpoint only
+ * returns enabled ones. Hiding via CSS would be useless, because
+ * "hidden" in a browser means opening devtools and reading it.
  *
- * Si no hay ninguna red ni ningún sitio, la fila superior no se dibuja. Nada de
- * una cabecera «Comunidad» sobre un hueco.
+ * If there are no networks and no sites, top row is not rendered. No
+ * "Community" header over an empty gap.
  */
 
-/** Los iconos de marca los sube el administrador; si no hay, va el nombre. */
-function EnlaceSocial({ enlace }: { enlace: SiteLink }) {
-  const esCorreo = enlace.url.startsWith('mailto:');
+/** Brand icons are uploaded by admin; if absent, name is shown. */
+function SocialLink({ link }: { link: SiteLink }) {
+  const isEmail = link.url.startsWith('mailto:');
 
   return (
     <a
-      href={enlace.url}
-      target={esCorreo ? undefined : '_blank'}
-      rel={esCorreo ? undefined : 'noopener noreferrer'}
-      title={enlace.label}
+      href={link.url}
+      target={isEmail ? undefined : '_blank'}
+      rel={isEmail ? undefined : 'noopener noreferrer'}
+      title={link.label}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-colors"
     >
-      {enlace.iconUrl ? (
+      {link.iconUrl ? (
         <BrandIcon
-          icon={enlace.iconUrl}
-          iconDark={enlace.iconDarkUrl}
+          icon={link.iconUrl}
+          iconDark={link.iconDarkUrl}
           size={16}
           className="w-4 h-4 rounded-[3px]"
         />
-      ) : esCorreo ? (
+      ) : isEmail ? (
         <Mail className="w-4 h-4 shrink-0" aria-hidden="true" />
       ) : null}
-      <span className="text-xs font-semibold">{enlace.label}</span>
+      <span className="text-xs font-semibold">{link.label}</span>
     </a>
   );
 }
 
-function SitioAmigo({ enlace }: { enlace: SiteLink }) {
+function FriendSite({ link }: { link: SiteLink }) {
   const { locale } = useI18n();
-  const descripcion = (locale === 'es' && enlace.descriptionEs) || enlace.description;
+  const description = (locale === 'es' && link.descriptionEs) || link.description;
 
   return (
     <a
-      href={enlace.url}
+      href={link.url}
       target="_blank"
       rel="noopener noreferrer"
       className="group flex items-start gap-2.5 min-w-0"
     >
-      {enlace.iconUrl ? (
+      {link.iconUrl ? (
         <img
-          src={enlace.iconUrl}
+          src={link.iconUrl}
           alt=""
           width={28}
           height={28}
@@ -71,22 +71,22 @@ function SitioAmigo({ enlace }: { enlace: SiteLink }) {
           aria-hidden="true"
           className="w-7 h-7 rounded-[5px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-center text-[11px] font-bold text-[var(--text-secondary)] shrink-0"
         >
-          {enlace.label.charAt(0).toUpperCase()}
+          {link.label.charAt(0).toUpperCase()}
         </span>
       )}
 
-      {/* min-w-0 en el hijo flexible: sin él, un nombre largo empuja la columna
-          en vez de recortarse. */}
+      {/* min-w-0 on flex child: without it, a long name pushes column
+          instead of truncating. */}
       <span className="min-w-0">
         <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
-          <span className="truncate">{enlace.label}</span>
+          <span className="truncate">{link.label}</span>
           <ExternalLink className="w-3 h-3 shrink-0 opacity-60" aria-hidden="true" />
         </span>
-        {/* La descripcion NO lleva `block`: `display:block` pisaria al
-            `-webkit-box` que necesita line-clamp y se iria a tres lineas. */}
-        {descripcion ? (
+        {/* Description does NOT use `block`: `display:block` would override
+            `-webkit-box` needed by line-clamp and spill into three lines. */}
+        {description ? (
           <span className="text-[11px] text-[var(--text-muted)] line-clamp-2">
-            {descripcion}
+            {description}
           </span>
         ) : null}
       </span>
@@ -96,25 +96,25 @@ function SitioAmigo({ enlace }: { enlace: SiteLink }) {
 
 export function SiteFooter({
   nota,
-  enlaces,
-  mostrarCookies = false,
-  onAbrirCookies,
+  links,
+  showCookies = false,
+  onOpenCookies,
 }: {
-  /** Texto de la izquierda. Por defecto, la marca. */
+  /** Left text. By default, the brand. */
   nota?: React.ReactNode;
-  /** Enlaces internos de la derecha. */
-  enlaces: { href: string; label: string }[];
-  mostrarCookies?: boolean;
-  onAbrirCookies?: () => void;
+  /** Internal links on the right. */
+  links: { href: string; label: string }[];
+  showCookies?: boolean;
+  onOpenCookies?: () => void;
 }) {
   const { t } = useI18n();
   const [social, setSocial] = useState<SiteLink[]>([]);
   const [amigos, setAmigos] = useState<SiteLink[]>([]);
-  const [ajustes, setAjustes] = useState<SiteSettings | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    // Si falla, el pie se queda con lo de siempre. No es contenido crítico y no
-    // merece un mensaje de error en la portada.
+    // If it fails, footer retains defaults. Not critical content and does not
+    // warrant an error message on homepage.
     api.setup
       .getSiteLinks()
       .then((res) => {
@@ -122,14 +122,14 @@ export function SiteFooter({
         setAmigos(res.friends || []);
       })
       .catch(() => {});
-    api.setup.getSiteSettings().then(setAjustes).catch(() => {});
+    api.setup.getSiteSettings().then(setSettings).catch(() => {});
   }, []);
 
-  const hayComunidad = social.length > 0 || amigos.length > 0;
+  const hasCommunity = social.length > 0 || amigos.length > 0;
 
   return (
     <footer className="w-full border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] relative z-10 transition-colors">
-      {hayComunidad && (
+      {hasCommunity && (
         <div className="w-full px-4 sm:px-8 lg:px-12 py-8 grid grid-cols-1 md:grid-cols-2 gap-8 border-b border-[var(--border-subtle)]">
           {social.length > 0 && (
             <section>
@@ -138,7 +138,7 @@ export function SiteFooter({
               </h2>
               <div className="flex flex-wrap gap-2">
                 {social.map((enlace) => (
-                  <EnlaceSocial key={enlace.id} enlace={enlace} />
+                  <SocialLink key={enlace.id} link={enlace} />
                 ))}
               </div>
             </section>
@@ -151,7 +151,7 @@ export function SiteFooter({
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                 {amigos.map((enlace) => (
-                  <SitioAmigo key={enlace.id} enlace={enlace} />
+                  <FriendSite key={enlace.id} link={enlace} />
                 ))}
               </div>
             </section>
@@ -164,7 +164,7 @@ export function SiteFooter({
           {nota ?? (
             <>
               <span className="font-bold text-[var(--text-primary)]" translate="no">
-                {ajustes?.siteName || 'SyncSekai'}
+                {settings?.siteName || 'SyncSekai'}
               </span>
               <span>&bull;</span>
               <span>{t('landing.footerTagline')}</span>
@@ -173,26 +173,26 @@ export function SiteFooter({
         </div>
 
         <nav className="flex items-center flex-wrap justify-center gap-x-6 gap-y-2">
-          {enlaces.map((enlace) => (
+          {links.map((link) => (
             <Link
-              key={enlace.href}
-              href={enlace.href}
+              key={link.href}
+              href={link.href}
               className="hover:text-[var(--text-primary)] transition-colors"
             >
-              {enlace.label}
+              {link.label}
             </Link>
           ))}
 
-          {ajustes?.contactEmail && (
-            <a href={`mailto:${ajustes.contactEmail}`} className="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
+          {settings?.contactEmail && (
+            <a href={`mailto:${settings.contactEmail}`} className="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5">
               <Mail className="w-3.5 h-3.5" aria-hidden="true" />
               <span>{t('footer.contact')}</span>
             </a>
           )}
 
-          {/* El codigo esta publicado y esa es la respuesta a "por que deberia
-              fiarme de este servidor": no hace falta, montatelo tu. Conviene
-              que se vea sin buscarlo. */}
+          {/* Code is published and that is the answer to "why should I
+              trust this server": you don't have to, host it yourself. Good
+              for it to be seen without searching. */}
           <a
             href="https://github.com/mr4r3n/syncsekai"
             target="_blank"
@@ -203,10 +203,10 @@ export function SiteFooter({
             <span>{t('landing.footerSource')}</span>
           </a>
 
-          {mostrarCookies && (
+          {showCookies && (
             <button
               type="button"
-              onClick={onAbrirCookies}
+              onClick={onOpenCookies}
               className="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1 cursor-pointer"
             >
               <Cookie className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />

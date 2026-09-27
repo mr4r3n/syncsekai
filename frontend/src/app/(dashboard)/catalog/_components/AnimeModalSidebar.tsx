@@ -36,7 +36,7 @@ export function AnimeModalSidebar({
 }: AnimeModalSidebarProps) {
   const { t } = useI18n();
 
-  // Helper para renderizar las 5 estrellas con soporte de decimales (0 a 10)
+  // Helper to render 5 stars with decimal support (0 to 10)
   const renderFiveStarWidget = (ratingVal: number) => {
     const activeScore = hoverRating !== null ? hoverRating : ratingVal;
 
@@ -81,10 +81,10 @@ export function AnimeModalSidebar({
                 title={`${fullVal}/10`}
               />
 
-              {/* Estrella de Fondo (Gris / Vacía) */}
+              {/* Background Star (Gray / Empty) */}
               <Star className="w-4 h-4 text-zinc-600 absolute inset-0 m-auto transition-transform group-hover:scale-120" />
 
-              {/* Estrella Rellena Parcial o Completa (Ámbar con Glow) */}
+              {/* Partially or Fully Filled Star (Amber with Glow) */}
               {fillPercent > 0 && (
                 <div
                   className="absolute inset-0 m-auto overflow-hidden pointer-events-none transition-all flex items-center"
@@ -102,7 +102,7 @@ export function AnimeModalSidebar({
 
   return (
     <>
-      {/* CABECERA COMPACTA EN MÓVIL (Oculta en Desktop para no duplicar ni sobrecargar el scroll móvil) */}
+      {/* COMPACT MOBILE HEADER (Hidden on Desktop to avoid duplication or scroll bloat) */}
       <div className="p-4 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] lg:hidden shrink-0 space-y-2.5">
         <div className="flex items-start gap-3 pr-8">
           {/* Portada Miniatura */}
@@ -141,7 +141,7 @@ export function AnimeModalSidebar({
               {selectedAnime.title}
             </h2>
 
-            {/* Calificación y Tracker */}
+            {/* Rating and Tracker */}
             <div className="flex items-center justify-between gap-2 pt-0.5">
               <div className="flex items-center gap-1 text-xs">
                 <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
@@ -183,7 +183,7 @@ export function AnimeModalSidebar({
                 <Link
                   href={`/mappings?search=${encodeURIComponent(selectedAnime.title)}`}
                   className="text-[11px] text-amber-400 hover:underline flex items-center gap-1 font-medium"
-                  title="Este anime no está vinculado a ningún tracker. Haz clic para crear el mapeo."
+                  title={t('catalog.unlinkedTrackerHint')}
                 >
                   <span>Local</span>
                   <Sliders className="w-3 h-3" />
@@ -193,7 +193,7 @@ export function AnimeModalSidebar({
           </div>
         </div>
 
-        {/* Sinopsis compacta en móvil */}
+        {/* Compact synopsis on mobile */}
         {selectedAnime.description && (
           <p className="text-[11px] leading-relaxed text-[var(--text-secondary)] line-clamp-2">
             {selectedAnime.description}
@@ -203,7 +203,7 @@ export function AnimeModalSidebar({
 
       {/* 1. COLUMNA IZQUIERDA COMPLETA EN DESKTOP (lg:col-span-4) */}
       <div className="hidden lg:flex lg:col-span-4 p-5 space-y-3.5 border-r border-[var(--glass-border)] flex-col justify-start bg-[var(--bg-surface)] overflow-y-auto shrink-0">
-        {/* Portada centrada con Badge de Estado en la esquina superior */}
+        {/* Centered cover with Status Badge in top corner */}
         <div className="relative w-full aspect-[3/4] mx-auto rounded-[6px] overflow-hidden border border-[var(--border-subtle)] shadow-md bg-[var(--bg-app)] shrink-0 group">
           <img
             src={selectedAnime.coverUrl}
@@ -226,7 +226,7 @@ export function AnimeModalSidebar({
           </div>
         </div>
 
-        {/* Títulos y Metadata (Centrados) */}
+        {/* Titles and Metadata (Centered) */}
         <div className="space-y-1 text-center">
           <h2 className="font-bold text-base leading-snug text-[var(--text-primary)] font-heading line-clamp-2">
             {selectedAnime.title}
@@ -246,12 +246,12 @@ export function AnimeModalSidebar({
               </span>
             )}
             <span className="badge-pill text-[11px] text-[#01bcf3]">
-              Temporada {getSeasonNumber(selectedAnime)}
+              {t('catalog.seasonN', { n: getSeasonNumber(selectedAnime) })}
             </span>
           </div>
         </div>
 
-        {/* CALIFICACIÓN */}
+        {/* RATING */}
         <div className="w-full flex flex-col items-center justify-center gap-1 py-0.5 text-center">
           <div className="flex items-center justify-center gap-2 text-xs">
             <span className="text-[var(--text-secondary)] font-medium">{t('catalog.rating')}</span>
@@ -283,7 +283,7 @@ export function AnimeModalSidebar({
           </button>
         </div>
 
-        {/* Géneros */}
+        {/* Genres */}
         {selectedAnime.genres && selectedAnime.genres.length > 0 && (
           <div className="flex flex-wrap justify-center gap-1">
             {selectedAnime.genres.slice(0, 4).map((g: string) => (
@@ -304,7 +304,7 @@ export function AnimeModalSidebar({
           </p>
         )}
 
-        {/* Botón Abrir en Tracker o Mapear si es Local */}
+        {/* Open in Tracker or Map if Local Button */}
         {(selectedAnime.anilistId && selectedAnime.anilistId > 0) || selectedAnime.malId || selectedAnime.kitsuId ? (
           <a
             href={
@@ -339,10 +339,10 @@ export function AnimeModalSidebar({
           <Link
             href={`/mappings?search=${encodeURIComponent(selectedAnime.title)}`}
             className="btn-secondary w-full text-xs mt-auto flex items-center justify-center gap-2 py-2 text-amber-400 border-amber-500/30 hover:border-amber-500/50"
-            title="Este anime no está vinculado a ningún tracker. Haz clic para crear el mapeo."
+            title={t('catalog.unlinkedTrackerHint')}
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Registro Local (Vincular a Tracker)</span>
+            <span>{t('catalog.localRecordLinkToTracker')}</span>
           </Link>
         )}
       </div>

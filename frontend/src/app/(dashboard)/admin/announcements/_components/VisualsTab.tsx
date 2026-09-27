@@ -49,7 +49,7 @@ export function VisualsTab({
                   </div>
                 </div>
 
-                {/* Switch de Atmósfera Global en Toda la Web */}
+                {/* Site-Wide Global Atmosphere Switch */}
                 <div className="flex items-center justify-between p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
                   <div className="space-y-0.5 pr-4">
                     <div className="flex items-center gap-2">

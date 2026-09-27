@@ -1,4 +1,4 @@
-import type { Traductor } from './types';
+import type { Translator } from './types';
 
 function toDatetimeLocal(isoStr?: string | null) {
   if (!isoStr) return '';
@@ -24,8 +24,8 @@ function fromDatetimeLocal(localStr: string) {
   }
 }
 
-// Recibe t y el idioma porque es un ayudante, no un componente: no puede usar el hook.
-function formatReadableDate(t: Traductor, locale: string, isoStr?: string | null) {
+// Receives t and language as it is a helper, not a component: cannot use hook.
+function formatReadableDate(t: Translator, locale: string, isoStr?: string | null) {
   if (!isoStr) return t('announcements.sampleBadge');
   try {
     const d = new Date(isoStr);

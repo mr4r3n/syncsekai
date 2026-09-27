@@ -37,7 +37,7 @@ export function AdminMappingsPageHeader({
               className="btn-primary"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Crear Mapeo Global</span>
+              <span>{t('admin.createGlobalMappingBtn')}</span>
             </button>
 
             <button

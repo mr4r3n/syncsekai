@@ -71,7 +71,7 @@ export default function AdminAnnouncementsPage() {
   const [isSavePresetModalClosing, setIsSavePresetModalClosing] = useState(false);
   const [showDiscardPresetPrompt, setShowDiscardPresetPrompt] = useState(false);
 
-  // Semántica de diálogo y gestión de foco del modal de esta vista.
+  // Dialog semantics and focus management for this view's modal.
   const { dialogProps: propsPreset } = useModalA11y(Boolean(isSavePresetModalOpen), () => handleAttemptCloseSavePresetModal());
 
   const isDirty = initialFormData ? JSON.stringify(formData) !== initialFormData : false;
@@ -160,7 +160,7 @@ export default function AdminAnnouncementsPage() {
           window.dispatchEvent(new CustomEvent('plexsync:announcement-updated', { detail: res.announcement }));
         }
       }
-      showToast(res?.message || 'Plantilla aplicada.', 'success');
+      showToast(res?.message || t('announcements.templateApplied'), 'success');
     } catch (err: any) {
       showToast(err.message || t('announcements.applyTemplateError'), 'error');
     } finally {
@@ -229,7 +229,7 @@ export default function AdminAnnouncementsPage() {
       };
 
       const res = await api.announcements.saveCustomPreset(payload);
-      showToast(res.message || 'Plantilla personalizada guardada.', 'success');
+      showToast(res.message || t('announcements.customTemplateSaved'), 'success');
       setCustomPresets((prev) => [res.preset, ...prev]);
       setIsSavePresetModalOpen(false);
       setNewPresetName('');
@@ -243,16 +243,16 @@ export default function AdminAnnouncementsPage() {
 
   const handleDeleteCustomPreset = (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const plantilla = customPresets.find((p) => p.id === id);
+    const template = customPresets.find((p) => p.id === id);
     setCustomPresets((prev) => prev.filter((p) => p.id !== id));
     showUndoToast(t('common.deletingItem', { name }), {
-      alDeshacer: () => setCustomPresets((prev) => (plantilla ? [...prev, plantilla] : prev)),
-      alExpirar: async () => {
+      onUndo: () => setCustomPresets((prev) => (template ? [...prev, template] : prev)),
+      onExpire: async () => {
         try {
           await api.announcements.deleteCustomPreset(id);
           showToast(t('announcements.presetDeleted', { name }), 'info');
         } catch (err: any) {
-          setCustomPresets((prev) => (plantilla ? [...prev, plantilla] : prev));
+          setCustomPresets((prev) => (template ? [...prev, template] : prev));
           showToast(err.message || t('announcements.deleteTemplateError'), 'error');
         }
       },
@@ -377,13 +377,13 @@ export default function AdminAnnouncementsPage() {
         t={t}
       />
 
-      {/* CONFIRMACIÓN DE REEMPLAZAR CAMBIOS AL APLICAR PLANTILLA */}
+      {/* OVERWRITE CHANGES ON TEMPLATE APPLY CONFIRMATION */}
       <ConfirmModal
         isOpen={showApplyPresetConfirm}
         title={t('announcements.unsavedAnnouncement')}
-        description="Tienes modificaciones sin guardar en el diseño actual. Si aplicas esta plantilla, se reemplazarán todos tus ajustes por los de la plantilla seleccionada. ¿Deseas continuar?"
-        confirmText="Reemplazar y Aplicar"
-        cancelText="Conservar mis cambios"
+        description={t('announcements.overwriteConfirmDesc')}
+        confirmText={t('announcements.replaceAndApply')}
+        cancelText={t('announcements.keepMyChanges')}
         variant="warning"
         onConfirm={() => {
           setShowApplyPresetConfirm(false);
@@ -397,13 +397,13 @@ export default function AdminAnnouncementsPage() {
         }}
       />
 
-      {/* CONFIRMACIÓN DE DESCARTAR NOMBRE DE PLANTILLA */}
+      {/* DISCARD TEMPLATE NAME CONFIRMATION */}
       <ConfirmModal
         isOpen={showDiscardPresetPrompt}
-        title="Descartar plantilla"
-        description="Has ingresado un nombre para la nueva plantilla. ¿Deseas descartar los cambios y salir?"
-        confirmText="Descartar y Salir"
-        cancelText="Continuar editando"
+        title={t('announcements.discardTemplate')}
+        description={t('announcements.discardTemplateDesc')}
+        confirmText={t('announcements.discardAndExit')}
+        cancelText={t('announcements.continueEditing')}
         variant="warning"
         onConfirm={() => {
           setShowDiscardPresetPrompt(false);

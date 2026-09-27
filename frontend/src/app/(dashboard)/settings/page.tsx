@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ThemeSwatch } from './_components/types';
-import { normalizarPaleta, THEME_SWATCHES } from './_components/constants';
+import { normalizePalette, THEME_SWATCHES } from './_components/constants';
 import { AvatarCard } from './_components/AvatarCard';
 import { AccountStatusCard } from './_components/AccountStatusCard';
 import { AccountDataCard } from './_components/AccountDataCard';
@@ -21,7 +21,7 @@ import { ThemeSwatchesCard } from './_components/ThemeSwatchesCard';
 import { ViewingStatsSection } from './_components/ViewingStatsSection';
 
 export type { ThemeSwatch };
-export { normalizarPaleta, THEME_SWATCHES };
+export { normalizePalette, THEME_SWATCHES };
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -45,11 +45,11 @@ export default function SettingsPage() {
   const [accountPassword, setAccountPassword] = useState('');
   const [savingAccount, setSavingAccount] = useState(false);
 
-  // Avatar. No hay recorte: la imagen se manda tal cual y el servidor la
-  // normaliza a 256x256, asi que aqui solo hay eleccion y vista previa.
+  // Avatar. No cropping: image is sent as-is and server
+  // normalizes to 256x256, so here there is only selection and preview.
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
-  // Lo elegido pero aun sin guardar: uno de los dos, nunca los dos a la vez.
+  // Selected but not yet saved: one of the two, never both at once.
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreset, setPendingPreset] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -60,11 +60,11 @@ export default function SettingsPage() {
 
   const isAvatarDirty = !!pendingFile || !!pendingPreset;
 
-  // Lo que se va a poner, separado de lo que ya hay guardado: la tarjeta ensena
-  // los dos a la vez para poder compararlos antes de guardar.
-  const previaNueva = isAvatarDirty ? previewSrc : null;
+  // What will be set, separate from what is saved: card shows
+  // both simultaneously for comparison before saving.
+  const newPreview = isAvatarDirty ? previewSrc : null;
 
-  // Detección de cambios sin guardar
+  // Unsaved changes detection
   const hasUnsavedChanges =
     isAvatarDirty ||
     (userProfile && (username !== (userProfile.username || '') || email !== (userProfile.email || '')));
@@ -103,15 +103,15 @@ export default function SettingsPage() {
       setPendingFile(null);
       setPendingPreset(null);
 
-      // Si la lista de predeterminados falla, la tarjeta simplemente no los
-      // muestra: subir una foto propia sigue funcionando igual.
+      // If preset list fails, card simply does not
+      // show them: uploading a custom photo still works.
       api.auth
         .presetAvatars()
         .then((res) => setPresetAvatars(res.avatars || []))
         .catch(() => setPresetAvatars([]));
 
-      // Cargar configuración de Tema & Apariencia
-      const currentPalette = normalizarPaleta(
+      // Load Theme & Appearance settings
+      const currentPalette = normalizePalette(
         localStorage.getItem('plexsync_palette') || user?.settings?.themePalette || 'sync',
       );
       const currentMode = (localStorage.getItem('plexsync_theme') as 'dark' | 'light') || (user?.settings?.themeMode as 'dark' | 'light') || 'dark';
@@ -132,12 +132,12 @@ export default function SettingsPage() {
       document.documentElement.setAttribute('data-palette', currentPalette);
       document.documentElement.setAttribute('data-theme', currentMode);
 
-      // Cargar estadísticas de visualización del usuario
+      // Load user viewing stats
       try {
         const stats = await api.catalog.getUserStats();
         setUserStats(stats);
       } catch (err) {
-        // Silencioso si no hay datos aún
+        // Silent if no data yet
       }
     } catch (e: any) {
       showToast(`${t('settings.loadProfileError')} ` + e.message, 'error');
@@ -146,7 +146,7 @@ export default function SettingsPage() {
     }
   };
 
-  // Selección instantánea de tema mediante muestras de color
+  // Instant theme selection via color swatches
   const handleSelectTheme = async (swatch: ThemeSwatch) => {
     setSelectedThemeId(swatch.id);
     localStorage.setItem('plexsync_selected_theme', swatch.id);
@@ -187,7 +187,7 @@ export default function SettingsPage() {
     } catch {}
   };
 
-  // Procesar archivo seleccionado o arrastrado
+  // Process selected or dropped file
   const handleProcessFile = (file: File) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -199,7 +199,7 @@ export default function SettingsPage() {
       return;
     }
 
-    // Solo se previsualiza. Nada llega al servidor hasta que se pulsa guardar.
+    // Preview only. Nothing reaches server until save is clicked.
     const reader = new FileReader();
     reader.onload = () => {
       setPendingFile(file);
@@ -222,14 +222,14 @@ export default function SettingsPage() {
     if (e.target.files && e.target.files[0]) {
       handleProcessFile(e.target.files[0]);
     }
-    // Se limpia siempre: sin esto, volver a elegir el mismo fichero tras
-    // descartar no dispara el evento y parece que no hace nada.
+    // Always cleared: without this, reselecting same file after
+    // discarding does not trigger event and appears non-responsive.
     e.target.value = '';
   };
 
   /**
-   * Elegir un avatar predeterminado solo lo deja pendiente: se ve en la vista
-   * previa y no cambia nada hasta pulsar guardar, igual que subir una imagen.
+   * Choosing a preset avatar only marks it pending: displayed in preview
+   * and modifies nothing until save is clicked, just like uploading an image.
    */
   const handleChoosePreset = (preset: string) => {
     setPendingPreset(preset);
@@ -237,19 +237,19 @@ export default function SettingsPage() {
     setPreviewSrc(preset);
   };
 
-  /** Volver a lo que hay guardado, descartando lo elegido. */
-  const handleDescartarAvatar = () => {
+  /** Revert to saved avatar, discarding selected one. */
+  const handleDiscardAvatar = () => {
     setPendingFile(null);
     setPendingPreset(null);
     setPreviewSrc(avatarUrl);
   };
 
   /**
-   * Guardar lo que este pendiente, sea un fichero o un predeterminado.
+   * Save pending avatar, whether file or preset.
    *
-   * La imagen se manda tal cual: el servidor ya la reescribe a 256x256 con
-   * sharp, que ademas es lo que neutraliza cualquier carga incrustada. Recortar
-   * aqui con un canvas solo anadia una copia peor de ese mismo trabajo.
+   * Image is sent as-is: server already rewrites to 256x256 with
+   * sharp, which also neutralizes embedded payloads. Cropping
+   * here with a canvas only added an inferior duplicate of that work.
    */
   const handleSaveAvatar = async () => {
     if (!pendingFile && !pendingPreset) {
@@ -333,7 +333,7 @@ export default function SettingsPage() {
     }
   }, [hasUnsavedChanges, isAvatarDirty, previewSrc, userProfile, username, email, accountPassword, registerSaveHandler]);
 
-  // Cálculo de días para próximo cambio de nombre
+  // Calculation of days until next username change
   const getDaysUntilUsernameChange = () => {
     if (!userProfile?.lastUsernameChange) return null;
     const last = new Date(userProfile.lastUsernameChange).getTime();
@@ -353,7 +353,7 @@ export default function SettingsPage() {
     >
       <Topbar rootLabel={t('topbar.settings')} currentLabel={t('settings.profileTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -392,14 +392,14 @@ export default function SettingsPage() {
                 isDragOver={isDragOver}
                 setIsDragOver={setIsDragOver}
                 avatarUrl={avatarUrl}
-                previaNueva={previaNueva}
+                newPreview={newPreview}
                 uploadingAvatar={uploadingAvatar}
                 presetAvatars={presetAvatars}
                 pendingPreset={pendingPreset}
                 pendingFile={pendingFile}
                 handleChoosePreset={handleChoosePreset}
                 isAvatarDirty={isAvatarDirty}
-                handleDescartarAvatar={handleDescartarAvatar}
+                handleDiscardAvatar={handleDiscardAvatar}
                 handleSaveAvatar={handleSaveAvatar}
                 t={t}
               />

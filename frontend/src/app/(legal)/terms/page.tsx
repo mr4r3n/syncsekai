@@ -8,8 +8,8 @@ export default function TermsPage() {
   const { t, locale } = useI18n();
   return (
     <LegalDocument
-      documento={TERMS[locale === 'es' ? 'es' : 'en']}
-      otro={{ href: '/privacy', label: t('legal.privacyTitle') }}
+      document={TERMS[locale === 'es' ? 'es' : 'en']}
+      other={{ href: '/privacy', label: t('legal.privacyTitle') }}
     />
   );
 }

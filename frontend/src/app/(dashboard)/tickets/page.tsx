@@ -45,8 +45,8 @@ export default function TicketsPage() {
     message: '',
   });
 
-  // Semántica de diálogo y gestión de foco del modal de esta vista.
-  const { dialogProps: propsCrear } = useModalA11y(Boolean(isCreateModalOpen), () => handleAttemptCloseModal());
+  // Dialog semantics and focus management for this view's modal.
+  const { dialogProps: createProps } = useModalA11y(Boolean(isCreateModalOpen), () => handleAttemptCloseModal());
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -147,7 +147,7 @@ export default function TicketsPage() {
         message: '',
       });
       setModalAttachments([]);
-      // Navegar directamente al nuevo ticket
+      // Navigate directly to new ticket
       if (newTicket?.id) {
         router.push(`/tickets/${newTicket.id}`);
       } else {
@@ -177,13 +177,13 @@ export default function TicketsPage() {
 
       {/* MAIN CONTENT */}
       <main className="w-full px-4 sm:px-6 md:px-8 py-6 space-y-6 min-w-0 flex-1">
-        {/* RESUMEN RÁPIDO */}
+        {/* QUICK SUMMARY */}
         <TicketsStatsCards
           activeTicketsCount={activeTicketsCount}
           totalCount={totalCount}
         />
 
-        {/* FILTROS Y BÚSQUEDA */}
+        {/* FILTERS AND SEARCH */}
         <TicketsFilters
           selectedStatus={selectedStatus}
           setSelectedStatus={setSelectedStatus}
@@ -212,7 +212,7 @@ export default function TicketsPage() {
       {/* MODAL CREAR TICKET */}
       {isCreateModalOpen && (
         <TicketCreateModal
-          propsCrear={propsCrear}
+          createProps={createProps}
           isModalClosing={isModalClosing}
           handleAttemptCloseModal={handleAttemptCloseModal}
           handleCreateTicket={handleCreateTicket}
@@ -227,13 +227,13 @@ export default function TicketsPage() {
         />
       )}
 
-      {/* CONFIRMACIÓN DE DESCARTAR NUEVO TICKET */}
+      {/* DISCARD NEW TICKET CONFIRMATION */}
       <ConfirmModal
         isOpen={showDiscardPrompt}
         title={t('tickets.discardDraft')}
-        description="Has escrito datos en el formulario del nuevo ticket. ¿Deseas descartar los datos y cerrar?"
-        confirmText="Descartar y Cerrar"
-        cancelText="Continuar editando"
+        description={t('tickets.discardPromptDesc')}
+        confirmText={t('tickets.discardAndClose')}
+        cancelText={t('tickets.continueEditing')}
         variant="warning"
         onConfirm={() => {
           setShowDiscardPrompt(false);

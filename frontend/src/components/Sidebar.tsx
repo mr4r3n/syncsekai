@@ -38,6 +38,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useModalA11y } from './useModalA11y';
+import { isDemo, exitDemo, DEMO_PAGES } from '@/lib/demo';
 
 
 interface SidebarProps {
@@ -56,10 +57,13 @@ export function Sidebar({
   const { t } = useI18n();
   const { isCollapsed, isLocked, toggleCollapsed, isMobileOpen, closeMobile } = useSidebar();
 
-  // El cajón móvil se comporta como diálogo: foco dentro y devuelto al cerrar.
+  // Mobile drawer acts as dialog: focus trapped inside and returned on close.
   const { dialogProps: dialogPropsCajon } = useModalA11y<HTMLElement>(isMobileOpen, closeMobile);
   const { confirmNavigation } = useUnsavedChanges();
   const [currentUser, setCurrentUser] = useState<any>(null);
+  // Read after mounting: sessionStorage does not exist on the server.
+  const [demo, setDemo] = useState(false);
+  useEffect(() => setDemo(isDemo()), []);
   const [avatarError, setAvatarError] = useState(false);
   const [reconnectionCount, setReconnectionCount] = useState(0);
 
@@ -75,6 +79,11 @@ export function Sidebar({
   };
 
   const handleLogout = async () => {
+    if (demo) {
+      exitDemo();
+      router.push('/');
+      return;
+    }
     const proceed = async () => {
       try {
         await api.auth.logout();
@@ -102,7 +111,7 @@ export function Sidebar({
   };
 
   useEffect(() => {
-    // Escuchar cambios de perfil y estado de conexiones
+    // Listen for profile changes and connection status
     api.auth
       .me()
       .then((res: any) => {
@@ -121,7 +130,7 @@ export function Sidebar({
   }, [pathname]);
 
   const effectiveRole = currentUser?.role || propRole || 'USER';
-  const effectiveUsername = currentUser?.username || propUsername || 'Usuario';
+  const effectiveUsername = currentUser?.username || propUsername || t('common.user');
   const effectiveToken = currentUser?.userToken || propToken || 'usr_live_xxxx';
   const effectiveAvatar = currentUser?.avatarUrl;
 
@@ -180,6 +189,12 @@ export function Sidebar({
           },
         ]
       : baseNavItems;
+  // The demo only covers a few pages: the rest would ask for data it does not have.
+  const visibleNavItems = demo
+    ? navItems
+        .map((group) => ({ ...group, items: group.items.filter((item) => DEMO_PAGES.includes(item.href)) }))
+        .filter((group) => group.items.length > 0)
+    : navItems;
 
   const renderSidebarContent = (collapsed: boolean) => (
     <div className="flex flex-col h-full bg-[var(--glass-bg)] backdrop-blur-xl text-[var(--text-primary)] select-none relative overflow-hidden transition-colors">
@@ -228,11 +243,11 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Nav List: Separación vertical limpia y animaciones suaves */}
+      {/* Nav List: Clean vertical spacing and smooth animations */}
       <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-7 scrollbar-none relative">
-        {navItems.map((group, idx) => (
+        {visibleNavItems.map((group, idx) => (
           <div key={idx} className="space-y-2">
-            {/* Título de Sección */}
+            {/* Section Title */}
             <div
               className={`transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden whitespace-nowrap ${
                 collapsed
@@ -245,7 +260,7 @@ export function Sidebar({
               </span>
             </div>
 
-            {/* Separador sutil visible solo cuando está colapsado */}
+            {/* Subtle divider visible only when collapsed */}
             <div
               className={`transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] h-px bg-[var(--glass-border)] ${
                 collapsed ? 'my-3 mx-2 opacity-100' : 'my-0 opacity-0 h-0 pointer-events-none'
@@ -276,7 +291,7 @@ export function Sidebar({
                         isActive ? 'text-[var(--nav-active-text)]' : 'text-[var(--text-muted)]'
                       }`}
                     />
-                    {/* Dot estilo Discord cuando la barra está colapsada */}
+                    {/* Discord-style dot when sidebar is collapsed */}
                     {showBadge && collapsed && (
                       <span className="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-[var(--bg-card)] shadow-[0_0_8px_rgba(244,63,94,0.9)] animate-pulse" />
                     )}
@@ -289,7 +304,7 @@ export function Sidebar({
                     }`}
                   >
                     <span>{item.label}</span>
-                    {/* Pill con número animado estilo Discord cuando está expandida */}
+                    {/* Discord-style animated number pill when expanded */}
                     {showBadge && !collapsed && (
                       <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 text-[11px] font-extrabold text-white bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.8)] animate-pulse shrink-0 tracking-tight">
                         {reconnectionCount}
@@ -303,10 +318,10 @@ export function Sidebar({
         ))}
       </nav>
 
-      {/* Idioma y tema: solo en el cajon de movil.
-          Arriba compartian barra con el menu, las notificaciones y la
-          documentacion, y en 375 px eso son cuatro botones al lado del titulo
-          de la pagina. Aqui no le quitan sitio a nada y siguen a un toque. */}
+      {/* Language and theme: mobile drawer only.
+          At the top they shared a bar with menu, notifications, and
+          documentation, and at 375 px that is four buttons next to page
+          title. Here they steal space from nothing and remain one tap away. */}
       <div className="md:hidden px-3.5 py-2.5 border-t border-[var(--glass-border)] shrink-0 flex items-center justify-between gap-2">
         <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
           {t('navigation.appearanceLanguage')}
@@ -319,7 +334,7 @@ export function Sidebar({
 
       {/* Footer Profile */}
       <div className="h-16 px-3.5 border-t border-[var(--glass-border)] shrink-0 flex items-center justify-between bg-transparent overflow-hidden">
-        {/* User Info (Avatar + Nombre): Oculto al colapsar */}
+        {/* User Info (Avatar + Name): Hidden when collapsed */}
         <div
           className={`flex items-center gap-3 min-w-0 transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] ${
             collapsed
@@ -354,7 +369,7 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* Botón de Logout: Único elemento visible al colapsar */}
+        {/* Logout Button: Only element visible when collapsed */}
         <button
           type="button"
           onClick={handleLogout}
@@ -377,7 +392,7 @@ export function Sidebar({
           isCollapsed ? 'w-[72px]' : 'w-[260px]'
         }`}
       >
-        {/* Toggle Collapse Button Flotante sobre el borde derecho del sidebar */}
+        {/* Floating Toggle Collapse Button on right edge of sidebar */}
         {!isLocked && (
           <button
             onClick={toggleCollapsed}
@@ -405,10 +420,10 @@ export function Sidebar({
 
       {/* MOBILE DRAWER SIDEBAR (ALWAYS EXPANDED IN MOBILE VIEW) */}
       {/*
-        El cajón nunca se desmonta: cerrado sigue en el DOM, solo desplazado fuera
-        de pantalla. Sin `inert`, quien navega con teclado tabulaba dentro de un
-        menú invisible y se perdía. `inert` lo saca del orden de foco y del árbol
-        de accesibilidad mientras está cerrado, sin afectar a la animación.
+        The drawer is never unmounted: closed it remains in DOM, merely shifted off
+        screen. Without `inert`, keyboard navigators tabbed inside an invisible
+        menu and got lost. `inert` removes it from focus order and accessibility
+        tree while closed, without affecting animation.
       */}
       <aside
         {...(isMobileOpen ? dialogPropsCajon : {})}

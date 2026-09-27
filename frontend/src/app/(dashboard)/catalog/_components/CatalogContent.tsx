@@ -14,7 +14,7 @@ interface CatalogContentProps {
   catalog: any[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  vistaCatalogo: 'grid' | 'list';
+  catalogView: 'grid' | 'list';
   setSelectedAnime: (anime: any | null) => void;
   getStatusBadge: (status: string) => any;
   getStatusIcon: (status: string) => any;
@@ -33,7 +33,7 @@ export function CatalogContent({
   catalog,
   searchQuery,
   setSearchQuery,
-  vistaCatalogo,
+  catalogView,
   setSelectedAnime,
   getStatusBadge,
   getStatusIcon,
@@ -52,7 +52,7 @@ export function CatalogContent({
 
   return (
     <>
-      {/* Estado de Carga con Skeleton Cards */}
+      {/* Loading State with Skeleton Cards */}
       {loading ? (
         <div className={`${getGridClass()} animate-in fade-in`}>
           {[...Array(16)].map((_, i) => (
@@ -105,9 +105,9 @@ export function CatalogContent({
           )}
         </div>
       ) : (
-        /* GRID FLUIDO COMPACTO Y ELEGANTE CON DENSIDAD RESPONSIVA */
+        /* COMPACT AND ELEGANT FLUID GRID WITH RESPONSIVE DENSITY */
         <div className="space-y-8">
-          {vistaCatalogo === 'list' ? (
+          {catalogView === 'list' ? (
             <CatalogListView
               catalog={catalog}
               setSelectedAnime={setSelectedAnime}
@@ -126,7 +126,7 @@ export function CatalogContent({
             />
           )}
 
-          {/* BARRA DE PAGINACIÓN MINIMALISTA Y ROBUSTA */}
+          {/* MINIMALIST AND ROBUST PAGINATION BAR */}
           {pagination.totalPages > 1 && (
             <CatalogPagination
               pagination={pagination}

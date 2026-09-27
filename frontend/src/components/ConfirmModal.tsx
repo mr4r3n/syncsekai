@@ -3,6 +3,7 @@
 import React, { useId } from 'react';
 import { AlertTriangle, Trash2, X, AlertCircle, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { useModalA11y } from './useModalA11y';
+import { useI18n } from '@/i18n/I18nProvider';
 
 export interface ConfirmModalProps {
   isOpen: boolean;
@@ -15,11 +16,11 @@ export interface ConfirmModalProps {
   onConfirm: () => void | Promise<void>;
   onClose: () => void;
   /**
-   * Contenido extra entre la descripción y los botones.
+   * Extra content between the description and the buttons.
    *
-   * Para las confirmaciones que necesitan algo más que un sí: escribir la
-   * contraseña, marcar una casilla. Sin esto había que duplicar el diálogo
-   * entero cada vez que hacía falta un campo.
+   * For confirmations that need more than just a yes: entering the
+   * password, checking a box. Without this the entire dialog had to be
+   * duplicated every time a field was needed.
    */
   children?: React.ReactNode;
 }
@@ -28,20 +29,24 @@ export function ConfirmModal({
   isOpen,
   title,
   description,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  confirmText,
+  cancelText,
   variant = 'danger',
   loading = false,
   onConfirm,
   onClose,
   children,
 }: ConfirmModalProps) {
-  // Los hooks se llaman antes del retorno temprano: si no, React se queja de que
-  // el número de hooks cambia entre renders al abrir y cerrar el modal.
-  const tituloId = useId();
-  const { dialogProps } = useModalA11y(isOpen, onClose, tituloId);
+  // Hooks are called before the early return: otherwise, React complains that
+  // the number of hooks changes between renders when opening and closing the modal.
+  const titleId = useId();
+  const { t } = useI18n();
+  const { dialogProps } = useModalA11y(isOpen, onClose, titleId);
 
   if (!isOpen) return null;
+
+  const effectiveConfirmText = confirmText ?? t('common.confirm');
+  const effectiveCancelText = cancelText ?? t('common.cancel');
 
   const getVariantStyles = () => {
     switch (variant) {
@@ -83,8 +88,8 @@ export function ConfirmModal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
       <div
         {...dialogProps}
-        // En movil sube desde abajo como una hoja, igual que el resto de la
-        // web; en escritorio sigue siendo el dialogo centrado de siempre.
+        // On mobile it slides up from the bottom like a sheet, just like the rest of the
+        // web; on desktop it remains the same centered dialog as always.
         className="w-full sm:max-w-md rounded-t-[var(--radius-xl,16px)] sm:rounded-[var(--radius-lg,10px)] border-t sm:border border-[var(--glass-border)] bg-[var(--bg-surface-elevated)] sm:bg-[var(--glass-bg)] p-5 sm:p-6 pb-7 sm:pb-6 shadow-[0_-12px_48px_rgba(0,0,0,0.6)] sm:shadow-[var(--glass-shadow-lg)] space-y-5 text-[var(--text-primary)] backdrop-blur-2xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300 sm:duration-200 outline-none"
       >
         <div className="flex items-start justify-between gap-3">
@@ -93,13 +98,13 @@ export function ConfirmModal({
               {style.icon}
             </div>
             <div>
-              <h3 id={tituloId} className={`font-bold text-base font-heading ${style.titleColor}`}>{title}</h3>
+              <h3 id={titleId} className={`font-bold text-base font-heading ${style.titleColor}`}>{title}</h3>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={loading}
-            aria-label="Cerrar modal"
+            aria-label={t('common.closeModal')}
             className="w-9 h-9 flex items-center justify-center rounded-[var(--radius-md,6px)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer disabled:opacity-50"
           >
             <X className="w-4 h-4" />
@@ -117,7 +122,7 @@ export function ConfirmModal({
             disabled={loading}
             className="btn-secondary"
           >
-            {cancelText}
+            {effectiveCancelText}
           </button>
           <button
             type="button"
@@ -126,7 +131,7 @@ export function ConfirmModal({
             className={`cursor-pointer disabled:opacity-50 ${style.btnClass}`}
           >
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            <span>{confirmText}</span>
+            <span>{effectiveConfirmText}</span>
           </button>
         </div>
       </div>

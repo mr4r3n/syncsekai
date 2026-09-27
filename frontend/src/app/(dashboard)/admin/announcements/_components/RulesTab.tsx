@@ -43,7 +43,7 @@ export function RulesTab({
                     <p className="text-[11px] text-[var(--text-muted)]">{t('announcements.audienceDesc')}</p>
                   </div>
 
-                  {/* Permitir Cerrar & Expiración */}
+                  {/* Allow Dismissal & Expiration */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] font-mono">{t('announcements.dismissBehaviour')}</label>
                     <div className="flex items-center gap-3">

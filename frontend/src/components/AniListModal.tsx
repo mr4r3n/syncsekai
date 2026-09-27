@@ -70,7 +70,7 @@ export function AniListModal({ isOpen, onClose, onSuccess }: AniListModalProps) 
     try {
       const res = await api.anilist.connectToken(token.trim());
       setVerifiedUser(res);
-      showToast(`¡Cuenta de AniList (@${res.remoteUsername || 'Usuario'}) vinculada exitosamente!`, 'success');
+      showToast(t('modalAnilist.linkSuccess', { username: res.remoteUsername || t('common.user') }), 'success');
       setTimeout(() => {
         onSuccess();
         onClose();
@@ -84,7 +84,7 @@ export function AniListModal({ isOpen, onClose, onSuccess }: AniListModalProps) 
     }
   };
 
-  // Foco dentro al abrir, Tab acotado al diálogo y foco devuelto al cerrar.
+  // Focus inside on open, Tab trapped in the dialog, and focus returned on close.
   const { dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
@@ -115,7 +115,7 @@ export function AniListModal({ isOpen, onClose, onSuccess }: AniListModalProps) 
           </button>
         </div>
 
-        {/* Opción 1: Botón OAuth 1-Click (Recomendado) */}
+        {/* Option 1: 1-Click OAuth Button (Recommended) */}
         <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-3">
           <div className="flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-[4px] bg-sky-500/10 flex items-center justify-center text-sky-400 shrink-0">
@@ -141,7 +141,7 @@ export function AniListModal({ isOpen, onClose, onSuccess }: AniListModalProps) 
           </button>
         </div>
 
-        {/* Opción 2: Token Manual (Colapsable) */}
+        {/* Option 2: Manual Token (Collapsible) */}
         <div className="border-t border-[var(--glass-border)] pt-3">
           <button
             type="button"

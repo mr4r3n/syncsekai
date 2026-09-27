@@ -9,7 +9,7 @@ interface ViewingStatsSectionProps {
 export function ViewingStatsSection({ userStats, t }: ViewingStatsSectionProps) {
   return (
     <div className="glass-card p-6 sm:p-7 space-y-6 border-amber-500/40 shadow-lg">
-      {/* SECCIÓN EXPANDIDA: ESTADÍSTICAS GLOBALES CONSOLIDADAS (ANCHO 100%) */}
+      {/* EXPANDED SECTION: CONSOLIDATED GLOBAL STATS (100% WIDTH) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--glass-border)] pb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-[6px] bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border border-[var(--nav-active-border)] flex items-center justify-center font-bold">
@@ -21,14 +21,14 @@ export function ViewingStatsSection({ userStats, t }: ViewingStatsSectionProps) 
           </div>
         </div>
         <span className="badge-pill font-mono text-xs self-start sm:self-auto">
-          {userStats?.totalShows ?? 0} series en catálogo
+          {t('settings.seriesInCatalog', { count: userStats?.totalShows ?? 0 })}
         </span>
       </div>
 
-      {/* Grid de 6 Métricas Globales */}
+      {/* 6 Global Metrics Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1 font-mono">
-          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">SERIES TOTALES</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{t('settings.statTotalSeries')}</span>
           <div className="text-2xl font-bold text-[var(--text-primary)]">
             {userStats?.totalShows ?? 0}
           </div>
@@ -36,23 +36,23 @@ export function ViewingStatsSection({ userStats, t }: ViewingStatsSectionProps) 
         </div>
 
         <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1 font-mono">
-          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">EPISODIOS VISTOS</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{t('settings.statEpisodesWatched')}</span>
           <div className="text-2xl font-bold text-[var(--text-primary)]">
             {userStats?.totalEpisodes ? userStats.totalEpisodes.toLocaleString() : 0}
           </div>
-          <p className="text-[10.5px] text-emerald-400 font-semibold">{userStats?.completedCount ?? 0} completados</p>
+          <p className="text-[10.5px] text-emerald-400 font-semibold">{t('settings.completedCount', { count: userStats?.completedCount ?? 0 })}</p>
         </div>
 
         <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1 font-mono">
-          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">TIEMPO TOTAL</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{t('settings.statTotalTime')}</span>
           <div className="text-2xl font-bold text-[var(--text-primary)]">
             {userStats?.totalHours ?? 0}h
           </div>
-          <p className="text-[10.5px] text-[var(--text-muted)]">~{userStats?.totalDays ?? 0} días netos</p>
+          <p className="text-[10.5px] text-[var(--text-muted)]">{t('settings.netDays', { days: userStats?.totalDays ?? 0 })}</p>
         </div>
 
         <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1 font-mono">
-          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">NOTA MEDIA</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{t('settings.statMeanScore')}</span>
           <div className="text-2xl font-bold text-amber-400 flex items-center gap-1.5">
             <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
             <span>{userStats?.meanScore ?? '8.5'}</span>
@@ -65,19 +65,19 @@ export function ViewingStatsSection({ userStats, t }: ViewingStatsSectionProps) 
           <div className="text-2xl font-bold text-sky-400">
             {userStats?.watchingCount ?? 0}
           </div>
-          <p className="text-[10.5px] text-[var(--text-muted)]">series activas</p>
+          <p className="text-[10.5px] text-[var(--text-muted)]">{t('settings.activeSeries')}</p>
         </div>
 
         <div className="p-4 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1 font-mono">
-          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">FAVORITOS</span>
+          <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">{t('settings.statFavorites')}</span>
           <div className="text-2xl font-bold text-rose-400">
             {userStats?.favoritesCount ?? 0}
           </div>
-          <p className="text-[10.5px] text-[var(--text-muted)]">destacados</p>
+          <p className="text-[10.5px] text-[var(--text-muted)]">{t('settings.featured')}</p>
         </div>
       </div>
 
-      {/* Desglose de Géneros con Barras Horizontales */}
+      {/* Genre Breakdown with Horizontal Bars */}
       <div className="p-4 sm:p-5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-3">
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-bold text-[var(--text-primary)] font-heading flex items-center gap-2">
@@ -85,18 +85,15 @@ export function ViewingStatsSection({ userStats, t }: ViewingStatsSectionProps) 
             <span>{t('settings.favouriteGenres')}</span>
           </h4>
           <span className="text-[11px] font-mono text-[var(--text-muted)]">
-            Calculado sobre {userStats?.totalEpisodes ? userStats.totalEpisodes.toLocaleString() : 0} episodios
+            {t('settings.calculatedOverEpisodes', { count: userStats?.totalEpisodes ? userStats.totalEpisodes.toLocaleString() : 0 })}
           </span>
         </div>
 
         <div className="space-y-2.5 pt-1">
-          {(userStats?.topGenres && userStats.topGenres.length > 0 ? userStats.topGenres : [
-            { name: 'Acción', percentage: 35 },
-            { name: 'Shounen', percentage: 28 },
-            { name: 'Fantasía', percentage: 22 },
-            { name: 'Drama', percentage: 15 },
-            { name: 'Comedia', percentage: 12 },
-          ]).map((g: any, idx: number) => {
+          {!userStats?.topGenres?.length && (
+            <p className="text-xs text-[var(--text-muted)]">{t('settings.noGenresYet')}</p>
+          )}
+          {(userStats?.topGenres || []).map((g: any, idx: number) => {
             const colors = ['bg-sky-400', 'bg-purple-400', 'bg-emerald-400', 'bg-amber-400', 'bg-rose-400'];
             const color = colors[idx % colors.length];
             return (

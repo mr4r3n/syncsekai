@@ -19,7 +19,7 @@ interface AdminBackupsTableProps {
   setShowCreateModal: (val: boolean) => void;
   formatDateTime: (dateStr: string) => string;
   handleDownload: (filename: string) => void;
-  descargando: string | null;
+  downloading: string | null;
   setRestoreTarget: (item: any) => void;
   setDeleteTarget: (item: any) => void;
 }
@@ -32,7 +32,7 @@ export function AdminBackupsTable({
   setShowCreateModal,
   formatDateTime,
   handleDownload,
-  descargando,
+  downloading,
   setRestoreTarget,
   setDeleteTarget,
 }: AdminBackupsTableProps) {
@@ -193,11 +193,11 @@ export function AdminBackupsTable({
                       {/* Descargar */}
                       <button
                         onClick={() => handleDownload(item.filename)}
-                        disabled={descargando === item.filename}
+                        disabled={downloading === item.filename}
                         className="p-1.5 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer disabled:cursor-wait"
                         title={t('backups.downloadBackup')}
                       >
-                        {descargando === item.filename ? (
+                        {downloading === item.filename ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
                           <Download className="w-3.5 h-3.5" />

@@ -29,11 +29,11 @@ export function AdminTicketsTable({
     const diffMs = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diffMs / 60000);
     if (mins < 1) return t('topbar.momentAgo');
-    if (mins < 60) return `Hace ${mins} min`;
+    if (mins < 60) return t('topbar.minutesAgo', { mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `Hace ${hours} h`;
+    if (hours < 24) return t('topbar.hoursAgo', { hours });
     const days = Math.floor(hours / 24);
-    if (days < 30) return `Hace ${days} d`;
+    if (days < 30) return t('topbar.daysAgo', { days });
     return new Date(dateStr).toLocaleDateString();
   };
 
@@ -60,7 +60,7 @@ export function AdminTicketsTable({
                   <th scope="col" className="py-3 px-4">{t('admin.user')}</th>
                   <th scope="col" className="py-3 px-4">{t('admin.subjectAndCategory')}</th>
                   <th scope="col" className="py-3 px-4">{t('tickets.priority')}</th>
-                  <th scope="col" className="py-3 px-4">Estado</th>
+                  <th scope="col" className="py-3 px-4">{t('common.status')}</th>
                   <th scope="col" className="py-3 px-4">{t('admin.lastReply')}</th>
                   <th scope="col" className="py-3 px-4 text-right">{t('admin.action')}</th>
                 </tr>
@@ -126,7 +126,7 @@ export function AdminTicketsTable({
                           }}
                           className="h-8 px-3 rounded-[4px] border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-primary)] text-xs font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors"
                         >
-                          <span>Gestionar</span>
+                          <span>{t('admin.manage')}</span>
                           <ChevronRight className="w-3.5 h-3.5" />
                         </button>
                       </td>
@@ -137,11 +137,11 @@ export function AdminTicketsTable({
             </table>
           </div>
 
-          {/* Paginación */}
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between p-3.5 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-xs">
               <span className="text-[var(--text-muted)]">
-                Página {page} de {totalPages} ({totalCount} tickets)
+                {t('tickets.paginationInfo', { page, totalPages, totalCount })}
               </span>
               <div className="flex items-center gap-2">
                 <button

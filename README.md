@@ -8,6 +8,30 @@ is, and pushes the progress to whichever trackers you have linked.
 
 [syncsekai.com](https://syncsekai.com) · [Documentation](https://syncsekai.com/docs) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
+**[Try the live demo →](https://syncsekai.com/demo)** The real app with sample data, no account needed.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="frontend/public/landing/catalog-dark-en.webp">
+  <img alt="Anime catalogue with covers, progress and tracker filters" src="frontend/public/landing/catalog-light-en.webp">
+</picture>
+
+<table>
+  <tr>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="frontend/public/landing/detail-dark-en.webp">
+        <img alt="Series page with seasons and per-episode progress" src="frontend/public/landing/detail-light-en.webp">
+      </picture>
+    </td>
+    <td width="50%">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="frontend/public/landing/history-dark-en.webp">
+        <img alt="Synchronization history with per-tracker results" src="frontend/public/landing/history-light-en.webp">
+      </picture>
+    </td>
+  </tr>
+</table>
+
 ---
 
 ## What it does

@@ -20,7 +20,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { HistorialNotificaciones } from '@/components/HistorialNotificaciones';
+import { NotificationHistory } from '@/components/NotificationHistory';
 
 export default function NotificationsSettingsPage() {
   const router = useRouter();
@@ -154,7 +154,7 @@ export default function NotificationsSettingsPage() {
     >
       <Topbar rootLabel={t('topbar.settings')} currentLabel={t('notifications.title')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -184,7 +184,7 @@ export default function NotificationsSettingsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* COLUMNA IZQUIERDA: CONFIGURACIÓN DE CANALES (7 COLS) */}
+            {/* LEFT COLUMN: CHANNEL CONFIGURATION (7 COLS) */}
             <div className="lg:col-span-7 space-y-6">
               <div className="glass-card p-6 sm:p-7 space-y-6">
                 <div className="flex items-center gap-3.5">
@@ -198,7 +198,7 @@ export default function NotificationsSettingsPage() {
                 </div>
 
                 <form onSubmit={handleSaveNotifications} className="space-y-4 pt-1">
-                  {/* Switch 1: Notificaciones en la Web (Navbar) */}
+                  {/* Switch 1: In-App Notifications (Navbar) */}
                   <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
                       <div className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
@@ -220,7 +220,7 @@ export default function NotificationsSettingsPage() {
                     </button>
                   </div>
 
-                  {/* Switch 2: Notificaciones por Discord (DM) */}
+                  {/* Switch 2: Discord Notifications (DM) */}
                   <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
                       <div className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
@@ -242,7 +242,7 @@ export default function NotificationsSettingsPage() {
                     </button>
                   </div>
 
-                  {/* Switch 3: Alertas por Correo */}
+                  {/* Switch 3: Email Alerts */}
                   <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
                       <div className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
@@ -315,7 +315,7 @@ export default function NotificationsSettingsPage() {
                   </div>
                 </div>
 
-                {/* Botón para enviar prueba a Discord */}
+                {/* Send test to Discord button */}
                 <button
                   type="button"
                   onClick={handleTestDiscord}
@@ -354,7 +354,7 @@ export default function NotificationsSettingsPage() {
           </div>
         )}
 
-        {!loading && <HistorialNotificaciones esAdmin={userProfile?.role === 'ADMIN'} />}
+        {!loading && <NotificationHistory esAdmin={userProfile?.role === 'ADMIN'} />}
       </main>
     </div>
   );

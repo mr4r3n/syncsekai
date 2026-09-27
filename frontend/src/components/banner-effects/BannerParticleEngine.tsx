@@ -7,7 +7,7 @@ interface BannerParticleEngineProps {
 }
 
 export function BannerParticleEngine({ effectType = 'NONE' }: BannerParticleEngineProps) {
-  // Generar partículas pre-calculadas estables para evitar re-renders innecesarios
+  // Generate stable pre-calculated particles to avoid unnecessary re-renders
   const particles = useMemo(() => {
     return Array.from({ length: 16 }, (_, i) => ({
       id: i,
@@ -48,7 +48,7 @@ export function BannerParticleEngine({ effectType = 'NONE' }: BannerParticleEngi
     );
   }
 
-  // 2. FLOATING_HEARTS (San Valentín)
+  // 2. FLOATING_HEARTS (Valentine's Day)
   if (effectType === 'FLOATING_HEARTS') {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
@@ -71,7 +71,7 @@ export function BannerParticleEngine({ effectType = 'NONE' }: BannerParticleEngi
     );
   }
 
-  // 3. CONFETTI & FIREWORKS (Año Nuevo & Celebraciones)
+  // 3. CONFETTI & FIREWORKS (New Year & Celebrations)
   if (effectType === 'CONFETTI' || effectType === 'FIREWORKS') {
     const fireworkBursts = [
       { id: 1, left: '18%', top: '45%', color: '#ffd700', delay: '0s', duration: '2.4s' },
@@ -92,7 +92,7 @@ export function BannerParticleEngine({ effectType = 'NONE' }: BannerParticleEngi
 
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
-        {/* Explosiones de Fuegos Artificiales en el Banner */}
+        {/* Fireworks Explosions on Banner */}
         {fireworkBursts.map((b) => (
           <div
             key={b.id}
@@ -171,7 +171,7 @@ export function BannerParticleEngine({ effectType = 'NONE' }: BannerParticleEngi
     );
   }
 
-  // 5. AUTUMN_LEAVES (Otoño Dorado)
+  // 5. AUTUMN_LEAVES (Golden Autumn)
   if (effectType === 'AUTUMN_LEAVES') {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
@@ -195,7 +195,7 @@ export function BannerParticleEngine({ effectType = 'NONE' }: BannerParticleEngi
     );
   }
 
-  // 6. CYBER_GLOW (Cyberpunk / Neón)
+  // 6. CYBER_GLOW (Cyberpunk / Neon)
   if (effectType === 'CYBER_GLOW') {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">

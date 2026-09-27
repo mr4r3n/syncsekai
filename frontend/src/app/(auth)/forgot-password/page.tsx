@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
-  // Modo Código de Emergencia
+  // Emergency Code Mode
   const [identifier, setIdentifier] = useState('');
   const [backupCode, setBackupCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
           <p className="text-xs text-[var(--text-secondary)] max-w-xs mx-auto">{t('auth.recoverSubtitle')}</p>
         </div>
 
-        {/* SELECTOR DE PESTAÑAS / MÉTODO */}
+        {/* TAB SELECTOR / METHOD */}
         {!emailSent && !backupSuccess && (
           <div className="grid grid-cols-2 p-1 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-semibold">
             <button
@@ -172,7 +172,7 @@ export default function ForgotPasswordPage() {
           </div>
         )}
 
-        {/* CONTENIDO 1: RECUPERACIÓN POR CORREO */}
+        {/* CONTENT 1: EMAIL RECOVERY */}
         {mode === 'EMAIL' && (
           <>
             {emailSent ? (
@@ -254,7 +254,7 @@ export default function ForgotPasswordPage() {
           </>
         )}
 
-        {/* CONTENIDO 2: RECUPERACIÓN CON CÓDIGO DE EMERGENCIA */}
+        {/* CONTENT 2: EMERGENCY CODE RECOVERY */}
         {mode === 'BACKUP_CODE' && (
           <>
             {backupSuccess ? (
@@ -297,7 +297,7 @@ export default function ForgotPasswordPage() {
                   <p className="leading-relaxed text-[11.5px]">{t('auth.enterOneOf')}{' '}<strong>{t('auth.savedRecoveryCodes')}</strong>{' '}{t('auth.toResetImmediately')}</p>
                 </div>
 
-                {/* Identificador: Usuario o Correo */}
+                {/* Identifier: Username or Email */}
                 <div className="space-y-1.5">
                   <label htmlFor="backup-identifier" className="text-xs font-semibold text-[var(--text-secondary)]">{t('auth.userOrEmail')}</label>
                   <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-colors">
@@ -321,7 +321,7 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
 
-                {/* Código de Emergencia */}
+                {/* Emergency Code */}
                 <div className="space-y-1.5">
                   <label htmlFor="backup-code" className="text-xs font-semibold text-[var(--text-secondary)] flex items-center justify-between">
                     <span>{t('auth.recoveryCode')}</span>
@@ -348,7 +348,7 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
 
-                {/* Nueva Contraseña */}
+                {/* New Password */}
                 <div className="space-y-1.5">
                   <label htmlFor="backup-new-password" className="text-xs font-semibold text-[var(--text-secondary)]">{t('auth.newPassword')}</label>
                   <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-colors">
@@ -370,7 +370,7 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
 
-                {/* Confirmar Nueva Contraseña */}
+                {/* Confirm New Password */}
                 <div className="space-y-1.5">
                   <label htmlFor="backup-confirm-password" className="text-xs font-semibold text-[var(--text-secondary)]">{t('auth.confirmNewPassword')}</label>
                   <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-colors">

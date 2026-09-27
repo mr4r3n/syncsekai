@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#FF634A]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#00D26A]/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* TARJETA PRINCIPAL CON CRISTAL TEMPLADO */}
+      {/* MAIN TEMPERED GLASS CARD */}
       <div className="w-full max-w-md p-8 rounded-[8px] border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-2xl space-y-6 relative z-10">
         {/* CABECERA */}
         <div className="text-center space-y-2">
@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nueva Contraseña */}
+            {/* New Password */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">{t('auth.newPassword')}</label>
               <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md focus-within:border-[#FF634A] focus-within:ring-1 focus-within:ring-[#FF634A] transition-colors">
@@ -127,7 +127,7 @@ export default function ResetPasswordPage() {
                   required
                   autoFocus
                   autoComplete="new-password"
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder={t('auth.minEightChars')}
                   className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] outline-none"
                 />
                 <button
@@ -142,7 +142,7 @@ export default function ResetPasswordPage() {
               </div>
             </div>
 
-            {/* Confirmar Nueva Contraseña */}
+            {/* Confirm New Password */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">{t('auth.confirmNewPassword')}</label>
               <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md focus-within:border-[#FF634A] focus-within:ring-1 focus-within:ring-[#FF634A] transition-colors">

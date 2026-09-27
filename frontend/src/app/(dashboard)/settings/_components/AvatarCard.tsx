@@ -8,14 +8,14 @@ interface AvatarCardProps {
   isDragOver: boolean;
   setIsDragOver: (isDragOver: boolean) => void;
   avatarUrl: string | null;
-  previaNueva: string | null;
+  newPreview: string | null;
   uploadingAvatar: boolean;
   presetAvatars: string[];
   pendingPreset: string | null;
   pendingFile: File | null;
   handleChoosePreset: (preset: string) => void;
   isAvatarDirty: boolean;
-  handleDescartarAvatar: () => void;
+  handleDiscardAvatar: () => void;
   handleSaveAvatar: () => void;
   t: (key: string, params?: any) => string;
 }
@@ -27,20 +27,20 @@ export function AvatarCard({
   isDragOver,
   setIsDragOver,
   avatarUrl,
-  previaNueva,
+  newPreview,
   uploadingAvatar,
   presetAvatars,
   pendingPreset,
   pendingFile,
   handleChoosePreset,
   isAvatarDirty,
-  handleDescartarAvatar,
+  handleDiscardAvatar,
   handleSaveAvatar,
   t,
 }: AvatarCardProps) {
   return (
     <div className="@container glass-card p-6 sm:p-7 space-y-6">
-      {/* CARD DE AVATAR CON CONTROLES INTEGRADOS */}
+      {/* AVATAR CARD WITH INTEGRATED CONTROLS */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-[var(--text-primary)] font-heading tracking-tight">Avatar</h2>
@@ -56,25 +56,23 @@ export function AvatarCard({
         onChange={handleFileInputChange}
       />
 
-      {/* A 2560 px esta tarjeta mide 1291 y la mitad derecha se
-          quedaba vacia: 766 px de hueco, el 59%. Ahora la zona de
-          arrastre ocupa todo el lado izquierdo -es la accion
-          principal, asi que es la que debe ser grande- y a la derecha
-          va el resto: el avatar actual junto al que se va a poner, los
-          predeterminados y los botones.
+      {/* At 2560 px this card measures 1291 and right half was
+          empty: 766 px void, 59%. Now drop zone occupies full
+          left side—primary action, so it deserves size—and
+          remaining elements sit on right: current avatar next to
+          pending one, presets, and buttons.
 
-          Ensenar el actual AL LADO del nuevo es el punto de la
-          reordenacion: antes solo se veia uno y no habia con que
-          comparar antes de guardar.
+          Showing current NEXT TO pending is the core of this
+          redesign: previously only one was visible with no basis
+          for comparison before saving.
 
-          Los cortes van por `@container`, no por el ancho de la
-          ventana: esta tarjeta ocupa 7 de 12 columnas, asi que a 1440
-          mide 606 px y a 2560 mide 1291. Con `lg:` -que mira la
-          ventana- las dos caian del mismo lado y a 1440 la zona de
-          arrastre se quedaba en 182 px. */}
+          Breakpoints use `@container`, not viewport width: card
+          occupies 7 of 12 columns, measuring 606 px at 1440 and
+          1291 at 2560. With viewport-based `lg:`, both collapsed
+          identically, reducing drop zone to 182 px at 1440. */}
       <div className="flex flex-col @3xl:flex-row gap-4 @3xl:gap-6 pt-1">
-        {/* Zona de arrastre, siempre presente: haya avatar o no, es el
-            mismo sitio donde soltar la imagen. */}
+        {/* Drop zone, always present: avatar or not, it remains
+            the consistent place to drop an image. */}
         <button
           type="button"
           onDragOver={(e) => {
@@ -105,51 +103,50 @@ export function AvatarCard({
           </span>
         </button>
 
-        {/* Ancho fijo, no un porcentaje: lo que va aqui -dos miniaturas
-            y una fila de botones- tiene un tamano natural, y dejarlo
-            crecer con la tarjeta solo repetiria el hueco de antes. */}
+        {/* Fixed width, not percentage: contents here—two thumbnails
+            and a button row—have intrinsic dimensions, and scaling
+            with card would only resurrect the previous void. */}
         <div className="@3xl:w-[400px] shrink-0 flex flex-col gap-4">
 
-          {/* El actual y el nuevo, uno al lado del otro. El tope de
-              ancho es lo que los deja del mismo tamano en todas las
-              pantallas: sin el, al apilarse en una tarjeta ancha, dos
-              celdas al 50% se convierten en dos bloques de 300 px. */}
+          {/* Current and pending, side by side. Width cap keeps them
+              uniform across screens: without it, stacking in a wide
+              card expands 50% cells into two 300 px blocks. */}
           <div className="flex gap-3">
             {[
-              { clave: 'actual', titulo: t('settings.avatarCurrent'), src: avatarUrl },
-              { clave: 'nuevo', titulo: t('settings.avatarNew'), src: previaNueva },
-            ].map(({ clave, titulo, src }) => {
-              const esNuevo = clave === 'nuevo';
-              const destacado = esNuevo && !!src;
+              { clave: 'actual', title: t('settings.avatarCurrent'), src: avatarUrl },
+              { clave: 'nuevo', title: t('settings.avatarNew'), src: newPreview },
+            ].map(({ clave, title, src }) => {
+              const isNew = clave === 'nuevo';
+              const highlighted = isNew && !!src;
 
               return (
                 <figure key={clave} className="flex-1 min-w-0 max-w-[172px] space-y-1.5">
                   <figcaption
                     className={`text-[10.5px] font-mono uppercase tracking-wider truncate ${
-                      destacado ? 'text-[var(--accent-text)] font-bold' : 'text-[var(--text-muted)]'
+                      highlighted ? 'text-[var(--accent-text)] font-bold' : 'text-[var(--text-muted)]'
                     }`}
                   >
-                    {titulo}
+                    {title}
                   </figcaption>
                   <div
                     className={`relative w-full aspect-square rounded-[var(--radius-md)] overflow-hidden border bg-[var(--bg-app)] flex items-center justify-center ${
-                      destacado
+                      highlighted
                         ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary)]/25'
                         : 'border-[var(--border-subtle)]'
                     }`}
                   >
                     {src ? (
-                      <img src={src} alt={titulo} className="w-full h-full object-cover" />
+                      <img src={src} alt={title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-center px-2 space-y-1.5">
                         <User className="w-7 h-7 mx-auto text-[var(--text-muted)]" aria-hidden="true" />
                         <p className="text-[11px] text-[var(--text-muted)] leading-tight">
-                          {esNuevo ? t('settings.avatarNoneChosen') : t('settings.noAvatarYet')}
+                          {isNew ? t('settings.avatarNoneChosen') : t('settings.noAvatarYet')}
                         </p>
                       </div>
                     )}
 
-                    {esNuevo && uploadingAvatar && (
+                    {isNew && uploadingAvatar && (
                       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
                         <Loader2 className="w-7 h-7 text-white animate-spin" aria-hidden="true" />
                         <span className="text-[10px] font-mono text-white font-bold">
@@ -163,7 +160,7 @@ export function AvatarCard({
             })}
           </div>
 
-          {/* Avatares predeterminados, para quien no quiera subir foto */}
+          {/* Default avatars, for users who prefer not to upload a photo */}
           {presetAvatars.length > 0 && (
             <div className="space-y-2">
               <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
@@ -171,9 +168,9 @@ export function AvatarCard({
               </span>
               <div className="flex flex-wrap gap-2">
                 {presetAvatars.map((preset) => {
-                  // El marco marca lo elegido, no lo guardado: mientras
-                  // este pendiente hay que ver cual se va a aplicar.
-                  const elegido = pendingPreset
+                  // Outline marks selected item, not saved one: while
+                  // pending, user needs to see what will apply.
+                  const selected = pendingPreset
                     ? pendingPreset === preset
                     : !pendingFile && avatarUrl === preset;
 
@@ -183,9 +180,9 @@ export function AvatarCard({
                       type="button"
                       onClick={() => handleChoosePreset(preset)}
                       disabled={uploadingAvatar}
-                      aria-pressed={elegido}
+                      aria-pressed={selected}
                       className={`w-12 h-12 rounded-[var(--radius-md)] overflow-hidden border-2 transition-all cursor-pointer disabled:opacity-40 ${
-                        elegido
+                        selected
                           ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary)]/30'
                           : 'border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                       }`}
@@ -204,13 +201,13 @@ export function AvatarCard({
             </div>
           )}
 
-          {/* Guardar, al fondo de la columna: nada de lo elegido arriba
-              se aplica hasta pulsarlo. */}
+          {/* Save, at column bottom: nothing chosen above
+              applies until clicked. */}
           <div className="flex items-center gap-2 mt-auto pt-1">
             {isAvatarDirty && (
               <button
                 type="button"
-                onClick={handleDescartarAvatar}
+                onClick={handleDiscardAvatar}
                 className="shrink-0 px-3 py-2.5 rounded-[var(--radius-md)] text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
               >
                 {t('settings.discardAvatar')}

@@ -20,8 +20,8 @@ import {
 interface EmbyConnectionCardProps {
   hubData: any;
   isEmbyConnected: boolean;
-  servidoresAbiertos: Record<string, boolean>;
-  setServidoresAbiertos: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  openServers: Record<string, boolean>;
+  setOpenServers: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   setShowEmbyModal: (show: boolean) => void;
   loadHubData: (silent?: boolean) => Promise<void>;
   availableEmbyLibraries: any[];
@@ -36,8 +36,8 @@ interface EmbyConnectionCardProps {
 export function EmbyConnectionCard({
   hubData,
   isEmbyConnected,
-  servidoresAbiertos,
-  setServidoresAbiertos,
+  openServers,
+  setOpenServers,
   setShowEmbyModal,
   loadHubData,
   availableEmbyLibraries,
@@ -123,18 +123,18 @@ export function EmbyConnectionCard({
           </div>
         </div>
 
-        {/* Plegado en movil: cuando la tarjeta esta cerrada solo hacen
-            falta el nombre y el estado; los botones son parte de lo que
-            se abre, y sueltos ahi partian en dos filas descuadradas. */}
+        {/* Collapsed on mobile: when card is closed only name
+            and status are needed; buttons are part of expanded content,
+            and uncollapsed they wrapped into two disjointed rows. */}
         <div
           className={`grid grid-cols-2 md:flex md:items-center gap-2 md:gap-2.5 md:flex-wrap ${
-            servidoresAbiertos.emby ? 'grid' : 'hidden'
+            openServers.emby ? 'grid' : 'hidden'
           }`}
         >
           <Link
             href="/docs?section=emby"
             className="btn-secondary text-xs"
-            title="Ver guía y watcher de sesiones de Emby"
+            title={t('connections.embyGuideWatcher')}
           >
             <BookOpen className="w-3.5 h-3.5 text-[var(--brand-emby)]" />
             <span>{t('connections.guide')}</span>
@@ -160,50 +160,49 @@ export function EmbyConnectionCard({
         </div>
       </div>
 
-      {/* En movil el cuerpo se pliega; el boton dice que hace. */}
+      {/* On mobile body collapses; button describes action. */}
       <button
         type="button"
         onClick={() =>
-          setServidoresAbiertos((prev) => ({ ...prev, emby: !prev.emby }))
+          setOpenServers((prev) => ({ ...prev, emby: !prev.emby }))
         }
-        aria-expanded={!!servidoresAbiertos.emby}
+        aria-expanded={!!openServers.emby}
         className="md:hidden -mt-0.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
       >
         <span>
-          {servidoresAbiertos.emby
+          {openServers.emby
             ? t('connections.hideDetails')
             : t('connections.showDetails')}
         </span>
         <ChevronDown
           className={`w-3.5 h-3.5 transition-transform duration-200 ${
-            servidoresAbiertos.emby ? 'rotate-180' : ''
+            openServers.emby ? 'rotate-180' : ''
           }`}
           aria-hidden="true"
         />
       </button>
 
-      {/* El plegado se anima con la altura de una fila de rejilla:
-          de 0fr a 1fr. Es la unica forma de animar hasta "lo que mida
-          el contenido" sin fijar una altura a mano, que aqui cambia
-          segun tengas bibliotecas o no. En escritorio el contenedor
-          vuelve a ser un bloque normal y no hay nada que animar. */}
+      {/* Collapse animates via grid row height: from 0fr to 1fr.
+          Only way to animate to intrinsic content height without
+          hardcoded measurements, which vary depending on library count.
+          On desktop container reverts to normal block without animation. */}
       <div
         className={`grid md:block transition-[grid-template-rows,margin-top] duration-300 ease-out ${
-          servidoresAbiertos.emby
+          openServers.emby
             ? 'grid-rows-[1fr]'
             : 'grid-rows-[0fr] -mt-3.5 md:mt-0'
         }`}
       >
         <div className="overflow-hidden md:overflow-visible">
           <div className="flex flex-col gap-6">
-      {/* Estado cuando Emby no está conectado */}
+      {/* State when Emby is not connected */}
       {!isEmbyConnected && (
         <div className="p-6 rounded-[6px] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-surface)] text-center space-y-2">
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('connections.noEmbyLinked')}</p>
         </div>
       )}
 
-      {/* Categorías de Emby a Monitorear */}
+      {/* Emby Categories to Monitor */}
       {isEmbyConnected && (
         <div className="space-y-3 pt-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -242,7 +241,7 @@ export function EmbyConnectionCard({
             </div>
           </div>
 
-          {/* Grid de Librerías */}
+          {/* Libraries Grid */}
           {availableEmbyLibraries.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pt-1">
               {availableEmbyLibraries.map((lib) => {
@@ -273,12 +272,12 @@ export function EmbyConnectionCard({
                           {lib.title}
                         </span>
                         <span className="badge-pill">
-                          {lib.type === 'tvshows' ? 'SERIES TV' : 'LIBRERÍA'}
+                          {['show', 'tvshows'].includes(lib.type) ? t('connections.badgeSeriesTv') : ['movie', 'movies'].includes(lib.type) ? t('connections.badgeMovies') : t('connections.badgeLibrary')}
                         </span>
                       </div>
-                      <p className="text-[10px] text-[var(--text-muted)] font-mono truncate">
-                        {lib.path || '/media/anime'}
-                      </p>
+                      {lib.path && (
+                        <p className="text-[10px] text-[var(--text-muted)] font-mono truncate">{lib.path}</p>
+                      )}
                     </div>
                   </div>
                 );
@@ -302,7 +301,7 @@ export function EmbyConnectionCard({
               <Link
                 href="/docs?section=emby"
                 className="text-[var(--brand-emby)] hover:underline text-xs flex items-center gap-1 font-medium"
-                title="Ver guía de Emby"
+                title={t('connections.viewEmbyGuide')}
               >
                 <BookOpen className="w-3 h-3" />
                 <span>{t('connections.webhookGuide')}</span>

@@ -44,7 +44,7 @@ export function AdminTicketImagePreviewModal({
         </div>
         <img
           src={previewImageUrl}
-          alt="Vista previa ampliada"
+          alt={t('tickets.enlargedPreview')}
           className="max-h-[80vh] w-auto max-w-full object-contain rounded-[8px] shadow-2xl border border-zinc-700"
         />
       </div>

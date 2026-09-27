@@ -28,7 +28,7 @@ function AniListCallbackContent() {
 
     if (errorParam) {
       setStatus('error');
-      setErrorMessage(`AniList reportó un error: ${errorParam}`);
+      setErrorMessage(t('connections.trackerReportedError', { tracker: 'AniList', error: errorParam }));
       return;
     }
 
@@ -45,16 +45,16 @@ function AniListCallbackContent() {
       if (code) {
         if (savedState && state && state !== savedState) {
           setStatus('error');
-          setErrorMessage('El estado de autorización OAuth no coincide. Posible intento de manipulación.');
+          setErrorMessage(t('connections.oauthStateMismatch'));
           return;
         }
         res = await api.anilist.handleOAuthCallback(code, state || undefined);
         if (typeof window !== 'undefined') sessionStorage.removeItem('anilist_oauth_state');
       } else if (tokenFromHash) {
-        // S02: Rechazar vinculación arbitraria desde fragmento de URL sin intención previa de la sesión
+        // S02: Reject arbitrary linking from URL fragment without prior session intent
         if (!savedState) {
           setStatus('error');
-          setErrorMessage('No hay una solicitud de vinculación pendiente en esta sesión. Abre el modal de AniList para conectar.');
+          setErrorMessage(t('connections.noPendingLinkRequest'));
           return;
         }
         res = await api.anilist.connectToken(tokenFromHash);
@@ -67,7 +67,7 @@ function AniListCallbackContent() {
 
       setUserData(res);
       setStatus('success');
-      showToast(`¡Cuenta de AniList (@${res.remoteUsername || 'Usuario'}) vinculada con éxito!`, 'success');
+      showToast(t('connections.trackerLinkedSuccess', { tracker: 'AniList', username: res.remoteUsername || t('common.user') }), 'success');
 
       setTimeout(() => {
         router.push('/connections');

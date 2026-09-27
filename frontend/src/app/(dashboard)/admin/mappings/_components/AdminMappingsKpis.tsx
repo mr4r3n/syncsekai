@@ -21,7 +21,7 @@ export function AdminMappingsKpis({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div className="glass-card p-5 space-y-1">
         <div className="flex items-center justify-between text-[var(--text-secondary)]">
-          <span className="text-xs font-mono font-semibold">Total Registrados</span>
+          <span className="text-xs font-mono font-semibold">{t('admin.totalRegisteredMappings')}</span>
           <Layers className="w-4 h-4 text-sky-400" />
         </div>
         <p className="text-2xl font-bold text-[var(--text-primary)] font-heading">{totalCount}</p>
@@ -29,7 +29,7 @@ export function AdminMappingsKpis({
 
       <div className="glass-card p-5 space-y-1">
         <div className="flex items-center justify-between text-amber-400">
-          <span className="text-xs font-mono font-semibold">Globales Oficiales</span>
+          <span className="text-xs font-mono font-semibold">{t('admin.officialGlobals')}</span>
           <Globe className="w-4 h-4 text-amber-400" />
         </div>
         <p className="text-2xl font-bold text-amber-400 font-heading">{globalCount}</p>

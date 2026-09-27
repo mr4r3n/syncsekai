@@ -13,7 +13,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // Rutas públicas dentro del dashboard que no deben bloquearse
+    // Public routes inside the dashboard that should not be blocked
     if (pathname === '/docs' || pathname.startsWith('/docs')) {
       setIsAuthenticated(true);
       return;

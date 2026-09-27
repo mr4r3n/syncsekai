@@ -47,7 +47,7 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
             setPolling(false);
             const count = res.libraries ? res.libraries.length : 0;
             showToast(
-              `¡Plex vinculado! Servidor "${res.serverName || 'Plex'}" con ${count} categorías detectadas.`,
+              t('modalPlex.linkedSuccess', { server: res.serverName || 'Plex', count }),
               'success',
             );
             onSuccess();
@@ -66,9 +66,9 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
   const fetchPin = async () => {
     setLoadingPin(true);
     try {
-      // Solicitar el PIN directamente desde el navegador del cliente a plex.tv
-      // para que la IP del creador del PIN coincida con la del navegador del usuario
-      // y Plex NO dispare la advertencia de seguridad con la IP del servidor.
+      // Request PIN directly from client browser to plex.tv
+      // so PIN creator IP matches user's browser IP
+      // and Plex does NOT trigger security warning with server IP.
       const clientIdentifier =
         (typeof window !== 'undefined' && localStorage.getItem('plexsync_client_id')) ||
         (() => {
@@ -107,7 +107,7 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
         throw new Error('Plex API error');
       }
     } catch (err: any) {
-      // Fallback transparente al backend en caso de bloqueo de red local / adblock
+      // Seamless fallback to backend in case of local network block / adblock
       try {
         const data = await api.plex.requestPin();
         setPinData(data);
@@ -129,12 +129,12 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
     try {
       const res = await api.plex.testConnection(serverUrl, manualToken);
       if (res.success) {
-        showToast(`¡Conexión exitosa! Se encontraron ${res.librariesCount} categorías en tu Plex.`, 'success');
+        showToast(t('modalPlex.connectionSuccess', { count: res.librariesCount }), 'success');
       } else {
         showToast(t('modalPlex.couldNotReadLibraries'), 'error');
       }
     } catch (err: any) {
-      showToast(`Error de conexión: ${err.message}`, 'error');
+      showToast(t('modalPlex.connectionError', { error: err.message }), 'error');
     } finally {
       setTestingConnection(false);
     }
@@ -147,7 +147,7 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
     try {
       const res = await api.plex.connectManual(manualToken, serverUrl, serverName);
       const count = res.availableLibraries ? res.availableLibraries.length : 0;
-      showToast(`¡Servidor Plex conectado! (${count} categorías disponibles)`, 'success');
+      showToast(t('modalPlex.serverConnected', { count }), 'success');
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -157,7 +157,7 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
     }
   };
 
-  // Foco dentro al abrir, Tab acotado al diálogo y foco devuelto al cerrar.
+  // Focus inside on open, Tab trapped in the dialog, and focus returned on close.
   const { dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
@@ -213,7 +213,7 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
             <div className="p-3.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] space-y-1.5">
               <p className="font-semibold text-[var(--text-primary)]">{t('modalPlex.howTitle')}</p>
               <ol className="list-decimal list-inside space-y-1 text-[11.5px] leading-relaxed text-[var(--text-muted)]">
-                <li>{t('modalPlex.step1')}{' '}<strong>"Abrir Autorización en Plex.tv"</strong></li>
+                <li>{t('modalPlex.step1')}{' '}<strong>"{t('modalPlex.openAuth')}"</strong></li>
                 <li>{t('modalPlex.step2')}</li>
                 <li>{t('modalPlex.step3')}</li>
               </ol>
@@ -229,9 +229,9 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
                 <div className="space-y-3">
                   <div className="text-xs text-[var(--text-muted)] font-mono">{t('modalPlex.codeLabel')}</div>
                   {/*
-                    El código de un PIN "strong" son 25 caracteres y viaja en la URL de
-                    autorización, no se teclea. Con inline-block y tracking-widest se salía
-                    de la tarjeta. Ahora se ajusta al ancho disponible y parte por caracteres.
+                    A "strong" PIN code is 25 characters and travels in authorization
+                    URL, not typed. With inline-block and tracking-widest it overflowed
+                    the card. Now it fits available width and breaks by characters.
                   */}
                   <div className="w-full max-w-full break-all text-center text-base sm:text-xl font-mono font-extrabold tracking-wide text-amber-400 bg-amber-400/10 py-2 px-4 rounded-[6px] border border-amber-400/20 select-all">
                     {pinData.code}
@@ -287,12 +287,12 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
                 type="text"
                 value={serverUrl}
                 onChange={(e) => setServerUrl(e.target.value)}
-                placeholder="http://localhost:32400 o http://192.168.1.50:32400"
+                placeholder={t('modalPlex.serverUrlPlaceholder')}
                 required
                 className="glass-input font-mono text-xs"
               />
               <p className="text-[10.5px] text-[var(--text-muted)]">
-                Usa <code className="font-mono">http://localhost:32400</code>{' '}{t('modalPlex.localHint')}</p>
+                {t('modalPlex.use')} <code className="font-mono">http://localhost:32400</code>{' '}{t('modalPlex.localHint')}</p>
             </div>
 
             <div className="space-y-1.5">

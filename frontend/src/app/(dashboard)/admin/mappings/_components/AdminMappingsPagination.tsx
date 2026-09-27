@@ -30,24 +30,23 @@ export function AdminMappingsPagination({
 
   return (
     <div className="pt-4 border-t border-[var(--glass-border)] flex flex-col md:flex-row items-center justify-between gap-4">
-      {/* Selector de Límite & Conteo */}
+      {/* Limit Selector & Count */}
       <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-muted)] flex-wrap">
         <span>
-          Mostrando <strong className="text-[var(--text-primary)]">{(page - 1) * limit + 1}</strong> a{' '}
-          <strong className="text-[var(--text-primary)]">{Math.min(page * limit, filteredMappings.length)}</strong> de{' '}
-          <strong className="text-[var(--text-primary)]">{filteredMappings.length}</strong>{' '}{t('admin.mappingsWord')}</span>
+          {t('mappings.showingRange', { from: (page - 1) * limit + 1, to: Math.min(page * limit, filteredMappings.length), total: filteredMappings.length })}
+        </span>
 
         <div className="flex items-center gap-1.5 ml-0 md:ml-2">
-          <span className="text-[11px]">Mostrar:</span>
+          <span className="text-[11px]">{t('mappings.show')}</span>
           <div className="w-28">
             <CustomSelect
               value={String(limit)}
               onChange={(val) => handleLimitChange(Number(val))}
               options={[
-                { value: '10', label: '10 / pág' },
-                { value: '25', label: '25 / pág' },
-                { value: '50', label: '50 / pág' },
-                { value: '100', label: t('mappings.hundredPerPage') },
+                { value: '10', label: t('mappings.perPage', { n: 10 }) },
+                { value: '25', label: t('mappings.perPage', { n: 25 }) },
+                { value: '50', label: t('mappings.perPage', { n: 50 }) },
+                { value: '100', label: t('mappings.perPage', { n: 100 }) },
               ]}
               accentColor="cinnabar"
             />
@@ -55,10 +54,10 @@ export function AdminMappingsPagination({
         </div>
       </div>
 
-      {/* Controles de Navegación de Página */}
+      {/* Page Navigation Controls */}
       {totalPages > 1 && (
         <div className="flex items-center gap-1.5">
-          {/* Ir a Primera Página */}
+          {/* Go to First Page */}
           <button
             onClick={() => changePage(1)}
             disabled={page === 1 || loading}
@@ -68,7 +67,7 @@ export function AdminMappingsPagination({
             <ChevronsLeft className="w-3.5 h-3.5" />
           </button>
 
-          {/* Página Anterior */}
+          {/* Previous Page */}
           <button
             onClick={() => changePage(Math.max(1, page - 1))}
             disabled={page === 1 || loading}
@@ -78,7 +77,7 @@ export function AdminMappingsPagination({
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
 
-          {/* Números de Página */}
+          {/* Page Numbers */}
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             let pageNum = page;
             if (totalPages <= 5) {
@@ -107,7 +106,7 @@ export function AdminMappingsPagination({
             );
           })}
 
-          {/* Página Siguiente */}
+          {/* Next Page */}
           <button
             onClick={() => changePage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages || loading}
@@ -117,7 +116,7 @@ export function AdminMappingsPagination({
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
 
-          {/* Ir a Última Página */}
+          {/* Go to Last Page */}
           <button
             onClick={() => changePage(totalPages)}
             disabled={page === totalPages || loading}
@@ -129,7 +128,7 @@ export function AdminMappingsPagination({
         </div>
       )}
 
-      {/* Salto Directo a Página */}
+      {/* Direct Jump to Page */}
       {totalPages > 1 && (
         <form
           onSubmit={(e) => {

@@ -22,7 +22,7 @@ export function StudioTabBar({
 }: StudioTabBarProps) {
   return (
     <>
-          {/* Tab Navigation: Botones con tamaño generoso y estilo outline */}
+          {/* Tab Navigation: Generously sized outline-style buttons */}
           <div className="flex items-center gap-2.5 p-3.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] overflow-x-auto">
             <button
               type="button"
@@ -34,7 +34,7 @@ export function StudioTabBar({
               }`}
             >
               <Type className="w-4 h-4" />
-              <span>1. Contenido & Textos</span>
+              <span>{t('announcements.contentSection')}</span>
             </button>
 
             <button
@@ -47,7 +47,7 @@ export function StudioTabBar({
               }`}
             >
               <Palette className="w-4 h-4" />
-              <span>2. Fondos & Efectos</span>
+              <span>{t('announcements.visualsSection')}</span>
             </button>
 
             <button
@@ -60,7 +60,7 @@ export function StudioTabBar({
               }`}
             >
               <ImageIcon className="w-4 h-4" />
-              <span>3. Multimedia & GIFs</span>
+              <span>{t('announcements.mediaSection')}</span>
             </button>
 
             <button
@@ -86,7 +86,7 @@ export function StudioTabBar({
               }`}
             >
               <Users className="w-4 h-4" />
-              <span>5. Audiencia & Cierre</span>
+              <span>{t('announcements.rulesSection')}</span>
             </button>
           </div>
     </>

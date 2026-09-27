@@ -151,7 +151,7 @@ function ResetPasswordForm() {
             </div>
           )}
 
-          {/* Nueva Contraseña */}
+          {/* New Password */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[var(--text-secondary)]">{t('auth.newPassword')}</label>
             <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md focus-within:border-[#FF634A] focus-within:ring-1 focus-within:ring-[#FF634A] transition-colors">
@@ -163,7 +163,7 @@ function ResetPasswordForm() {
                 required
                 autoFocus
                 autoComplete="new-password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder={t('auth.minEightChars')}
                 className="flex-1 min-w-0 bg-transparent text-sm text-[var(--text-primary)] outline-none"
               />
               <button
@@ -178,7 +178,7 @@ function ResetPasswordForm() {
             </div>
           </div>
 
-          {/* Confirmar Nueva Contraseña */}
+          {/* Confirm New Password */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[var(--text-secondary)]">{t('auth.confirmNewPassword')}</label>
             <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-md focus-within:border-[#FF634A] focus-within:ring-1 focus-within:ring-[#FF634A] transition-colors">

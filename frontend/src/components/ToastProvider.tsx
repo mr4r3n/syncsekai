@@ -10,26 +10,26 @@ interface Toast {
   id: string;
   message: string;
   type: ToastType;
-  /** Aviso con cuenta atrás: la acción se ejecuta al expirar salvo que se deshaga. */
-  deshacer?: { expira: number; segundos: number; alDeshacer: () => void };
+  /** Notice with countdown: action executes on expiry unless undone. */
+  undo?: { expires: number; seconds: number; onUndo: () => void };
 }
 
-export interface OpcionesDeshacer {
-  /** Segundos de cuenta atrás. */
-  segundos?: number;
-  /** Se ejecuta si nadie pulsa Deshacer antes de que expire. */
-  alExpirar: () => void;
-  /** Se ejecuta al pulsar Deshacer. */
-  alDeshacer: () => void;
+export interface UndoOptions {
+  /** Countdown seconds. */
+  seconds?: number;
+  /** Executes if Undo is not clicked before expiry. */
+  onExpire: () => void;
+  /** Executes when Undo is clicked. */
+  onUndo: () => void;
 }
 
 interface ToastContextType {
   showToast: (message: string, type?: ToastType) => void;
   /**
-   * Aviso con botón Deshacer y cuenta atrás. La acción destructiva se hace
-   * al expirar, no antes: así deshacer no tiene que revertir nada.
+   * Notice with Undo button and countdown. Destructive action occurs
+   * on expiry, not before: thus undo does not need to revert anything.
    */
-  showUndoToast: (message: string, opciones: OpcionesDeshacer) => void;
+  showUndoToast: (message: string, options: UndoOptions) => void;
 }
 
 const ToastContext = createContext<ToastContextType>({
@@ -58,34 +58,34 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const showUndoToast = React.useCallback((message: string, opciones: OpcionesDeshacer) => {
+  const showUndoToast = React.useCallback((message: string, options: UndoOptions) => {
     const id = Math.random().toString(36).substring(2, 9);
-    const segundos = opciones.segundos ?? 8;
-    let deshecho = false;
-    const temporizador = setTimeout(() => {
+    const seconds = options.seconds ?? 8;
+    let undone = false;
+    const timer = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-      if (!deshecho) opciones.alExpirar();
-    }, segundos * 1000);
-    const alDeshacer = () => {
-      deshecho = true;
-      clearTimeout(temporizador);
+      if (!undone) options.onExpire();
+    }, seconds * 1000);
+    const handleUndo = () => {
+      undone = true;
+      clearTimeout(timer);
       setToasts((prev) => prev.filter((t) => t.id !== id));
-      opciones.alDeshacer();
+      options.onUndo();
     };
     setToasts((prev) => [
       ...prev,
-      { id, message, type: 'warning', deshacer: { expira: Date.now() + segundos * 1000, segundos, alDeshacer } },
+      { id, message, type: 'warning', undo: { expires: Date.now() + seconds * 1000, seconds, onUndo: handleUndo } },
     ]);
   }, []);
 
-  // Un tic periódico mientras haya alguna cuenta atrás en pantalla.
+  // Periodic tick while any countdown is on screen.
   const [, setTic] = useState(0);
-  const hayCuentaAtras = toasts.some((t) => t.deshacer);
+  const hasCountdown = toasts.some((t) => t.undo);
   useEffect(() => {
-    if (!hayCuentaAtras) return;
+    if (!hasCountdown) return;
     const i = setInterval(() => setTic((n) => n + 1), 250);
     return () => clearInterval(i);
-  }, [hayCuentaAtras]);
+  }, [hasCountdown]);
 
   return (
     <ToastContext.Provider value={{ showToast, showUndoToast }}>
@@ -118,21 +118,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               {toast.type === 'info' && <Info className="w-4 h-4 text-sky-400 shrink-0" aria-hidden="true" />}
               <span className="leading-snug">{toast.message}</span>
             </div>
-            {toast.deshacer ? (
+            {toast.undo ? (
               <button
                 type="button"
-                onClick={toast.deshacer.alDeshacer}
+                onClick={toast.undo.onUndo}
                 className="btn-secondary ml-3 shrink-0 text-xs py-1 px-2.5 relative overflow-hidden"
               >
-                {/* Barra que se vacía con la cuenta atrás, detrás del texto. */}
+                {/* Bar emptying with countdown, behind text. */}
                 <span
                   aria-hidden="true"
                   className="absolute inset-y-0 left-0 bg-[var(--status-warning-bg)] transition-[width] duration-200 ease-linear"
-                  style={{ width: `${Math.max(0, Math.min(100, ((toast.deshacer.expira - Date.now()) / (toast.deshacer.segundos * 1000)) * 100))}%` }}
+                  style={{ width: `${Math.max(0, Math.min(100, ((toast.undo.expires - Date.now()) / (toast.undo.seconds * 1000)) * 100))}%` }}
                 />
                 <Undo2 className="w-3.5 h-3.5 relative" aria-hidden="true" />
                 <span className="relative tabular-nums">
-                  {t('common.undo')} ({Math.max(0, Math.ceil((toast.deshacer.expira - Date.now()) / 1000))}s)
+                  {t('common.undo')} ({Math.max(0, Math.ceil((toast.undo.expires - Date.now()) / 1000))}s)
                 </span>
               </button>
             ) : (

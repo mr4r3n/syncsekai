@@ -9,8 +9,8 @@ import {
   Sparkles,
   Lock,
 } from 'lucide-react';
-import type { HeatmapDay, MonthRecord, HeatmapResponse } from './tipos';
-import { etiquetaMes, formatDateReadable, getHeatmapTierClass } from './utils';
+import type { HeatmapDay, MonthRecord, HeatmapResponse } from './types';
+import { monthLabel, formatDateReadable, getHeatmapTierClass } from './utils';
 import { DatePickerPopover } from './DatePickerPopover';
 import { HistoryInsights } from './HistoryInsights';
 
@@ -38,7 +38,7 @@ interface HistoryPaceProps {
   hoveredDay: HeatmapDay | null;
   setHoveredDay: (day: HeatmapDay | null) => void;
   heatmapData: HeatmapResponse | null;
-  resumen: any;
+  summary: any;
 }
 
 export function HistoryPace({
@@ -65,21 +65,21 @@ export function HistoryPace({
   hoveredDay,
   setHoveredDay,
   heatmapData,
-  resumen,
+  summary,
 }: HistoryPaceProps) {
   return (
     <>
-      {/* COLUMNA DERECHA: RITMO TEMPORAL & MÉTRICAS (4 COLS) */}
+      {/* RIGHT COLUMN: WATCHING PACE & METRICS (4 COLS) */}
       <div className="xl:col-span-4 space-y-4">
         <div className="glass-card p-5 sm:p-6 space-y-4">
-          {/* CABECERA CON TOGGLE MES VS RANGO */}
+          {/* HEADER WITH MONTH VS RANGE TOGGLE */}
           <div className="flex items-center justify-between gap-2 pb-3 border-b border-[var(--glass-border)]">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[var(--color-brand-primary,#FF634A)]" />
               <h3 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('history.viewingPace')}</h3>
             </div>
 
-            {/* CONMUTADOR DE MODO CON ESTILO DE BOTONES SYNCSEKAI */}
+            {/* MODE TOGGLE WITH SYNCSEKAI BUTTON STYLING */}
             <div className="flex items-center p-1 rounded-[6px] bg-[var(--bg-app)] border border-[var(--border-subtle)]">
               <button
                 type="button"
@@ -124,7 +124,7 @@ export function HistoryPace({
                 title={
                   selectedMonthIndex > 0
                     ? t('history.previousMonth')
-                    : 'Primer mes disponible con registros'
+                    : t('history.firstAvailableMonth')
                 }
               >
                 <ChevronLeft className={`w-4 h-4 shrink-0 ${isLightMode ? 'text-zinc-900' : 'text-zinc-100'}`} />
@@ -132,7 +132,7 @@ export function HistoryPace({
 
               <div className="text-center min-w-0">
                 <div className={`text-sm font-bold font-heading ${isLightMode ? 'text-zinc-950' : 'text-[var(--text-primary)]'}`}>
-                  {etiquetaMes(currentMonthData.year, currentMonthData.month, locale)}
+                  {monthLabel(currentMonthData.year, currentMonthData.month, locale)}
                 </div>
                 <div className="text-[10.5px] font-mono text-[var(--text-muted)]">
                   {t('history.scrobblesInMonth', { n: currentMonthData.totalScrobbles })}
@@ -163,14 +163,14 @@ export function HistoryPace({
             </div>
           )}
 
-          {/* MODO 2: SELECTOR DE RANGO DE FECHAS (SIN POPUP BLANCO DEL NAVEGADOR) */}
+          {/* MODE 2: DATE RANGE PICKER (NO NATIVE BROWSER WHITE POPUP) */}
           {dateFilterMode === 'range' && (
             <div className="space-y-3 p-3 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] dark-datepicker-container">
               <div className="grid grid-cols-2 gap-2.5">
-                {/* CAMPO 'DESDE' */}
+                {/* 'FROM' FIELD */}
                 <div className="space-y-1 relative">
                   <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider block">
-                    Desde
+                    {t('history.from')}
                   </label>
                   <button
                     type="button"
@@ -193,7 +193,7 @@ export function HistoryPace({
 
                   {openPicker === 'start' && (
                     <DatePickerPopover
-                      title="Seleccionar fecha inicial"
+                      title={t('history.selectStartDate')}
                       currentDate={startDate}
                       minDate={earliestDate}
                       maxDate={endDate || latestDate}
@@ -209,10 +209,10 @@ export function HistoryPace({
                   )}
                 </div>
 
-                {/* CAMPO 'HASTA' */}
+                {/* 'TO' FIELD */}
                 <div className="space-y-1 relative">
                   <label className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider block">
-                    Hasta
+                    {t('history.to')}
                   </label>
                   <button
                     type="button"
@@ -235,7 +235,7 @@ export function HistoryPace({
 
                   {openPicker === 'end' && (
                     <DatePickerPopover
-                      title="Seleccionar fecha final"
+                      title={t('history.selectEndDate')}
                       currentDate={endDate}
                       minDate={startDate || earliestDate}
                       maxDate={latestDate}
@@ -252,7 +252,7 @@ export function HistoryPace({
                 </div>
               </div>
 
-              {/* ACCESOS RÁPIDOS CON ESTILO DE BOTONES SYNCSEKAI */}
+              {/* QUICK ACCESS WITH SYNCSEKAI BUTTON STYLING */}
               <div className="flex items-center gap-2 flex-wrap pt-0.5">
                 <button
                   type="button"
@@ -318,7 +318,7 @@ export function HistoryPace({
             </div>
           )}
 
-          {/* INSIGNIA INFORMATIVA DE LÍMITES */}
+          {/* INFORMATIVE BOUNDARY BADGE */}
           <div
             className={`flex items-center gap-1.5 p-2.5 rounded-[6px] border text-[10.5px] font-mono truncate ${
               isLightMode
@@ -363,7 +363,7 @@ export function HistoryPace({
               })}
             </div>
 
-            {/* Tooltip Dinámico */}
+            {/* Dynamic Tooltip */}
             <div
               className={`h-4 flex items-center justify-center text-[11px] font-mono font-semibold ${
                 isLightMode ? 'text-zinc-950' : 'text-amber-400'
@@ -371,10 +371,7 @@ export function HistoryPace({
             >
               {hoveredDay ? (
                 <span>
-                  Día {hoveredDay.day}: {hoveredDay.count}{' '}
-                  {hoveredDay.count === 1
-                    ? 'scrobble registrado'
-                    : 'scrobbles registrados'}
+                  {t('history.dayScrobbles', { day: hoveredDay.day, n: hoveredDay.count })}
                 </span>
               ) : (
                 <span
@@ -403,7 +400,7 @@ export function HistoryPace({
 
           <HistoryInsights
             heatmapData={heatmapData}
-            resumen={resumen}
+            summary={summary}
             t={t}
           />
         </div>

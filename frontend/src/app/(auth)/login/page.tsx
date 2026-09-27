@@ -55,7 +55,7 @@ export default function LoginPage() {
       } else if (error) {
         if (error.includes('NOT_CONFIGURED')) {
           const provName = error.split('_')[0];
-          showToast(`El proveedor ${provName} no está configurado aún en backend/.env`, 'info');
+          showToast(t('auth.providerNotConfigured', { provider: provName }), 'info');
         } else if (error === 'ACCESS_DENIED') {
           showToast(t('auth.socialCancelled'), 'info');
         } else {
@@ -63,8 +63,8 @@ export default function LoginPage() {
         }
       }
 
-      // La cookie de sesión es httpOnly, así que document.cookie nunca la ve: hay que
-      // preguntarle al backend. Un 401 de visitante anónimo es la respuesta esperada.
+      // Session cookie is httpOnly, so document.cookie never sees it: we must
+      // query backend. A 401 from anonymous visitor is the expected response.
       api.auth
         .me()
         .then((me) => {
@@ -100,7 +100,7 @@ export default function LoginPage() {
         return;
       }
 
-      showToast(`¡Bienvenido de nuevo, ${res.user?.username || 'usuario'}!`, 'success');
+      showToast(t('auth.welcomeBack', { username: res.user?.username || t('common.user') }), 'success');
       router.push('/connections');
     } catch (err: any) {
       const msg = err.message || t('auth.loginError');
@@ -157,7 +157,7 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {/* Centro: Texto Editorial & Declaración de Propósito */}
+        {/* Center: Editorial Copy & Purpose Statement */}
         <div className="my-auto py-10 space-y-8 relative z-10 max-w-xl">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
@@ -203,10 +203,10 @@ export default function LoginPage() {
       </div>
 
       {/* ========================================================= */}
-      {/* PANEL DERECHO: FORMULARIO DE INICIO DE SESIÓN             */}
+      {/* RIGHT PANEL: LOGIN FORM                                  */}
       {/* ========================================================= */}
       <div className="col-span-1 lg:col-span-6 xl:col-span-5 flex flex-col justify-between p-6 sm:p-10 xl:p-14 min-h-screen relative z-10">
-        {/* Top Header que ocupa el ancho completo */}
+        {/* Top Header taking full width */}
         <div className="flex items-center justify-between w-full">
           <Link
             href="/"
@@ -309,7 +309,7 @@ export default function LoginPage() {
                   className="flex-1 py-3 px-4 rounded-[6px] text-xs font-bold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[var(--accent-primary)]/20 disabled:opacity-40 cursor-pointer"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <ShieldCheck className="w-4 h-4" aria-hidden="true" />}
-                  <span>Verificar e Ingresar</span>
+                  <span>{t('auth.verifyAndSignIn')}</span>
                 </button>
               </div>
             </form>
@@ -383,7 +383,7 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Correo Electrónico */}
+                {/* Email */}
                 <div className="space-y-1.5" suppressHydrationWarning>
                   <label htmlFor="login-email" className="text-xs font-semibold text-[var(--text-secondary)]">
                     {t('auth.email')}
@@ -412,7 +412,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Contraseña */}
+                {/* Password */}
                 <div className="space-y-1.5" suppressHydrationWarning>
                   <div className="flex items-center justify-between">
                     <label htmlFor="login-password" className="text-xs font-semibold text-[var(--text-secondary)]">
@@ -463,7 +463,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Botón de Envío */}
+                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -485,7 +485,7 @@ export default function LoginPage() {
           </div>
         </main>
 
-        {/* Footer que ocupa todo el ancho */}
+        {/* Footer taking full width */}
         <div className="w-full flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)] border-t border-[var(--border-subtle)] pt-4" suppressHydrationWarning>
           <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">{t('legal.termsTitle')}</Link>
           <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">

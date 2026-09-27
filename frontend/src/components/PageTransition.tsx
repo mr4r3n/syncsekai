@@ -3,11 +3,11 @@
 import { usePathname } from 'next/navigation';
 
 /**
- * Suaviza el cambio entre páginas del panel (cada página del dashboard monta
- * su propio Sidebar/Topbar, así que Next.js reemplaza el árbol entero al
- * navegar). Sin esto el contenido aparecía de golpe; con la key por ruta,
- * React desmonta/monta el div y dispara el fade-in de globals.css en cada
- * cambio de menú. Respeta prefers-reduced-motion (ver globals.css).
+ * Smooths page transitions across the dashboard (each dashboard page mounts
+ * its own Sidebar/Topbar, so Next.js replaces the entire tree on navigation).
+ * Without this, content appeared abruptly; with the route key, React
+ * unmounts/mounts the div and triggers the globals.css fade-in on each
+ * menu change. Respects prefers-reduced-motion (see globals.css).
  */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

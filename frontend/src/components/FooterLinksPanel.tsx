@@ -22,20 +22,20 @@ import {
 } from 'lucide-react';
 
 /**
- * Ajustes del sitio > Enlaces del pie. Se guarda al momento, acción por acción,
- * a diferencia del resto de ajustes: cada enlace es una fila propia y no hay
- * nada que "aplicar".
+ * Site Settings > Footer Links. Saved immediately, action by action,
+ * unlike other settings: each link is its own row and there is
+ * nothing to "apply".
  *
- * Dos cosas distintas, y por eso dos secciones separadas:
+ * Two distinct things, hence two separate sections:
  *
- * - Las **redes** salen de un catálogo cerrado. Se elige cuál del desplegable y
- *   el nombre y el icono vienen con ella: no hay nada que subir, y así tampoco
- *   hay forma de acabar con un "Discord" que apunta a una imagen cualquiera.
- * - Los **sitios recomendados** son libres, así que ahí sí hace falta un
- *   nombre, una descripción y un logo que suba el administrador.
+ * - **Networks** come from a closed catalog. Selected from the dropdown, and
+ *   the name and icon come with it: nothing to upload, preventing
+ *   ending up with a "Discord" pointing to an arbitrary image.
+ * - **Recommended sites** are open-ended, so they do require a
+ *   name, a description, and a logo uploaded by the administrator.
  *
- * Lo desactivado no se envía siquiera al cliente: apagar un enlace lo quita de
- * verdad, no lo esconde.
+ * Disabled items are not even sent to the client: disabling a link removes it
+ * for real, not merely hiding it.
  */
 export function FooterLinksPanel() {
   const { t } = useI18n();
@@ -44,40 +44,40 @@ export function FooterLinksPanel() {
   const [links, setLinks] = useState<SiteLink[]>([]);
   const [redes, setRedes] = useState<RedSocial[]>([]);
   const [loading, setLoading] = useState(true);
-  const [aBorrar, setABorrar] = useState<SiteLink | null>(null);
-  const [subiendoLogo, setSubiendoLogo] = useState<string | null>(null);
-  // Fila en edición; los campos viven aquí hasta guardar o cancelar.
-  const [edicion, setEdicion] = useState<{
+  const [toDelete, setToDelete] = useState<SiteLink | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState<string | null>(null);
+  // Row being edited; fields live here until saved or cancelled.
+  const [editing, setEditing] = useState<{
     id: string;
     label: string;
     url: string;
     description: string;
     descriptionEs: string;
   } | null>(null);
-  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Alta de red social
-  const [redElegida, setRedElegida] = useState('');
-  const [urlRed, setUrlRed] = useState('');
-  const [creandoRed, setCreandoRed] = useState(false);
+  const [selectedSocial, setSelectedSocial] = useState('');
+  const [networkUrl, setNetworkUrl] = useState('');
+  const [creatingSocial, setCreatingSocial] = useState(false);
 
   // Alta de sitio recomendado
-  const [nombreSitio, setNombreSitio] = useState('');
-  const [urlSitio, setUrlSitio] = useState('');
-  const [descSitio, setDescSitio] = useState('');
-  const [descSitioEs, setDescSitioEs] = useState('');
-  const [creandoSitio, setCreandoSitio] = useState(false);
+  const [siteName, setSiteName] = useState('');
+  const [siteUrl, setSiteUrl] = useState('');
+  const [siteDesc, setSiteDesc] = useState('');
+  const [siteDescEs, setSiteDescEs] = useState('');
+  const [creatingSite, setCreatingSite] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const idParaLogo = useRef<string | null>(null);
 
-  const cargar = async () => {
+  const load = async () => {
     try {
       setLoading(true);
       const [res, cat] = await Promise.all([api.admin.siteLinks(), api.admin.siteLinkProviders()]);
       setLinks(res.links || []);
       setRedes(cat.providers || []);
-      if (!redElegida && cat.providers?.length) setRedElegida(cat.providers[0].id);
+      if (!selectedSocial && cat.providers?.length) setSelectedSocial(cat.providers[0].id);
     } catch (err: any) {
       showToast(`${t('adminLinks.loadError')} ${err.message}`, 'error');
     } finally {
@@ -86,77 +86,77 @@ export function FooterLinksPanel() {
   };
 
   useEffect(() => {
-    cargar();
+    load();
   }, []);
 
-  const redActual = redes.find((r) => r.id === redElegida);
+  const redActual = redes.find((r) => r.id === selectedSocial);
 
-  const handleCrearRed = async (e: React.FormEvent) => {
+  const handleCreateSocial = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreandoRed(true);
+    setCreatingSocial(true);
     try {
       const res = await api.admin.createSiteLink({
         kind: 'SOCIAL',
-        provider: redElegida,
-        url: urlRed.trim(),
+        provider: selectedSocial,
+        url: networkUrl.trim(),
       });
       setLinks(res.links || []);
-      setUrlRed('');
+      setNetworkUrl('');
       showToast(t('adminLinks.created'), 'success');
     } catch (err: any) {
       showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
     } finally {
-      setCreandoRed(false);
+      setCreatingSocial(false);
     }
   };
 
-  const handleCrearSitio = async (e: React.FormEvent) => {
+  const handleCreateSite = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreandoSitio(true);
+    setCreatingSite(true);
     try {
       const res = await api.admin.createSiteLink({
         kind: 'FRIEND',
-        label: nombreSitio.trim(),
-        url: urlSitio.trim(),
-        description: descSitio.trim(),
-        descriptionEs: descSitioEs.trim(),
+        label: siteName.trim(),
+        url: siteUrl.trim(),
+        description: siteDesc.trim(),
+        descriptionEs: siteDescEs.trim(),
       });
       setLinks(res.links || []);
-      setNombreSitio('');
-      setUrlSitio('');
-      setDescSitio('');
-      setDescSitioEs('');
+      setSiteName('');
+      setSiteUrl('');
+      setSiteDesc('');
+      setSiteDescEs('');
       showToast(t('adminLinks.created'), 'success');
     } catch (err: any) {
       showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
     } finally {
-      setCreandoSitio(false);
+      setCreatingSite(false);
     }
   };
 
-  const actualizar = async (id: string, cambios: Partial<SiteLink>) => {
+  const update = async (id: string, changes: Partial<SiteLink>) => {
     try {
-      const res = await api.admin.updateSiteLink(id, cambios);
+      const res = await api.admin.updateSiteLink(id, changes);
       setLinks(res.links || []);
     } catch (err: any) {
       showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
     }
   };
 
-  const handleBorrar = () => {
-    if (!aBorrar) return;
-    const enlace = aBorrar;
-    setABorrar(null);
-    setLinks((prev) => prev.filter((l) => l.id !== enlace.id));
-    showUndoToast(t('common.deletingItem', { name: enlace.label }), {
-      alDeshacer: () => setLinks((prev) => [...prev, enlace]),
-      alExpirar: async () => {
+  const handleDelete = () => {
+    if (!toDelete) return;
+    const link = toDelete;
+    setToDelete(null);
+    setLinks((prev) => prev.filter((l) => l.id !== link.id));
+    showUndoToast(t('common.deletingItem', { name: link.label }), {
+      onUndo: () => setLinks((prev) => [...prev, link]),
+      onExpire: async () => {
         try {
-          const res = await api.admin.deleteSiteLink(enlace.id);
+          const res = await api.admin.deleteSiteLink(link.id);
           setLinks(res.links || []);
           showToast(t('adminLinks.deleted'), 'success');
         } catch (err: any) {
-          setLinks((prev) => [...prev, enlace]);
+          setLinks((prev) => [...prev, link]);
           showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
         }
       },
@@ -164,33 +164,33 @@ export function FooterLinksPanel() {
   };
 
   /**
-   * Mover dentro de su grupo intercambiando el orden con el vecino, en lugar de
-   * renumerar la lista entera: dos escrituras en vez de N y el mismo resultado.
+   * Move within its group by swapping order with the neighbor, rather than
+   * renumbering the entire list: two writes instead of N and the same result.
    */
-  const mover = async (enlace: SiteLink, direccion: -1 | 1) => {
-    const grupo = links.filter((l) => l.kind === enlace.kind);
-    const i = grupo.findIndex((l) => l.id === enlace.id);
-    const vecino = grupo[i + direccion];
-    if (!vecino) return;
+  const mover = async (link: SiteLink, direction: -1 | 1) => {
+    const group = links.filter((l) => l.kind === link.kind);
+    const i = group.findIndex((l) => l.id === link.id);
+    const neighbor = group[i + direction];
+    if (!neighbor) return;
 
     try {
-      await api.admin.updateSiteLink(enlace.id, { sortOrder: vecino.sortOrder });
-      const res = await api.admin.updateSiteLink(vecino.id, { sortOrder: enlace.sortOrder });
+      await api.admin.updateSiteLink(link.id, { sortOrder: neighbor.sortOrder });
+      const res = await api.admin.updateSiteLink(neighbor.id, { sortOrder: link.sortOrder });
       setLinks(res.links || []);
     } catch (err: any) {
       showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
     }
   };
 
-  const handleLogoElegido = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    // Se limpia siempre: sin esto, reintentar con el mismo fichero tras un fallo
-    // no dispara el evento y parece que el boton no hace nada.
+    // Always cleared: without this, retrying with the same file after a failure
+    // does not trigger the event and makes the button appear non-responsive.
     e.target.value = '';
     const id = idParaLogo.current;
     if (!file || !id) return;
 
-    setSubiendoLogo(id);
+    setUploadingLogo(id);
     try {
       const formData = new FormData();
       formData.append('icon', file);
@@ -200,44 +200,44 @@ export function FooterLinksPanel() {
     } catch (err: any) {
       showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
     } finally {
-      setSubiendoLogo(null);
+      setUploadingLogo(null);
     }
   };
 
-  const guardarEdicion = async () => {
-    if (!edicion) return;
-    const enlace = links.find((l) => l.id === edicion.id);
-    if (!enlace) return setEdicion(null);
-    // Una red social solo cambia de dirección: nombre e icono los pone el catálogo.
-    const cambios: Partial<SiteLink> =
-      enlace.kind === 'SOCIAL'
-        ? { url: edicion.url.trim() }
+  const saveEdit = async () => {
+    if (!editing) return;
+    const link = links.find((l) => l.id === editing.id);
+    if (!link) return setEditing(null);
+    // A social network only changes address: name and icon are provided by the catalog.
+    const changes: Partial<SiteLink> =
+      link.kind === 'SOCIAL'
+        ? { url: editing.url.trim() }
         : {
-            label: edicion.label.trim(),
-            url: edicion.url.trim(),
-            description: edicion.description.trim(),
-            descriptionEs: edicion.descriptionEs.trim(),
+            label: editing.label.trim(),
+            url: editing.url.trim(),
+            description: editing.description.trim(),
+            descriptionEs: editing.descriptionEs.trim(),
           };
-    setGuardandoEdicion(true);
+    setSavingEdit(true);
     try {
-      const res = await api.admin.updateSiteLink(enlace.id, cambios);
+      const res = await api.admin.updateSiteLink(link.id, changes);
       setLinks(res.links || []);
-      setEdicion(null);
+      setEditing(null);
       showToast(t('adminLinks.updated'), 'success');
     } catch (err: any) {
       showToast(`${t('adminLinks.saveError')} ${err.message}`, 'error');
     } finally {
-      setGuardandoEdicion(false);
+      setSavingEdit(false);
     }
   };
 
-  const campoEdicion = (valor: string, onChange: (v: string) => void, extra: Record<string, unknown>) => (
+  const editField = (valor: string, onChange: (v: string) => void, extra: Record<string, unknown>) => (
     <input
       value={valor}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') guardarEdicion();
-        if (e.key === 'Escape') setEdicion(null);
+        if (e.key === 'Enter') saveEdit();
+        if (e.key === 'Escape') setEditing(null);
       }}
       spellCheck={false}
       autoComplete="off"
@@ -246,35 +246,35 @@ export function FooterLinksPanel() {
     />
   );
 
-  /** Texto de la fila, o sus campos cuando se está editando. */
-  const cuerpo = (enlace: SiteLink) => {
-    if (edicion?.id === enlace.id) {
-      const social = enlace.kind === 'SOCIAL';
+  /** Row text, or its fields when being edited. */
+  const body = (link: SiteLink) => {
+    if (editing?.id === link.id) {
+      const social = link.kind === 'SOCIAL';
       return (
         <div className="min-w-0 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2">
           {social ? (
-            <div className="text-xs font-bold text-[var(--text-primary)] self-center truncate">{enlace.label}</div>
+            <div className="text-xs font-bold text-[var(--text-primary)] self-center truncate">{link.label}</div>
           ) : (
-            campoEdicion(edicion.label, (v) => setEdicion({ ...edicion, label: v }), {
+            editField(editing.label, (v) => setEditing({ ...editing, label: v }), {
               maxLength: 60,
               placeholder: t('adminLinks.label'),
               'aria-label': t('adminLinks.label'),
             })
           )}
-          {campoEdicion(edicion.url, (v) => setEdicion({ ...edicion, url: v }), {
+          {editField(editing.url, (v) => setEditing({ ...editing, url: v }), {
             type: 'url',
             inputMode: 'url',
             placeholder: t('adminLinks.url'),
             'aria-label': t('adminLinks.url'),
           })}
           {!social &&
-            campoEdicion(edicion.description, (v) => setEdicion({ ...edicion, description: v }), {
+            editField(editing.description, (v) => setEditing({ ...editing, description: v }), {
               maxLength: 160,
               placeholder: t('adminLinks.description'),
               'aria-label': t('adminLinks.description'),
             })}
           {!social &&
-            campoEdicion(edicion.descriptionEs, (v) => setEdicion({ ...edicion, descriptionEs: v }), {
+            editField(editing.descriptionEs, (v) => setEditing({ ...editing, descriptionEs: v }), {
               maxLength: 160,
               placeholder: t('adminLinks.descriptionEs'),
               'aria-label': t('adminLinks.descriptionEs'),
@@ -284,30 +284,30 @@ export function FooterLinksPanel() {
     }
     return (
       <div className="min-w-0 flex-1">
-        <div className="text-xs font-bold text-[var(--text-primary)] truncate">{enlace.label}</div>
-        {enlaceUrl(enlace)}
-        {enlace.description ? (
-          <div className="text-[11px] text-[var(--text-secondary)] line-clamp-1">{enlace.description}</div>
+        <div className="text-xs font-bold text-[var(--text-primary)] truncate">{link.label}</div>
+        {linkUrl(link)}
+        {link.description ? (
+          <div className="text-[11px] text-[var(--text-secondary)] line-clamp-1">{link.description}</div>
         ) : null}
       </div>
     );
   };
 
-  /** Controles comunes a las dos listas: orden, visibilidad, edición y borrado. */
-  const controles = (enlace: SiteLink, i: number, total: number) =>
-    edicion?.id === enlace.id ? (
+  /** Controls shared by both lists: order, visibility, edit, and delete. */
+  const controles = (link: SiteLink, i: number, total: number) =>
+    editing?.id === link.id ? (
       <div className="flex items-center gap-1 shrink-0">
         <button
-          onClick={guardarEdicion}
-          disabled={guardandoEdicion}
+          onClick={saveEdit}
+          disabled={savingEdit}
           aria-label={t('common.save')}
           title={t('common.save')}
           className="p-1.5 rounded-[5px] text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 cursor-pointer transition-colors"
         >
-          {guardandoEdicion ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+          {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
         </button>
         <button
-          onClick={() => setEdicion(null)}
+          onClick={() => setEditing(null)}
           aria-label={t('common.cancel')}
           title={t('common.cancel')}
           className="p-1.5 rounded-[5px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] cursor-pointer transition-colors"
@@ -318,7 +318,7 @@ export function FooterLinksPanel() {
     ) : (
     <div className="flex items-center gap-1 shrink-0">
       <button
-        onClick={() => mover(enlace, -1)}
+        onClick={() => mover(link, -1)}
         disabled={i === 0}
         aria-label={t('adminLinks.moveUp')}
         title={t('adminLinks.moveUp')}
@@ -327,7 +327,7 @@ export function FooterLinksPanel() {
         <ChevronUp className="w-3.5 h-3.5" />
       </button>
       <button
-        onClick={() => mover(enlace, 1)}
+        onClick={() => mover(link, 1)}
         disabled={i === total - 1}
         aria-label={t('adminLinks.moveDown')}
         title={t('adminLinks.moveDown')}
@@ -339,8 +339,8 @@ export function FooterLinksPanel() {
       <label className="flex items-center gap-1.5 px-2 cursor-pointer">
         <input
           type="checkbox"
-          checked={!!enlace.isEnabled}
-          onChange={(e) => actualizar(enlace.id, { isEnabled: e.target.checked })}
+          checked={!!link.isEnabled}
+          onChange={(e) => update(link.id, { isEnabled: e.target.checked })}
           className="accent-[var(--accent-primary)] cursor-pointer"
         />
         <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
@@ -350,12 +350,12 @@ export function FooterLinksPanel() {
 
       <button
         onClick={() =>
-          setEdicion({
-            id: enlace.id,
-            label: enlace.label,
-            url: enlace.url,
-            description: enlace.description || '',
-            descriptionEs: enlace.descriptionEs || '',
+          setEditing({
+            id: link.id,
+            label: link.label,
+            url: link.url,
+            description: link.description || '',
+            descriptionEs: link.descriptionEs || '',
           })
         }
         aria-label={t('adminLinks.edit')}
@@ -366,7 +366,7 @@ export function FooterLinksPanel() {
       </button>
 
       <button
-        onClick={() => setABorrar(enlace)}
+        onClick={() => setToDelete(link)}
         aria-label={t('adminLinks.delete')}
         title={t('adminLinks.delete')}
         className="p-1.5 rounded-[5px] text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-colors"
@@ -376,25 +376,25 @@ export function FooterLinksPanel() {
     </div>
     );
 
-  const filaBase = (enlace: SiteLink) =>
+  const baseRow = (link: SiteLink) =>
     `flex items-center gap-3 p-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-opacity ${
-      enlace.isEnabled ? '' : 'opacity-50'
+      link.isEnabled ? '' : 'opacity-50'
     }`;
 
-  const enlaceUrl = (enlace: SiteLink) => (
+  const linkUrl = (link: SiteLink) => (
     <a
-      href={enlace.url}
+      href={link.url}
       target="_blank"
       rel="noopener noreferrer"
       className="text-[11px] font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1"
     >
-      <span className="truncate">{enlace.url}</span>
+      <span className="truncate">{link.url}</span>
       <ExternalLink className="w-3 h-3 shrink-0" aria-hidden="true" />
     </a>
   );
 
   const sociales = links.filter((l) => l.kind === 'SOCIAL');
-  const sitios = links.filter((l) => l.kind === 'FRIEND');
+  const sites = links.filter((l) => l.kind === 'FRIEND');
 
   return (
     <>
@@ -403,7 +403,7 @@ export function FooterLinksPanel() {
         type="file"
         accept="image/png,image/jpeg,image/webp"
         className="hidden"
-        onChange={handleLogoElegido}
+        onChange={handleLogoSelected}
       />
 
       {loading ? (
@@ -427,7 +427,7 @@ export function FooterLinksPanel() {
             </div>
 
             <form
-              onSubmit={handleCrearRed}
+              onSubmit={handleCreateSocial}
               className="grid grid-cols-1 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] gap-3 items-end"
             >
               <div className="space-y-1.5 min-w-0">
@@ -435,8 +435,8 @@ export function FooterLinksPanel() {
                   {t('adminLinks.network')}
                 </label>
                 <CustomSelect
-                  value={redElegida}
-                  onChange={setRedElegida}
+                  value={selectedSocial}
+                  onChange={setSelectedSocial}
                   options={redes.map((r) => ({
                     value: r.id,
                     label: r.label,
@@ -458,18 +458,18 @@ export function FooterLinksPanel() {
                   id="url-red"
                   type="url"
                   inputMode="url"
-                  value={urlRed}
-                  onChange={(e) => setUrlRed(e.target.value)}
+                  value={networkUrl}
+                  onChange={(e) => setNetworkUrl(e.target.value)}
                   required
                   spellCheck={false}
                   autoComplete="off"
-                  placeholder={redActual?.ejemplo || 'https://…'}
+                  placeholder={redActual?.example || 'https://…'}
                   className="w-full px-3 py-2 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] text-xs font-mono"
                 />
               </div>
 
-              <button type="submit" disabled={creandoRed} className="btn-primary shrink-0">
-                {creandoRed ? (
+              <button type="submit" disabled={creatingSocial} className="btn-primary shrink-0">
+                {creatingSocial ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
                 ) : (
                   <Plus className="w-3.5 h-3.5" aria-hidden="true" />
@@ -482,13 +482,13 @@ export function FooterLinksPanel() {
               <p className="text-xs text-[var(--text-muted)] py-2">{t('adminLinks.emptySocial')}</p>
             ) : (
               <ul className="space-y-2">
-                {sociales.map((enlace, i) => (
-                  <li key={enlace.id} className={filaBase(enlace)}>
+                {sociales.map((link, i) => (
+                  <li key={link.id} className={baseRow(link)}>
                     <span className="w-8 h-8 rounded-[5px] border border-[var(--border-subtle)] bg-[var(--bg-app)] flex items-center justify-center shrink-0">
-                      {enlace.iconUrl ? (
+                      {link.iconUrl ? (
                         <BrandIcon
-                          icon={enlace.iconUrl}
-                          iconDark={redes.find((r) => r.id === enlace.provider)?.iconDark}
+                          icon={link.iconUrl}
+                          iconDark={redes.find((r) => r.id === link.provider)?.iconDark}
                           size={18}
                           className="w-[18px] h-[18px]"
                         />
@@ -497,10 +497,10 @@ export function FooterLinksPanel() {
                       )}
                     </span>
 
-                    {/* min-w-0: sin el, una URL larga empuja los botones fuera de la fila */}
-                    {cuerpo(enlace)}
+                    {/* min-w-0: without it, a long URL pushes the buttons out of the row */}
+                    {body(link)}
 
-                    {controles(enlace, i, sociales.length)}
+                    {controles(link, i, sociales.length)}
                   </li>
                 ))}
               </ul>
@@ -518,7 +518,7 @@ export function FooterLinksPanel() {
               </p>
             </div>
 
-            <form onSubmit={handleCrearSitio} className="space-y-3">
+            <form onSubmit={handleCreateSite} className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className="space-y-1.5 min-w-0">
                   <label
@@ -529,8 +529,8 @@ export function FooterLinksPanel() {
                   </label>
                   <input
                     id="nombre-sitio"
-                    value={nombreSitio}
-                    onChange={(e) => setNombreSitio(e.target.value)}
+                    value={siteName}
+                    onChange={(e) => setSiteName(e.target.value)}
                     required
                     maxLength={60}
                     spellCheck={false}
@@ -551,8 +551,8 @@ export function FooterLinksPanel() {
                     id="url-sitio"
                     type="url"
                     inputMode="url"
-                    value={urlSitio}
-                    onChange={(e) => setUrlSitio(e.target.value)}
+                    value={siteUrl}
+                    onChange={(e) => setSiteUrl(e.target.value)}
                     required
                     spellCheck={false}
                     autoComplete="off"
@@ -570,8 +570,8 @@ export function FooterLinksPanel() {
                   </label>
                   <input
                     id="desc-sitio"
-                    value={descSitio}
-                    onChange={(e) => setDescSitio(e.target.value)}
+                    value={siteDesc}
+                    onChange={(e) => setSiteDesc(e.target.value)}
                     maxLength={160}
                     autoComplete="off"
                     placeholder={t('adminLinks.descriptionPlaceholder')}
@@ -589,8 +589,8 @@ export function FooterLinksPanel() {
                   <input
                     id="desc-sitio-es"
                     lang="es"
-                    value={descSitioEs}
-                    onChange={(e) => setDescSitioEs(e.target.value)}
+                    value={siteDescEs}
+                    onChange={(e) => setSiteDescEs(e.target.value)}
                     maxLength={160}
                     autoComplete="off"
                     placeholder={t('adminLinks.descriptionEsPlaceholder')}
@@ -601,8 +601,8 @@ export function FooterLinksPanel() {
 
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <p className="text-[11px] text-[var(--text-muted)]">{t('adminLinks.logoHint')}</p>
-                <button type="submit" disabled={creandoSitio} className="btn-primary shrink-0">
-                  {creandoSitio ? (
+                <button type="submit" disabled={creatingSite} className="btn-primary shrink-0">
+                  {creatingSite ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
                   ) : (
                     <Plus className="w-3.5 h-3.5" aria-hidden="true" />
@@ -612,27 +612,27 @@ export function FooterLinksPanel() {
               </div>
             </form>
 
-            {sitios.length === 0 ? (
+            {sites.length === 0 ? (
               <p className="text-xs text-[var(--text-muted)] py-2">{t('adminLinks.emptyFriend')}</p>
             ) : (
               <ul className="space-y-2">
-                {sitios.map((enlace, i) => (
-                  <li key={enlace.id} className={filaBase(enlace)}>
-                    {/* El logo es el boton de subida: es donde uno mira cuando
-                        quiere cambiarlo, y con hueco vacio se ve que falta. */}
+                {sites.map((link, i) => (
+                  <li key={link.id} className={baseRow(link)}>
+                    {/* The logo is the upload button: that's where one looks when
+                        wanting to change it, and an empty slot shows it is missing. */}
                     <button
                       onClick={() => {
-                        idParaLogo.current = enlace.id;
+                        idParaLogo.current = link.id;
                         logoInputRef.current?.click();
                       }}
-                      disabled={subiendoLogo === enlace.id}
+                      disabled={uploadingLogo === link.id}
                       title={t('adminLinks.uploadIcon')}
-                      aria-label={`${t('adminLinks.uploadIcon')}: ${enlace.label}`}
+                      aria-label={`${t('adminLinks.uploadIcon')}: ${link.label}`}
                       className="group relative w-11 h-11 rounded-[5px] border border-[var(--border-subtle)] bg-[var(--bg-app)] overflow-hidden shrink-0 cursor-pointer hover:border-[var(--accent-primary)] transition-colors"
                     >
-                      {enlace.iconUrl ? (
+                      {link.iconUrl ? (
                         <img
-                          src={enlace.iconUrl}
+                          src={link.iconUrl}
                           alt=""
                           width={44}
                           height={44}
@@ -645,7 +645,7 @@ export function FooterLinksPanel() {
                       )}
 
                       <span className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity flex items-center justify-center">
-                        {subiendoLogo === enlace.id ? (
+                        {uploadingLogo === link.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                         ) : (
                           <ImagePlus className="w-4 h-4" aria-hidden="true" />
@@ -653,9 +653,9 @@ export function FooterLinksPanel() {
                       </span>
                     </button>
 
-                    {cuerpo(enlace)}
+                    {body(link)}
 
-                    {controles(enlace, i, sitios.length)}
+                    {controles(link, i, sites.length)}
                   </li>
                 ))}
               </ul>
@@ -665,11 +665,11 @@ export function FooterLinksPanel() {
       )}
 
       <ConfirmModal
-        isOpen={!!aBorrar}
-        onClose={() => setABorrar(null)}
-        onConfirm={handleBorrar}
+        isOpen={!!toDelete}
+        onClose={() => setToDelete(null)}
+        onConfirm={handleDelete}
         title={t('adminLinks.deleteTitle')}
-        description={t('adminLinks.deleteMessage', { label: aBorrar?.label || '' })}
+        description={t('adminLinks.deleteMessage', { label: toDelete?.label || '' })}
         confirmText={t('adminLinks.delete')}
         variant="danger"
       />

@@ -3,7 +3,7 @@ import { Plus, Database, Archive, Loader2, Sparkles } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface AdminBackupCreateModalProps {
-  propsCrear: Record<string, any>;
+  createProps: Record<string, any>;
   setShowCreateModal: (val: boolean) => void;
   creatingType: 'DATABASE' | 'FULL_SYSTEM';
   setCreatingType: (val: 'DATABASE' | 'FULL_SYSTEM') => void;
@@ -12,7 +12,7 @@ interface AdminBackupCreateModalProps {
 }
 
 export function AdminBackupCreateModal({
-  propsCrear,
+  createProps,
   setShowCreateModal,
   creatingType,
   setCreatingType,
@@ -24,7 +24,7 @@ export function AdminBackupCreateModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        {...propsCrear}
+        {...createProps}
         className="w-full max-w-md p-6 rounded-[6px] border border-[var(--glass-border)] bg-[var(--bg-surface-elevated)] backdrop-blur-2xl shadow-2xl space-y-5">
         <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-subtle)]">
           <div className="w-9 h-9 rounded-[6px] bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 flex items-center justify-center text-[var(--accent-text)]">
@@ -37,7 +37,7 @@ export function AdminBackupCreateModal({
         </div>
 
         <div className="space-y-3">
-          {/* Opción 1: Base de Datos */}
+          {/* Option 1: Database */}
           <div
             onClick={() => setCreatingType('DATABASE')}
             className={`p-4 rounded-[6px] border transition-all cursor-pointer flex items-start gap-3 ${
@@ -63,7 +63,7 @@ export function AdminBackupCreateModal({
             </div>
           </div>
 
-          {/* Opción 2: Completo (Migración) */}
+          {/* Option 2: Full (Migration) */}
           <div
             onClick={() => setCreatingType('FULL_SYSTEM')}
             className={`p-4 rounded-[6px] border transition-all cursor-pointer flex items-start gap-3 ${
@@ -78,14 +78,14 @@ export function AdminBackupCreateModal({
             <div className="space-y-1.5 flex-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[var(--text-primary)] font-heading">
-                  Sistema Completo &amp; Archivos Multimedia
+                  {t('backups.fullSystemMedia')}
                 </span>
                 <span className="text-[10px] font-mono font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded">{t('backups.fullMigration')}</span>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">{t('backups.fullMigrationDesc')}</p>
               <ul className="text-[10.5px] text-[var(--text-muted)] space-y-0.5 font-mono">
                 <li>{t('backups.bulletFullPostgres')}</li>
-                <li>• Biblioteca multimedia `/uploads` (portadas WebP, avatares)</li>
+                <li>{t('backups.bulletMediaUploads')}</li>
                 <li>{t('backups.bulletFullRestore')}</li>
               </ul>
             </div>

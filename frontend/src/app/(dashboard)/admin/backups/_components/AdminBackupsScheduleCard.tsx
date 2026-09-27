@@ -29,7 +29,7 @@ export function AdminBackupsScheduleCard({
       </div>
 
       <form onSubmit={handleSaveSchedule} className="space-y-4">
-        {/* Switch Activación */}
+        {/* Activation Switch */}
         <div className="flex items-center justify-between p-3 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
           <div className="space-y-0.5">
             <span className="text-xs font-bold text-[var(--text-primary)]">{t('backups.enableAutoBackups')}</span>
@@ -58,7 +58,7 @@ export function AdminBackupsScheduleCard({
           />
         </div>
 
-        {/* Hora de Ejecución */}
+        {/* Execution Time */}
         <div className="space-y-1.5">
           <label htmlFor="copia-hora-ejecucion" className="text-xs font-medium text-[var(--text-secondary)]">{t('backups.executionTime')}</label>
           <div className="relative">
@@ -73,7 +73,7 @@ export function AdminBackupsScheduleCard({
           </div>
         </div>
 
-        {/* Retención */}
+        {/* Retention */}
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-[var(--text-secondary)]">{t('backups.retention')}</label>
           <CustomSelect

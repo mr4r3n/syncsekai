@@ -1,8 +1,8 @@
-import type { Traductor } from './types';
+import type { Translator } from './types';
 
-// Ayudante, no componente: recibe t en vez de usar el hook. Reutiliza las
-// claves de tiempo relativo que ya existen en la seccion topbar.
-function formatRelativeTime(t: Traductor, dateString: string | Date | undefined) {
+// Helper, not component: receives t instead of using hook. Reuses
+// relative time keys already existing in topbar section.
+function formatRelativeTime(t: Translator, dateString: string | Date | undefined) {
   if (!dateString) return t('security.activeRecently');
   const diffSec = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
 

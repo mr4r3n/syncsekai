@@ -30,7 +30,7 @@ export function DangerZoneSection({
 }: DangerZoneSectionProps) {
   return (
     <>
-            {/* ZONA DE PELIGRO: ELIMINACIÓN DE CUENTA (FLUJO EN 2 FASES + GRACIA 24H) */}
+            {/* DANGER ZONE: ACCOUNT DELETION (2-PHASE FLOW + 24H GRACE) */}
             {userProfile?.deletionScheduledAt ? (
               /* ESTADO: CUENTA EN PERIODO DE GRACIA (24 HORAS) */
               <div className="col-span-full glass-card p-6 sm:p-7 border-amber-500/30 bg-amber-500/[0.04] space-y-4 animate-in fade-in duration-200">
@@ -69,7 +69,7 @@ export function DangerZoneSection({
                 <div className="p-3 rounded-[6px] bg-[var(--bg-surface)] border border-amber-500/20 text-[11px] text-[var(--text-muted)]">{t('security.cancelDeletionDesc')}</div>
               </div>
             ) : (
-              /* ESTADO NORMAL: INICIAR SOLICITUD DE ELIMINACIÓN */
+              /* NORMAL STATE: INITIATE DELETION REQUEST */
               <div className="col-span-full glass-card p-6 sm:p-7 space-y-4 border-rose-500/20 bg-rose-500/[0.02]">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-[6px] bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">

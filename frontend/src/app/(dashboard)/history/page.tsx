@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { api, getApiBase } from '@/lib/api';
 import { Topbar } from '@/components/Topbar';
-import type { TrackersVinculados } from '@/components/SyncStatus';
+import type { LinkedTrackers } from '@/components/SyncStatus';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useRouter } from 'next/navigation';
-import type { HeatmapDay, HeatmapResponse } from './_components/tipos';
+import type { HeatmapDay, HeatmapResponse } from './_components/types';
 import { HistorySelectionBar } from './_components/HistorySelectionBar';
 import { HistoryHeader } from './_components/HistoryHeader';
 import { HistoryStats } from './_components/HistoryStats';
@@ -23,7 +23,7 @@ export default function HistoryPage() {
   const { showToast, showUndoToast } = useToast();
   const { t, locale } = useI18n();
 
-  // Detección reactiva de Modo Claro / Modo Oscuro
+  // Reactive detection of Light Mode / Dark Mode
   const [isLightMode, setIsLightMode] = useState(false);
 
   useEffect(() => {
@@ -51,10 +51,10 @@ export default function HistoryPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Filtro de Estado: Todo, Éxitos, Errores
+  // Status Filter: All, Successes, Errors
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'SUCCESS' | 'ERROR'>('ALL');
 
-  // Modal de Confirmación Glassmorphism
+  // Glassmorphism Confirmation Modal
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -68,29 +68,29 @@ export default function HistoryPage() {
     onConfirm: () => {},
   });
 
-  // Estados de Paginación & Búsqueda
+  // Pagination & Search States
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(30);
   const [total, setTotal] = useState(0);
   /*
-   * Las cifras de las tarjetas de arriba, contadas en la base.
+   * Numbers for cards above, counted in database.
    */
-  const [resumen, setResumen] = useState<any>(null);
+  const [summary, setSummary] = useState<any>(null);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [jumpPage, setJumpPage] = useState('');
 
-  // Estados para selección por lotes (Batch Selection)
+  // States for batch selection (Batch Selection)
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [activeHistorySheetItem, setActiveHistorySheetItem] = useState<any | null>(null);
 
-  // Que trackers tiene vinculados. Es un dato de la cuenta, no del scrobble:
-  // sin el, "no lo tienes puesto" y "lo tienes y fallo" se ven igual, y el
-  // contador dice 1/3 cuando lo correcto es 1/1.
-  const [vinculados, setVinculados] = useState<TrackersVinculados>({
+  // Which trackers are linked. Account data, not scrobble data:
+  // without it, "not configured" and "configured and failed" look identical, and
+  // counter reports 1/3 when 1/1 is correct.
+  const [linked, setLinked] = useState<LinkedTrackers>({
     anilist: true,
     mal: true,
     kitsu: true,
@@ -100,21 +100,21 @@ export default function HistoryPage() {
     api.auth
       .me()
       .then((res) => {
-        const conexiones = (res?.user || res)?.animeConnections || [];
-        const puesto = (p: string) =>
-          conexiones.some((c: any) => c.provider === p && c.isConnected);
-        setVinculados({
-          anilist: puesto('ANILIST'),
-          mal: puesto('MAL'),
-          kitsu: puesto('KITSU'),
+        const connections = (res?.user || res)?.animeConnections || [];
+        const isLinked = (p: string) =>
+          connections.some((c: any) => c.provider === p && c.isConnected);
+        setLinked({
+          anilist: isLinked('ANILIST'),
+          mal: isLinked('MAL'),
+          kitsu: isLinked('KITSU'),
         });
       })
-      // Si falla, se asume que estan los tres: es mejor mostrar de mas que
+      // If it fails, all three are assumed: better to overreport than
       // esconder un fallo real de sincronizacion.
       .catch(() => {});
   }, []);
 
-  // Estados de Ritmo Temporal y Filtro de Fechas (100% Reales)
+  // Pace & Date Filter States (100% Real)
   const [heatmapData, setHeatmapData] = useState<HeatmapResponse | null>(null);
   const [dateFilterMode, setDateFilterMode] = useState<'month' | 'range'>('month');
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
@@ -143,15 +143,15 @@ export default function HistoryPage() {
   useEffect(() => {
     api.history
       .getSummary()
-      .then(setResumen)
-      .catch(() => setResumen(null));
+      .then(setSummary)
+      .catch(() => setSummary(null));
   }, []);
 
   useEffect(() => {
     loadHeatmap();
   }, [loadHeatmap]);
 
-  // Cerrar picker de fecha al hacer clic fuera
+  // Close date picker on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -163,7 +163,7 @@ export default function HistoryPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Cargar estado inicial de paginación desde URL o localStorage
+  // Load initial pagination state from URL or localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -226,7 +226,7 @@ export default function HistoryPage() {
     setIsRefreshing(true);
     await Promise.all([loadHistory(page, limit, search), loadHeatmap()]);
     setIsRefreshing(false);
-    showToast('Historial actualizado.', 'success');
+    showToast(t('history.historyRefreshed'), 'success');
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -262,7 +262,7 @@ export default function HistoryPage() {
     }
   };
 
-  // Manejo de Selección de Checkboxes
+  // Checkbox Selection Handling
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
@@ -277,7 +277,7 @@ export default function HistoryPage() {
     }
   };
 
-  // Reversión individual
+  // Individual rollback
   const handleDeleteAndRevert = (item: any) => {
     setConfirmModal({
       isOpen: true,
@@ -289,8 +289,8 @@ export default function HistoryPage() {
         setHistory((prev) => prev.filter((h) => h.id !== item.id));
         setTotal((prev) => Math.max(0, prev - 1));
         showUndoToast(t('common.deletingItem', { name: `${item.showTitle} Ep. ${item.episodeNumber}` }), {
-          alDeshacer: () => loadHistory(page, limit, search),
-          alExpirar: async () => {
+          onUndo: () => loadHistory(page, limit, search),
+          onExpire: async () => {
             try {
               await api.history.deleteAndRevert(item.id);
               showToast(t('history.scrobbleReverted'), 'success');
@@ -304,7 +304,7 @@ export default function HistoryPage() {
     });
   };
 
-  // Reversión por Lotes
+  // Batch Rollback
   const handleBatchDeleteAndRevert = () => {
     if (selectedIds.length === 0) return;
     const count = selectedIds.length;
@@ -320,15 +320,15 @@ export default function HistoryPage() {
         setHistory((prev) => prev.filter((h) => !idsToProcess.includes(h.id)));
         setSelectedIds([]);
         showUndoToast(t('history.revertingN', { n: count }), {
-          alDeshacer: () => loadHistory(page, limit, search),
-          alExpirar: () => revertirEnLote(idsToProcess),
+          onUndo: () => loadHistory(page, limit, search),
+          onExpire: () => batchRevert(idsToProcess),
         });
       },
     });
   };
 
-  // Peticiones escalonadas para respetar los limites de AniList / MAL.
-  const revertirEnLote = async (idsToProcess: string[]) => {
+  // Staggered requests to respect AniList / MAL rate limits.
+  const batchRevert = async (idsToProcess: string[]) => {
         const count = idsToProcess.length;
         setIsBatchProcessing(true);
         setBatchProgress({ current: 0, total: count });
@@ -363,14 +363,14 @@ export default function HistoryPage() {
   const startRecord = total === 0 ? 0 : (page - 1) * limit + 1;
   const endRecord = Math.min(page * limit, total);
 
-  // Helper para construir la URL absoluta de portada si es relativa (/api/covers/...)
+  // Helper to build absolute cover URL if relative (/api/covers/...)
   const resolveCoverUrl = (cover: string | null) => {
     if (!cover) return null;
     if (cover.startsWith('http://') || cover.startsWith('https://')) return cover;
     return `${getApiBase()}${cover}`;
   };
 
-  // Filtrar elementos según statusFilter
+  // Filter items according to statusFilter
   const filteredHistory = useMemo(() => {
     if (statusFilter === 'SUCCESS') {
       return history.filter(
@@ -435,11 +435,11 @@ export default function HistoryPage() {
 
           <HistoryStats
             total={total}
-            resumen={resumen}
+            summary={summary}
             t={t}
           />
 
-          {/* GRID PRINCIPAL: 8 COLS SCROBBLES / 4 COLS RITMO DE VISUALIZACIÓN */}
+          {/* MAIN GRID: 8 COLS SCROBBLES / 4 COLS WATCHING PACE */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
             <HistoryList
               history={history}
@@ -461,7 +461,7 @@ export default function HistoryPage() {
               deletingId={deletingId}
               setActiveHistorySheetItem={setActiveHistorySheetItem}
               resolveCoverUrl={resolveCoverUrl}
-              vinculados={vinculados}
+              linked={linked}
               handleDeleteAndRevert={handleDeleteAndRevert}
               totalPages={totalPages}
               page={page}
@@ -496,7 +496,7 @@ export default function HistoryPage() {
               hoveredDay={hoveredDay}
               setHoveredDay={setHoveredDay}
               heatmapData={heatmapData}
-              resumen={resumen}
+              summary={summary}
             />
           </div>
         </main>
@@ -506,7 +506,7 @@ export default function HistoryPage() {
         activeHistorySheetItem={activeHistorySheetItem}
         setActiveHistorySheetItem={setActiveHistorySheetItem}
         resolveCoverUrl={resolveCoverUrl}
-        vinculados={vinculados}
+        linked={linked}
         handleDeleteAndRevert={handleDeleteAndRevert}
         router={router}
         showToast={showToast}

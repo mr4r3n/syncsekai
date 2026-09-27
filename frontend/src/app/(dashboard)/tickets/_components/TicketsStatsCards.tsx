@@ -35,7 +35,7 @@ export function TicketsStatsCards({
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs text-[var(--text-muted)] font-medium">Total Registrados</span>
+              <span className="text-xs text-[var(--text-muted)] font-medium">{t('tickets.totalRegistered')}</span>
               <p className="text-lg font-bold font-heading text-[var(--text-primary)] mt-0.5">
                 {totalCount}
               </p>

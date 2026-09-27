@@ -40,11 +40,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: 'tickets.catOther',
 };
 
-const PRIORITY_STYLES: Record<string, { label: string; class: string }> = {
-  LOW: { label: 'Baja', class: 'bg-zinc-800 text-zinc-400 border-zinc-700' },
-  NORMAL: { label: 'Normal', class: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
-  HIGH: { label: 'Alta', class: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-  URGENT: { label: 'Urgente', class: 'bg-rose-500/15 text-rose-400 border-rose-500/30' },
+const PRIORITY_STYLES: Record<string, { labelKey: string; class: string }> = {
+  LOW: { labelKey: 'tickets.prioLow', class: 'bg-zinc-800 text-zinc-400 border-zinc-700' },
+  NORMAL: { labelKey: 'tickets.prioNormal', class: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+  HIGH: { labelKey: 'tickets.prioHigh', class: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+  URGENT: { labelKey: 'tickets.prioUrgent', class: 'bg-rose-500/15 text-rose-400 border-rose-500/30' },
 };
 
 const STATUS_STYLES: Record<string, { label: string; class: string; icon: any }> = {
@@ -73,7 +73,7 @@ export default function TicketDetailPage() {
   const [closing, setClosing] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
-  // Semántica de diálogo y gestión de foco del visor de imagen.
+  // Dialog semantics and focus management for image viewer.
   const { dialogProps: propsVisor } = useModalA11y(Boolean(previewImageUrl), () => setPreviewImageUrl(null));
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -194,7 +194,7 @@ export default function TicketDetailPage() {
         isCollapsed ? 'md:pl-[72px]' : 'md:pl-[260px]'
       } pl-0 flex flex-col`}
     >
-      <Topbar rootLabel="Soporte" currentLabel={ticket ? `Ticket #${ticket.ticketNumber}` : t('tickets.ticketDetail')} />
+      <Topbar rootLabel={t('topbar.support')} currentLabel={ticket ? `Ticket #${ticket.ticketNumber}` : t('tickets.ticketDetail')} />
 
       {/* TOP BAR / TICKET HEADER */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-3">
@@ -227,7 +227,7 @@ export default function TicketDetailPage() {
                       <span>{t(statusCfg.label)}</span>
                     </span>
                     <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-mono font-bold border ${priorityCfg.class}`}>
-                      {priorityCfg.label}
+                      {t(priorityCfg.labelKey)}
                     </span>
                     <span className="text-xs text-[var(--text-muted)] font-medium">
                       {t(CATEGORY_LABELS[ticket.category] || ticket.category)}
@@ -268,7 +268,7 @@ export default function TicketDetailPage() {
             {ticket?.messages?.map((msg: any, idx: number) => {
               const isStaff = msg.isStaff;
               const sender = msg.sender || {};
-              const senderName = isStaff ? 'SyncSekai Staff' : sender.username || 'Usuario';
+              const senderName = isStaff ? 'SyncSekai Staff' : sender.username || t('common.user');
               const avatarSrc = sender.avatarUrl
                 ? (sender.avatarUrl.startsWith('http') || sender.avatarUrl.startsWith('/')
                     ? sender.avatarUrl
@@ -280,7 +280,7 @@ export default function TicketDetailPage() {
                   key={msg.id || idx}
                   className="flex items-start gap-3 w-full animate-in fade-in slide-in-from-bottom-1 duration-200"
                 >
-                  {/* Avatar del Remitente (Icono anterior) */}
+                  {/* Sender Avatar (Previous icon) */}
                   <div className="shrink-0 pt-0.5">
                     {isStaff ? (
                       <div className="w-8 h-8 rounded-[6px] flex items-center justify-center font-bold text-xs shrink-0 bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-xs">
@@ -303,7 +303,7 @@ export default function TicketDetailPage() {
 
                   {/* Burbuja de Mensaje */}
                   <div className="flex flex-col space-y-1.5 max-w-[90%] sm:max-w-[78%]">
-                    {/* Remitente y Fecha */}
+                    {/* Sender and Date */}
                     <div className="flex items-center gap-2 pl-1 flex-wrap">
                       <span className="text-xs font-bold text-[var(--text-primary)]">
                         {senderName}
@@ -319,7 +319,7 @@ export default function TicketDetailPage() {
                       </span>
                     </div>
 
-                    {/* Cuerpo de la Burbuja (Sin bordes duros) */}
+                    {/* Bubble Body (No hard borders) */}
                     <div
                       className={`p-3.5 sm:p-4 rounded-[12px] shadow-sm text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-body transition-colors ${
                         isStaff
@@ -329,7 +329,7 @@ export default function TicketDetailPage() {
                     >
                       {msg.content}
 
-                      {/* Fotos / Archivos Adjuntos en el Mensaje */}
+                      {/* Photos / Attachments in Message */}
                       {msg.attachments && msg.attachments.length > 0 && (
                         <div className="flex flex-wrap gap-2 pt-2.5 mt-2 border-t border-[var(--border-subtle)]">
                           {msg.attachments.map((att: any, attIdx: number) => (
@@ -386,7 +386,7 @@ export default function TicketDetailPage() {
                 onSubmit={handleSendReply}
                 className="rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-xl backdrop-blur-md p-2 space-y-2"
               >
-                {/* Input oculto para adjuntar fotos */}
+                {/* Hidden input to attach photos */}
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -395,7 +395,7 @@ export default function TicketDetailPage() {
                   className="hidden"
                 />
 
-                {/* Previsualización de Fotos Adjuntas */}
+                {/* Preview of Attached Photos */}
                 {attachments.length > 0 && (
                   <div className="flex flex-wrap gap-2 px-1 pb-1 pt-0.5 border-b border-[var(--border-subtle)]">
                     {attachments.map((att, idx) => (
@@ -461,7 +461,7 @@ export default function TicketDetailPage() {
         )}
       </main>
 
-      {/* LIGHTBOX MODAL PARA VER FOTO EN TAMAÑO COMPLETO */}
+      {/* LIGHTBOX MODAL FOR FULL-SIZE PHOTO */}
       {previewImageUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
@@ -494,20 +494,20 @@ export default function TicketDetailPage() {
             </div>
             <img
               src={previewImageUrl}
-              alt="Vista previa ampliada"
+              alt={t('tickets.enlargedPreview')}
               className="max-h-[80vh] w-auto max-w-full object-contain rounded-[8px] shadow-2xl border border-zinc-700"
             />
           </div>
         </div>
       )}
 
-      {/* CONFIRMACIÓN DE DESCARTAR RESPUESTA */}
+      {/* DISCARD REPLY CONFIRMATION */}
       <ConfirmModal
         isOpen={showDiscardConfirm}
-        title="Descartar borrador"
-        description="Tienes texto o archivos adjuntos en la respuesta sin enviar. Si sales ahora, el borrador se perderá. ¿Deseas salir de todas formas?"
-        confirmText="Descartar y Salir"
-        cancelText="Continuar escribiendo"
+        title={t('tickets.discardDraftTitle')}
+        description={t('tickets.discardDraftDesc')}
+        confirmText={t('tickets.discardAndLeave')}
+        cancelText={t('tickets.continueWriting')}
         variant="warning"
         onConfirm={() => {
           setShowDiscardConfirm(false);

@@ -1,3 +1,3 @@
-type Traductor = (key: string, vars?: Record<string, string | number>) => string;
+type Translator = (key: string, vars?: Record<string, string | number>) => string;
 
-export type { Traductor };
+export type { Translator };

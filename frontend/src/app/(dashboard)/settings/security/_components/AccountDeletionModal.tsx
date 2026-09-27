@@ -12,7 +12,7 @@ import {
 
 interface AccountDeletionModalProps {
   showDeletionModal: boolean;
-  propsBorrado: any;
+  deleteProps: any;
   setShowDeletionModal: (show: boolean) => void;
   userProfile: any;
   handleRequestDeletion: (e: React.FormEvent) => void;
@@ -26,7 +26,7 @@ interface AccountDeletionModalProps {
 
 export function AccountDeletionModal({
   showDeletionModal,
-  propsBorrado,
+  deleteProps,
   setShowDeletionModal,
   userProfile,
   handleRequestDeletion,
@@ -41,11 +41,11 @@ export function AccountDeletionModal({
 
   return (
     <>
-      {/* MODAL DE SOLICITUD DE ELIMINACIÓN EN 2 FASES */}
+      {/* 2-PHASE DELETION REQUEST MODAL */}
       {showDeletionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
           <div
-            {...propsBorrado}
+            {...deleteProps}
             className="w-full max-w-md rounded-[8px] border border-rose-500/30 bg-[var(--bg-surface-elevated)] backdrop-blur-2xl shadow-2xl p-6 space-y-5">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-subtle)] pb-4">
               <div className="flex items-center gap-3">

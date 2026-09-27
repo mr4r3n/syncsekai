@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-// Las preguntas viven en el diccionario, no aquí: la página las pinta con t() y
-// este marcado las lee de la misma fuente, así no pueden desincronizarse.
-// En ingles porque es el idioma de los metadatos que indexa Google (ver layout raiz).
-const PREGUNTAS = Array.from({ length: 14 }, (_, i) => {
+// Questions live in dictionary, not here: page renders them with t() and
+// this markup reads them from the same source, preventing divergence.
+// In English because it is the metadata language indexed by Google (see root layout).
+const QUESTIONS = Array.from({ length: 14 }, (_, i) => {
   const faq = en.faq as Record<string, string>;
   return {
     '@type': 'Question',
@@ -23,7 +23,7 @@ const PREGUNTAS = Array.from({ length: 14 }, (_, i) => {
 const JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: PREGUNTAS,
+  mainEntity: QUESTIONS,
 };
 
 export default function FaqLayout({ children }: { children: React.ReactNode }) {

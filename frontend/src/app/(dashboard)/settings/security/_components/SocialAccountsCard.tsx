@@ -62,14 +62,14 @@ export function SocialAccountsCard({
                       <div className="min-w-0">
                         <span className="text-xs font-bold text-[var(--text-primary)]">Google</span>
                         <p className="text-[11px] text-[var(--text-muted)] truncate">
-                          {userProfile?.googleId ? (userProfile.googleId.includes('@') ? userProfile.googleId : 'Cuenta vinculada') : t('security.notLinked')}
+                          {userProfile?.googleId ? (userProfile.googleId.includes('@') ? userProfile.googleId : t('security.accountLinked')) : t('security.notLinked')}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0 justify-between sm:justify-end w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-[var(--border-subtle)]">
                       <span className={userProfile?.googleId ? 'badge-status-success' : 'badge-status-neutral'}>
-                        {userProfile?.googleId ? 'VINCULADO' : t('security.notConnectedUpper')}
+                        {userProfile?.googleId ? t('security.linkedUpper') : t('security.notConnectedUpper')}
                       </span>
 
                       {userProfile?.googleId ? (
@@ -80,7 +80,7 @@ export function SocialAccountsCard({
                           className="btn-danger text-xs px-2.5 py-1.5 shrink-0"
                         >
                           {unlinkingSocial === 'google' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unlink className="w-3.5 h-3.5" />}
-                          <span>Desvincular</span>
+                          <span>{t('security.unlink')}</span>
                         </button>
                       ) : (
                         <button
@@ -113,7 +113,7 @@ export function SocialAccountsCard({
 
                     <div className="flex items-center gap-2 shrink-0 justify-between sm:justify-end w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-[var(--border-subtle)]">
                       <span className={userProfile?.discordId ? 'badge-status-success' : 'badge-status-neutral'}>
-                        {userProfile?.discordId ? 'VINCULADO' : t('security.notConnectedUpper')}
+                        {userProfile?.discordId ? t('security.linkedUpper') : t('security.notConnectedUpper')}
                       </span>
 
                       {userProfile?.discordId ? (
@@ -124,7 +124,7 @@ export function SocialAccountsCard({
                           className="btn-danger text-xs px-2.5 py-1.5 shrink-0"
                         >
                           {unlinkingSocial === 'discord' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unlink className="w-3.5 h-3.5" />}
-                          <span>Desvincular</span>
+                          <span>{t('security.unlink')}</span>
                         </button>
                       ) : (
                         <button

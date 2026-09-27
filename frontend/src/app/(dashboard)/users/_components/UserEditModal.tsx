@@ -2,13 +2,13 @@ import React from 'react';
 import { Crown, X, Loader2, Save } from 'lucide-react';
 import { CustomSelect } from '@/components/CustomSelect';
 import { Switch } from '@/components/Switch';
-import { PERMISOS_USUARIO } from './constants';
+import { USER_PERMISSIONS } from './constants';
 import { getAvatarSrc } from './utils';
 
 interface UserEditModalProps {
   editingUser: any | null;
   setEditingUser: (u: any | null) => void;
-  propsEditar: any;
+  editProps: any;
   editForm: any;
   setEditForm: React.Dispatch<React.SetStateAction<any>>;
   handleSaveEdit: (e: React.FormEvent) => void;
@@ -19,7 +19,7 @@ interface UserEditModalProps {
 export function UserEditModal({
   editingUser,
   setEditingUser,
-  propsEditar,
+  editProps,
   editForm,
   setEditForm,
   handleSaveEdit,
@@ -29,22 +29,22 @@ export function UserEditModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
       <div
-        {...propsEditar}
-        /* En movil esto es una hoja que sube desde abajo, no un dialogo
-           flotando en el centro: es lo que hace el resto de la web -el menu
-           de opciones ya era asi- y ademas deja el contenido pegado al
-           pulgar en vez de en mitad de la pantalla. */
+        {...editProps}
+        /* On mobile this is a bottom sheet sliding up, not a floating
+           dialog in the center: matches rest of site—options menu
+           already did—and positions content near the thumb
+           instead of mid-screen. */
         className="relative w-full sm:max-w-2xl rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-lg)] border-t sm:border border-[var(--glass-border)] bg-[var(--bg-surface-elevated)] sm:bg-[var(--glass-bg)] shadow-[0_-12px_48px_rgba(0,0,0,0.6)] sm:shadow-[var(--glass-shadow-lg)] flex flex-col text-[var(--text-primary)] backdrop-blur-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300 sm:duration-200 outline-none"
       >
-        {/* Agarradera, como en la hoja de opciones */}
+        {/* Handle, matching options sheet */}
         <div className="sm:hidden pt-3 pb-1 flex justify-center shrink-0">
           <div className="w-12 h-1.5 rounded-full bg-white/25" />
         </div>
-        {/* Cabecera.
-            El avatar era un cuadrado de 80 px que se comia el ancho, y al
-            lado del titulo colgaba una pastilla con el id recortado, que no
-            se puede copiar ni sirve para nada aqui: ahora vive en el title
-            del avatar, por si alguna vez hace falta. */}
+        {/* Header.
+            Avatar was an 80 px square consuming width, and next to
+            title hung a pill with truncated ID, uncopyable and
+            useless here: now lives in avatar title attribute
+            in case ever needed. */}
         <div className="flex items-center gap-3.5 px-5 sm:px-6 py-4 border-b border-[var(--glass-border)] shrink-0">
           {getAvatarSrc(editingUser.avatarUrl) ? (
             <img
@@ -94,7 +94,7 @@ export function UserEditModal({
         <form onSubmit={handleSaveEdit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className="overflow-y-auto flex-1 px-5 sm:px-6 py-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 items-start">
-              {/* IZQUIERDA: la cuenta */}
+              {/* LEFT: account */}
               <div className="space-y-4">
                 <h3 className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--text-muted)] pb-2 border-b border-[var(--glass-border)]">
                   {t('users.accountAndSecurity')}
@@ -163,7 +163,7 @@ export function UserEditModal({
                 </div>
               </div>
 
-              {/* DERECHA: acceso y permisos, con el mismo interruptor que el resto de la web. */}
+              {/* RIGHT: access and permissions, using same switch as rest of site. */}
               <div className="space-y-4">
                 <h3 className="text-[10.5px] font-mono uppercase tracking-wider text-[var(--text-muted)] pb-2 border-b border-[var(--glass-border)]">
                   {t('users.accessAnd2fa')}
@@ -210,15 +210,15 @@ export function UserEditModal({
                 </h3>
 
                 <div className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] divide-y divide-[var(--border-subtle)]">
-                  {PERMISOS_USUARIO.map(({ campo, clave }) => (
-                    <div key={campo} className="flex items-center justify-between gap-3 px-3.5 py-2">
+                  {USER_PERMISSIONS.map(({ field, key }) => (
+                    <div key={field} className="flex items-center justify-between gap-3 px-3.5 py-2">
                       <span className="text-xs text-[var(--text-secondary)] min-w-0 truncate">
-                        {t(clave)}
+                        {t(key)}
                       </span>
                       <Switch
-                        checked={editForm[campo]}
-                        onChange={(v) => setEditForm({ ...editForm, [campo]: v })}
-                        ariaLabel={t(clave)}
+                        checked={editForm[field]}
+                        onChange={(v) => setEditForm({ ...editForm, [field]: v })}
+                        ariaLabel={t(key)}
                       />
                     </div>
                   ))}

@@ -39,7 +39,7 @@ export function BottomSheet({
   const { t } = useI18n();
   const { dialogProps } = useModalA11y(isOpen, onClose);
 
-  // Bloquear scroll de fondo cuando el bottom sheet está abierto
+  // Lock background scroll when bottom sheet is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -51,7 +51,7 @@ export function BottomSheet({
     };
   }, [isOpen]);
 
-  // Cerrar al presionar la tecla Escape
+  // Close when Escape key is pressed
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -65,29 +65,29 @@ export function BottomSheet({
   if (!isOpen) return null;
 
   return (
-    /* Hoja pegada abajo en movil y dialogo centrado en escritorio. */
+    /* Sheet pinned to the bottom on mobile and centered dialog on desktop. */
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6">
-      {/* Fondo oscurecido con desenfoque / Backdrop */}
+      {/* Darkened background with blur / Backdrop */}
       <div
         onClick={onClose}
         className="fixed inset-0 bg-black/65 backdrop-blur-sm animate-in fade-in duration-200 transition-opacity"
         aria-hidden="true"
       />
 
-      {/* Contenedor del Bottom Sheet estilo Android / iOS */}
-      {/* Ya declaraba role/aria-modal; lo que faltaba era el foco: al abrirse, el
-          teclado seguía navegando la página de fondo, detrás de la hoja. */}
+      {/* Bottom Sheet container Android / iOS style */}
+      {/* It already declared role/aria-modal; what was missing was focus: on open, the
+          keyboard continued navigating the background page behind the sheet. */}
       <div
         {...dialogProps}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full sm:max-w-md bg-[var(--bg-surface-elevated)] border-t sm:border border-[var(--glass-border)] rounded-t-[var(--radius-xl,16px)] sm:rounded-[var(--radius-lg,10px)] shadow-[0_-12px_48px_rgba(0,0,0,0.6)] sm:shadow-[var(--glass-shadow-lg)] backdrop-blur-2xl z-10 max-h-[88vh] flex flex-col animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300 sm:duration-200 ease-out outline-none"
       >
-        {/* La agarradera es de la hoja; en escritorio no hay nada que arrastrar. */}
+        {/* The drag handle belongs to the sheet; on desktop there is nothing to drag. */}
         <div className="sm:hidden pt-3 pb-1.5 flex justify-center shrink-0 cursor-grab active:cursor-grabbing">
           <div className="w-12 h-1.5 rounded-full bg-white/25 hover:bg-white/40 transition-colors" />
         </div>
 
-        {/* Cabecera con Info del Elemento */}
+        {/* Header with Item Info */}
         {(title || headerImage) && (
           <div className="px-5 py-3 sm:pt-4 border-b border-[var(--border-subtle)] flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -120,10 +120,10 @@ export function BottomSheet({
           </div>
         )}
 
-        {/* Contenido extra opcional (ej: badges o métricas) */}
+        {/* Optional extra content (e.g. badges or metrics) */}
         {children && <div className="px-5 py-3 border-b border-[var(--border-subtle)] shrink-0">{children}</div>}
 
-        {/* Lista de Acciones con Área Táctil Ergonómica */}
+        {/* Actions List with Ergonomic Touch Area */}
         <div className="p-3.5 space-y-1.5 overflow-y-auto max-h-[55vh]">
           {actions.map((action, index) => {
             const Icon = action.icon;
@@ -177,7 +177,7 @@ export function BottomSheet({
           })}
         </div>
 
-        {/* Botón Inferior Cancelar / Descartar */}
+        {/* Bottom Cancel / Dismiss Button */}
         <div className="p-3.5 pt-1 border-t border-[var(--border-subtle)] shrink-0">
           <button
             onClick={onClose}

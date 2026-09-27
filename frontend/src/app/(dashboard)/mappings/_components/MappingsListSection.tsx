@@ -45,7 +45,7 @@ export function MappingsListSection({
 
         <div className="flex flex-wrap items-center gap-2.5">
 
-          {/* Input de Búsqueda */}
+          {/* Search Input */}
           <div className="relative flex-1 sm:flex-initial">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
             <input
@@ -60,7 +60,7 @@ export function MappingsListSection({
         </div>
       </div>
 
-      {/* Listado de Mapeos con Formato Adaptable */}
+      {/* Responsive Mappings List */}
       <div className="divide-y divide-[var(--glass-border)]">
         {loading ? (
           <div className="py-16 text-center text-xs font-mono text-[var(--text-muted)]">{t('mappings.loadingCatalogue')}</div>
@@ -120,10 +120,10 @@ export function MappingsListSection({
                   item.matchScore ? `${Math.round(item.matchScore * 100)}%` : null,
                 ]}
                 status={
-                  // Pildora, no boton: antes compartia altura, borde y
-                  // familia visual con "Editar" y "Hacer Global" que
-                  // tiene al lado, y la gente la pulsaba esperando algo.
-                  // pointer-events-none lo deja claro tambien al raton.
+                  // Pill, not button: previously shared height, border, and
+                  // styling with adjacent "Edit" and "Make Global",
+                  // leading users to click expecting an action.
+                  // pointer-events-none reinforces non-clickable nature to mouse.
                   <span
                     className={`shrink-0 pointer-events-none inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                       isApproved

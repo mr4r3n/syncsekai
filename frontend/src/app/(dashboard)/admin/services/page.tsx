@@ -33,17 +33,17 @@ export default function AdminServicesPage() {
   const [mMessage, setMMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(10); // por defecto 10s
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(10); // 10s by default
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Semántica de diálogo y gestión de foco de los modales de esta vista.
-  const { dialogProps: propsMantenimiento } = useModalA11y(Boolean(showMaintenanceModal), () => setShowMaintenanceModal(false));
+  // Dialog semantics and focus management for modals in this view.
+  const { dialogProps: maintenanceProps } = useModalA11y(Boolean(showMaintenanceModal), () => setShowMaintenanceModal(false));
 
   useEffect(() => {
     loadData(true);
   }, []);
 
-  // Intervalo de auto-actualización en tiempo real
+  // Real-time auto-refresh interval
   useEffect(() => {
     if (autoRefreshInterval <= 0) return;
     const timer = setInterval(() => {
@@ -125,7 +125,7 @@ export default function AdminServicesPage() {
     >
       <Topbar rootLabel={t('navigation.systemAdmin')} currentLabel={t('admin.servicesTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <AdminServicesPageHeader
         autoRefreshInterval={autoRefreshInterval}
         setAutoRefreshInterval={setAutoRefreshInterval}
@@ -149,29 +149,29 @@ export default function AdminServicesPage() {
           serviceDist={serviceDist}
         />
 
-        {/* SECCIÓN 2: ESTADO Y LATENCIA DE APIS EXTERNAS & BASES DE DATOS */}
+        {/* SECTION 2: EXTERNAL APIS & DATABASE STATUS AND LATENCY */}
         <AdminServicesApisCard
           loading={loading}
           systemHealth={systemHealth}
         />
 
-        {/* SECCIÓN 3: HARDWARE Y RECURSOS DEL SERVIDOR */}
+        {/* SECTION 3: SERVER HARDWARE AND RESOURCES */}
         <AdminServicesSystemCard
           loading={loading}
           systemHealth={systemHealth}
         />
 
-        {/* DISTRIBUCIÓN DE TRACKERS Y BIBLIOTECAS */}
+        {/* TRACKER AND LIBRARY DISTRIBUTION */}
         <AdminServicesDistributionSection
           serviceDist={serviceDist}
           stats={stats}
         />
       </main>
 
-      {/* MODAL DE GESTIÓN DEL MODO MANTENIMIENTO */}
+      {/* MAINTENANCE MODE MANAGEMENT MODAL */}
       {showMaintenanceModal && (
         <AdminServicesMaintenanceModal
-          propsMantenimiento={propsMantenimiento}
+          maintenanceProps={maintenanceProps}
           setShowMaintenanceModal={setShowMaintenanceModal}
           mEnabled={mEnabled}
           setMEnabled={setMEnabled}

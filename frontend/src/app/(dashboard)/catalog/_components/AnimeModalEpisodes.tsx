@@ -62,7 +62,7 @@ export function AnimeModalEpisodes({
     return [{
       index: seasonNumber - 1,
       title: t('catalog.seasonN', { n: seasonNumber }),
-      subtitle: total > 0 ? `Episodios 1 a ${total}` : t('catalog.episodesToConfirm'),
+      subtitle: total > 0 ? t('catalog.episodesRange', { total }) : t('catalog.episodesToConfirm'),
       episodes,
       watchedCount: watched,
       totalCount: total,
@@ -70,11 +70,11 @@ export function AnimeModalEpisodes({
     }];
   };
 
-  // Manejar sincronización de un episodio específico en todos los trackers
+  // Handle sync for a specific episode across all trackers
   const handleSyncEpisode = async (epNumber: number) => {
     if (!selectedAnime) return;
     if (selectedAnime.inUserList === false) {
-      showToast(`Esta temporada todavía no está en tu lista. Ábrela en ${selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList'} para añadirla primero.`, 'info');
+      showToast(t('catalog.seasonNotOnListOpenTracker', { tracker: selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList' }), 'info');
       return;
     }
     setSyncingEpisode(epNumber);
@@ -112,7 +112,7 @@ export function AnimeModalEpisodes({
       const trackersMsg = res?.updatedTrackers?.length > 0
         ? res.updatedTrackers.join(' y ')
         : (selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList');
-      showToast(`¡Episodio ${epNumber} sincronizado en ${trackersMsg}!`, 'success');
+      showToast(t('catalog.episodeSynced', { number: epNumber, trackers: trackersMsg }), 'success');
     } catch (err: any) {
       showToast(`${t('catalog.syncEpisodeError')} ` + err.message, 'error');
     } finally {
@@ -139,7 +139,7 @@ export function AnimeModalEpisodes({
               borderColor: isExpanded ? 'var(--border-strong)' : 'var(--border-subtle)',
             }}
           >
-            {/* Cabecera de la Temporada */}
+            {/* Season Header */}
             <button
               type="button"
               onClick={() => toggleSeason(season.index)}
@@ -171,7 +171,7 @@ export function AnimeModalEpisodes({
               </div>
             </button>
 
-            {/* Grid de Episodios con Animación CSS Grid Ease-in-Out */}
+            {/* Episode Grid with CSS Grid Ease-in-Out Animation */}
             <div
               className={`grid transition-all duration-300 ease-in-out ${
                 isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
@@ -206,7 +206,7 @@ export function AnimeModalEpisodes({
                           </div>
                           <div className="min-w-0 flex-1">
                             <span className="text-xs font-semibold block truncate text-[var(--text-primary)] leading-tight">
-                              Episodio {ep.number}
+                              {t('catalog.episodeNumber', { number: ep.number })}
                             </span>
                             <span
                               className={`text-[10px] font-mono leading-none block whitespace-nowrap mt-0.5 ${
@@ -233,7 +233,7 @@ export function AnimeModalEpisodes({
                               ? 'btn-primary'
                               : 'btn-secondary'
                           }`}
-                          title={`Sincronizar Episodio ${ep.number}`}
+                          title={t('catalog.syncEpisodeNumber', { number: ep.number })}
                         >
                           {isSyncing ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -242,7 +242,7 @@ export function AnimeModalEpisodes({
                           ) : (
                             <Play className="w-2.5 h-2.5 fill-current" />
                           )}
-                          <span className="whitespace-nowrap">{ep.isWatched ? 'Re-sync' : 'Marcar'}</span>
+                          <span className="whitespace-nowrap">{ep.isWatched ? t('catalog.resync') : t('catalog.mark')}</span>
                         </button>
                       </div>
                     );

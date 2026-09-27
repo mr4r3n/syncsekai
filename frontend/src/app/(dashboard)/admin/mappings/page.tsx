@@ -27,12 +27,12 @@ export default function AdminMappingsPage() {
   const [searchFilter, setSearchFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'GLOBAL' | 'USER' | 'PENDING'>('ALL');
 
-  // Estados de Paginación
+  // Pagination States
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const [jumpPage, setJumpPage] = useState('');
 
-  // Cargar estado inicial de paginación desde URL o localStorage
+  // Load initial pagination state from URL or localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -89,7 +89,7 @@ export default function AdminMappingsPage() {
     changePage(1);
   };
 
-  // Modal de Confirmación
+  // Confirmation Modal
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -111,14 +111,14 @@ export default function AdminMappingsPage() {
   const [plexSeasonInput, setPlexSeasonInput] = useState(1);
   const [isGlobalInput, setIsGlobalInput] = useState(true);
 
-  // Búsqueda en vivo de AniList
+  // AniList live search
   const [remoteSearchQuery, setRemoteSearchQuery] = useState('');
   const [remoteResults, setRemoteResults] = useState<any[]>([]);
   const [isSearchingRemote, setIsSearchingRemote] = useState(false);
   const [selectedRemoteAnime, setSelectedRemoteAnime] = useState<any | null>(null);
 
-  // Semántica de diálogo y gestión de foco de los modales de esta vista.
-  const { dialogProps: propsMapeo } = useModalA11y(Boolean(showModal), () => setShowModal(false));
+  // Dialog semantics and focus management for modals in this view.
+  const { dialogProps: mappingProps } = useModalA11y(Boolean(showModal), () => setShowModal(false));
 
   useEffect(() => {
     loadAdminMappings();
@@ -149,7 +149,7 @@ export default function AdminMappingsPage() {
       showToast(
         res.isGlobal
           ? t('mappings.mappingNowGlobal')
-          : 'Mapeo global revocado a mapeo personal.',
+          : t('mappings.globalRevokedToPersonal'),
         'success',
       );
       loadAdminMappings();
@@ -172,13 +172,13 @@ export default function AdminMappingsPage() {
     setConfirmModal({
       isOpen: true,
       title: t('admin.confirmDeleteGlobalMapping'),
-      description: `¿Deseas eliminar permanentemente el mapeo para "${item.plexTitle}" (Temporada ${item.plexSeason || 1})?`,
+      description: t('mappings.confirmDeletePermanentDesc', { title: item.plexTitle, season: item.plexSeason || 1 }),
       onConfirm: () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         setMappings((prev) => prev.filter((m) => m.id !== item.id));
         showUndoToast(t('common.deletingItem', { name: item.plexTitle }), {
-          alDeshacer: () => loadAdminMappings(),
-          alExpirar: async () => {
+          onUndo: () => loadAdminMappings(),
+          onExpire: async () => {
             try {
               await api.mappings.unlink(item.id);
               showToast(t('admin.mappingDeleted'), 'info');
@@ -257,8 +257,8 @@ export default function AdminMappingsPage() {
         plexSeason: Number(plexSeasonInput || 1),
         anilistMediaId: selectedRemoteAnime.id,
         anilistTitle: selectedRemoteAnime.title?.romaji || selectedRemoteAnime.title?.english || plexTitleInput,
-        // Sin idMal real no se manda nada: caer al id de AniList guardaba un
-        // MAL ID inexistente y cada scrobble fallaba con 404 en MyAnimeList.
+        // Without real idMal nothing is sent: falling back to AniList id saved a
+        // nonexistent MAL ID and each scrobble failed with 404 on MyAnimeList.
         malMediaId: selectedRemoteAnime.idMal ? Number(selectedRemoteAnime.idMal) : undefined,
         malTitle: selectedRemoteAnime.idMal
           ? selectedRemoteAnime.title?.romaji || selectedRemoteAnime.title?.english
@@ -305,7 +305,7 @@ export default function AdminMappingsPage() {
     >
       <Topbar rootLabel={t('navigation.systemAdmin')} currentLabel={t('admin.mappingsTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <AdminMappingsPageHeader
         handleOpenCreateModal={handleOpenCreateModal}
         handleRefresh={handleRefresh}
@@ -338,7 +338,7 @@ export default function AdminMappingsPage() {
             filteredMappings={filteredMappings}
           />
 
-          {/* Lista con Formato Adaptable */}
+          {/* Responsive Mappings List */}
           <AdminMappingsListSection
             loading={loading}
             filteredMappings={filteredMappings}
@@ -350,7 +350,7 @@ export default function AdminMappingsPage() {
             handleDelete={handleDelete}
           />
 
-          {/* BARRA DE PAGINACIÓN COMPLETA */}
+          {/* COMPLETE PAGINATION BAR */}
           {filteredMappings.length > 0 && (
             <AdminMappingsPagination
               page={page}
@@ -370,7 +370,7 @@ export default function AdminMappingsPage() {
         {showModal && (
           <AdminMappingEditModal
             setShowModal={setShowModal}
-            propsMapeo={propsMapeo}
+            mappingProps={mappingProps}
             isNewMapping={isNewMapping}
             plexTitleInput={plexTitleInput}
             setPlexTitleInput={setPlexTitleInput}
@@ -390,7 +390,7 @@ export default function AdminMappingsPage() {
         )}
       </main>
 
-      {/* BOTTOM SHEET NATIVO MÓVIL PARA MAPEOS ADMIN */}
+      {/* NATIVE MOBILE BOTTOM SHEET FOR ADMIN MAPPINGS */}
       {activeAdminMappingSheetItem && (
         <AdminMappingActionSheet
           activeAdminMappingSheetItem={activeAdminMappingSheetItem}
@@ -406,8 +406,8 @@ export default function AdminMappingsPage() {
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         description={confirmModal.description}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         onConfirm={confirmModal.onConfirm}
         onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}

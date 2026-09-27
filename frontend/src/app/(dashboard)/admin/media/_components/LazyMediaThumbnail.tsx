@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import type { MediaItem } from './types';
 
-// COMPONENTE LAZY LOAD CON INTERSECTION OBSERVER (TIPO WORDPRESS)
+// LAZY LOAD COMPONENT WITH INTERSECTION OBSERVER (WORDPRESS STYLE)
 function LazyMediaThumbnail({
   item,
   isSelected,
@@ -111,14 +111,14 @@ function LazyMediaThumbnail({
         </div>
       )}
 
-      {/* Indicador de Selección */}
+      {/* Selection Indicator */}
       {isSelected && (
         <div className="absolute top-1.5 right-1.5 z-20 w-5 h-5 rounded-[4px] bg-[var(--accent-primary)] text-white flex items-center justify-center shadow-md">
           <Check className="w-3.5 h-3.5 stroke-[3]" />
         </div>
       )}
 
-      {/* Badge Estado: Huérfano vs En Uso */}
+      {/* Status Badge: Orphan vs In Use */}
       {item.category === t('admin.animeCovers') && (
         <div className="absolute top-1.5 left-1.5 z-10">
           {item.isOrphan ? (
@@ -127,7 +127,7 @@ function LazyMediaThumbnail({
               <span>{t('admin.orphan')}</span>
             </span>
           ) : (
-            <span className="px-1.5 py-0.5 rounded-[4px] bg-emerald-600/90 text-white font-bold text-[8px] font-mono shadow-xs backdrop-blur-xs flex items-center gap-0.5" title={`En uso activo: ${item.usageCount} referencias`}>
+            <span className="px-1.5 py-0.5 rounded-[4px] bg-emerald-600/90 text-white font-bold text-[8px] font-mono shadow-xs backdrop-blur-xs flex items-center gap-0.5" title={t('admin.activeUsageReferences', { count: item.usageCount || 1 })}>
               <LinkIcon className="w-2.5 h-2.5" />
               <span>{item.usageCount || 1}</span>
             </span>
@@ -135,7 +135,7 @@ function LazyMediaThumbnail({
         </div>
       )}
 
-      {/* Overlay inferior con títulos e info técnica */}
+      {/* Bottom overlay with titles and technical metadata */}
       <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-2 pt-6 text-left pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
         <p className="text-[11px] font-bold text-white truncate leading-tight">
           {displayName}

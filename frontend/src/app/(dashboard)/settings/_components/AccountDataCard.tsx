@@ -67,7 +67,7 @@ export function AccountDataCard({
           </div>
         </div>
 
-        {/* Correo electrónico */}
+        {/* Email address */}
         <div className="space-y-1.5">
           <label htmlFor="ajustes-correo" className="text-xs font-semibold text-[var(--text-secondary)]">{t('settings.email')}</label>
           <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] focus-within:border-[var(--border-focus)] focus-within:ring-1 focus-within:ring-[var(--border-focus)] transition-all">

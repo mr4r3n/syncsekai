@@ -51,8 +51,8 @@ export function AdminBackupsStats({
             }`}
           />
           <div className="text-xl sm:text-2xl font-bold font-heading text-[var(--text-primary)]">
-            {/* La frecuencia venia cruda del enum: en la tarjeta se leia
-                "DAILY" en mayusculas junto a textos traducidos. */}
+            {/* Frequency arrived raw from enum: card showed
+                "DAILY" in uppercase next to translated copy. */}
             {schedule.enabled ? t(`backups.freq${schedule.frequency}`) : t('backups.inactive')}
           </div>
         </div>

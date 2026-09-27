@@ -135,7 +135,7 @@ export default function AdminOverviewPage() {
     >
       <Topbar rootLabel={t('navigation.systemAdmin')} currentLabel={t('admin.metricsTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -204,7 +204,7 @@ export default function AdminOverviewPage() {
               </div>
               <div className="flex items-center gap-1.5 text-xs text-purple-400 font-semibold pt-0.5">
                 <User className="w-3.5 h-3.5 shrink-0" />
-                <span>{stats.totalUsers ?? 0} usuarios en total</span>
+                <span>{t('admin.totalUsersCount', { count: stats.totalUsers ?? 0 })}</span>
               </div>
             </div>
 
@@ -231,7 +231,7 @@ export default function AdminOverviewPage() {
             <div className="glass-card p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10.5px] font-bold font-mono tracking-wider text-[var(--text-secondary)] uppercase">
-                  SERVIDORES CONECTADOS
+                  {t('admin.connectedServers')}
                 </span>
                 <div className="w-8 h-8 rounded-[6px] bg-sky-500/10 text-sky-400 flex items-center justify-center">
                   <Server className="w-4 h-4" />
@@ -253,7 +253,7 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
-          {/* 1. GRÁFICO RECHARTS PRINCIPAL (ANCHO COMPLETO ARRIBA) */}
+          {/* 1. MAIN RECHARTS CHART (FULL WIDTH TOP) */}
           <div className="glass-card -mx-4 sm:mx-0 rounded-none sm:rounded-[10px] border-x-0 sm:border-x px-3 py-5 sm:p-6 space-y-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex items-center gap-2">
@@ -263,16 +263,16 @@ export default function AdminOverviewPage() {
               </div>
 
               <div className="flex items-center justify-between gap-3 w-full sm:w-auto sm:justify-end">
-                {/* Rango temporal.
-                    Etiqueta corta en movil: "1 Semana" y "Area" juntos no
-                    caben en 375 px y el segundo grupo bajaba a otra fila.
-                    Con las abreviaturas los dos controles comparten linea. */}
+                {/* Time range.
+                    Short label on mobile: "1 Week" and "Area" combined do not
+                    fit on 375 px and second group dropped to next row.
+                    With abbreviations both controls share a line. */}
                 <div className="flex items-center bg-[var(--bg-surface)] p-1 rounded-[var(--radius-md)] border border-[var(--border-subtle)]">
                   {[
-                    { id: '1d', corto: '1D', largo: t('admin.rangeDay') },
-                    { id: '7d', corto: '7D', largo: t('admin.rangeWeek') },
-                    { id: '30d', corto: '1M', largo: t('admin.rangeMonth') },
-                    { id: '1y', corto: '1A', largo: t('admin.rangeYear') },
+                    { id: '1d', short: '1D', largo: t('admin.rangeDay') },
+                    { id: '7d', short: '7D', largo: t('admin.rangeWeek') },
+                    { id: '30d', short: '1M', largo: t('admin.rangeMonth') },
+                    { id: '1y', short: '1A', largo: t('admin.rangeYear') },
                   ].map((tf) => (
                     <button
                       key={tf.id}
@@ -287,16 +287,16 @@ export default function AdminOverviewPage() {
                           : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] border-transparent'
                       }`}
                     >
-                      <span className="sm:hidden">{tf.corto}</span>
+                      <span className="sm:hidden">{tf.short}</span>
                       <span className="hidden sm:inline">{tf.largo}</span>
                     </button>
                   ))}
                 </div>
 
-                {/* Tipo de grafico: un solo boton que alterna.
-                    Ensena el icono del tipo al que vas, no el que tienes, que
-                    es lo que hace un boton: decir que pasa al pulsarlo. Igual
-                    que el de rejilla/lista del catalogo. */}
+                {/* Chart type: single toggling button.
+                    Shows destination type icon, not current one, which
+                    is what a button does: describes its click action. Just
+                    like grid/list toggle in catalog. */}
                 <button
                   type="button"
                   onClick={() => setChartType(chartType === 'area' ? 'bar' : 'area')}
@@ -317,7 +317,7 @@ export default function AdminOverviewPage() {
             <div className="w-full h-[320px]">
               {loading || chartLoading ? (
                 <div className="w-full h-full flex items-center justify-center text-xs font-mono text-[var(--text-muted)] animate-pulse">
-                  Cargando historial de métricas ({timeframeLabels[timeframe]})...
+                  {t('admin.loadingMetricsHistory', { timeframe: timeframeLabels[timeframe] })}
                 </div>
               ) : chartHistory.length === 0 ? (
                 <div className="w-full h-full flex items-center justify-center text-xs font-mono text-[var(--text-muted)]">{t('admin.noActivityInPeriod')}</div>
@@ -366,7 +366,7 @@ export default function AdminOverviewPage() {
             <div className="flex items-center justify-center gap-6 pt-2 border-t border-[var(--glass-border)] text-xs font-mono">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-sky-400 inline-block"></span>
-                <span className="text-[var(--text-secondary)]">Tráfico &amp; Scrobbles</span>
+                <span className="text-[var(--text-secondary)]">{t('admin.trafficAndScrobbles')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-purple-400 inline-block"></span>
@@ -374,12 +374,12 @@ export default function AdminOverviewPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-emerald-400 inline-block"></span>
-                <span className="text-[var(--text-secondary)]">Mapeos &amp; Webhooks</span>
+                <span className="text-[var(--text-secondary)]">{t('admin.mappingsAndWebhooks')}</span>
               </div>
             </div>
           </div>
 
-          {/* 2. FILA DE 2 COLUMNAS (50% / 50% EN PANTALLA COMPLETA, 100% EN PANTALLAS PEQUEÑAS) */}
+          {/* 2. 2-COLUMN ROW (50% / 50% ON FULL SCREEN, 100% ON SMALL SCREENS) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
             {/* MATRIZ DE ACTIVIDAD ANUAL (ESTILO GITHUB & ANILIST) */}
             <ActivityHeatmap
@@ -391,7 +391,7 @@ export default function AdminOverviewPage() {
               loading={loading}
             />
 
-            {/* DISTRIBUCIÓN POR GÉNEROS DE ANIME (ESTILO ANILIST GENRE OVERVIEW) */}
+            {/* ANIME GENRE DISTRIBUTION (ANILIST GENRE OVERVIEW STYLE) */}
             <GenreOverview
               genres={data?.genreOverview?.genres || []}
               totalEntries={data?.genreOverview?.totalEntries || 0}
@@ -399,7 +399,7 @@ export default function AdminOverviewPage() {
             />
           </div>
 
-          {/* SECCIÓN TOP ANIMES MÁS VISTOS REALES */}
+          {/* REAL TOP MOST WATCHED ANIMES SECTION */}
           <div className="glass-card -mx-4 sm:mx-0 rounded-none sm:rounded-[10px] border-x-0 sm:border-x px-3 py-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[var(--glass-border)]">
               <div className="flex items-center gap-2.5">
@@ -419,9 +419,9 @@ export default function AdminOverviewPage() {
                   <ListRow
                     key={i}
                     density="compact"
-                    // El puesto va delante y no en una insignia a la derecha:
-                    // es lo que ordena la lista, asi que se lee antes que nada
-                    // y deja de gastar 90 px de la fila.
+                    // Rank comes first rather than in a badge on the right:
+                    // it sorts the list, so it reads before anything else
+                    // and stops consuming 90 px of the row.
                     media={
                       <span className="w-6 text-right text-xs font-mono font-bold text-[var(--text-muted)]">
                         {i + 1}

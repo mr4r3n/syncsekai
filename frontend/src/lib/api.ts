@@ -1,3 +1,5 @@
+import { isDemo, demoResponse, spanish } from './demo';
+
 export function getApiBase(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '');
@@ -17,17 +19,17 @@ export function getApiBase(): string {
 
 export function clearAuthToken() {}
 
-/** Red del catalogo: de aqui salen el nombre y el icono, sin subir nada. */
+/** Catalog network: provides name and icon, without uploading anything. */
 export interface RedSocial {
   id: string;
   label: string;
   icon: string;
-  /** Variante blanca, solo en las marcas monocromas que se pierden en oscuro. */
+  /** White variant, only for monochrome brands lost on dark background. */
   iconDark?: string;
-  ejemplo: string;
+  example: string;
 }
 
-/** Enlace externo del pie: red social o sitio recomendado. */
+/** External footer link: social network or recommended site. */
 export interface SiteSettings {
   siteName: string;
   siteTitle: string;
@@ -40,26 +42,28 @@ export interface SiteSettings {
 export interface SiteLink {
   id: string;
   kind: 'SOCIAL' | 'FRIEND';
-  /** Id de la red del catalogo. Solo lo llevan los SOCIAL. */
+  /** Catalog network ID. Present only on SOCIAL. */
   provider?: string | null;
   label: string;
   url: string;
   description?: string | null;
-  /** Traducción al español; si falta, se usa `description`. */
+  /** Spanish translation; if missing, `description` is used. */
   descriptionEs?: string | null;
   iconUrl?: string | null;
-  /** Variante para tema oscuro, resuelta en el servidor desde el catalogo. */
+  /** Dark theme variant, resolved on server from catalog. */
   iconDarkUrl?: string | null;
-  // Sólo llegan al panel: la lectura pública no devuelve los desactivados.
+  // Delivered to dashboard only: public reading does not return disabled ones.
   isEnabled?: boolean;
   sortOrder?: number;
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  if (isDemo()) return demoResponse(endpoint, options.method) as Promise<T>;
+
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
-    // Marca de la propia app: el contador de visitas del backend ignora lo
-    // que no la lleve (escáneres que prueban /api/ con User-Agent de navegador).
+    // App's own token: backend visit counter ignores requests
+    // without it (scanners probing /api/ with browser User-Agent).
     'X-Requested-With': 'SyncSekai',
   };
 
@@ -104,7 +108,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   } catch (err: any) {
     if (err instanceof TypeError && (err.message === 'Failed to fetch' || err.message?.includes('fetch'))) {
       throw new Error(
-        `No se pudo conectar con el backend (${apiBase || 'API'}). Comprueba que el servicio esté iniciado en el puerto 4000.`
+        spanish()
+          ? `No se pudo conectar con el backend (${apiBase || 'API'}). Comprueba que el servicio esté iniciado en el puerto 4000.`
+          : `Could not connect to the backend (${apiBase || 'API'}). Make sure the service is running on port 4000.`
       );
     }
     throw err;
@@ -465,7 +471,7 @@ export const api = {
       request<any>('/api/admin/domains', { method: 'POST', body: JSON.stringify({ domain, isAllowed, reason }) }),
     deleteDomain: (id: string) => request<any>(`/api/admin/domains/${id}`, { method: 'DELETE' }),
 
-    // BACKUPS & PROGRAMACIÓN
+    // BACKUPS & SCHEDULING
     getBackups: () =>
       request<{ backups: any[]; schedule: any; totalBackups: number; storageUsedFormatted: string }>(
         '/api/admin/backups',
@@ -490,7 +496,9 @@ export const api = {
         credentials: 'include',
       });
       if (!res.ok) {
-        let msg = `Error al descargar copia de seguridad (${res.status})`;
+        let msg = spanish()
+          ? `Error al descargar copia de seguridad (${res.status})`
+          : `Failed to download backup (${res.status})`;
         try {
           const err = await res.json();
           if (err.message) msg = err.message;
@@ -510,7 +518,7 @@ export const api = {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Error al restaurar copia de seguridad');
+        throw new Error(err.message || (spanish() ? 'Error al restaurar copia de seguridad' : 'Failed to restore backup'));
       }
       return res.json();
     },
@@ -563,7 +571,7 @@ export const api = {
         body: JSON.stringify(data),
       }),
 
-    // ENLACES DEL PIE (redes sociales y sitios recomendados)
+    // FOOTER LINKS (social networks and recommended sites)
     siteLinks: () => request<{ links: SiteLink[] }>('/api/admin/site-links'),
     siteLinkProviders: () =>
       request<{ providers: RedSocial[] }>('/api/admin/site-links/providers'),
@@ -669,7 +677,7 @@ export const api = {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Error al adjuntar archivo');
+        throw new Error(err.message || (spanish() ? 'Error al adjuntar archivo' : 'Failed to attach file'));
       }
       return res.json() as Promise<{ success: boolean; attachment: { fileName: string; fileSize: number; mimeType: string; fileUrl: string } }>;
     },
@@ -803,7 +811,7 @@ export const api = {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Error al subir archivo');
+        throw new Error(err.message || (spanish() ? 'Error al subir archivo' : 'Failed to upload file'));
       }
       return res.json();
     },

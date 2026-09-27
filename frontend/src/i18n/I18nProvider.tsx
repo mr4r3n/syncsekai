@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useCall
 import type { Locale, I18nContextType, TranslationDictionary } from './types';
 import esDict from './locales/es.json';
 import enDict from './locales/en.json';
-import { elegirFormaPlural } from './plural';
+import { choosePluralForm } from './plural';
 
 const dictionaries: Record<Locale, TranslationDictionary> = {
   es: esDict,
@@ -32,8 +32,8 @@ function getNestedValue(obj: any, path: string): string | undefined {
 }
 
 /**
- * El idioma por defecto es el inglés, y no se adivina por el navegador: sólo
- * cambia cuando el usuario lo elige con el conmutador.
+ * Default language is English, not inferred from browser: only
+ * changes when selected by user via toggle.
  */
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en');
@@ -60,7 +60,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
       document.documentElement.lang = 'en';
     } catch {
-      // Sin almacenamiento disponible se queda en inglés, que ya es el estado inicial.
+      // Without available storage, remains English, which is initial state.
     }
   }, []);
 
@@ -94,18 +94,18 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       // 1. Buscar en diccionario activo
       let val = getNestedValue(dictionaries[locale], key);
 
-      // 2. Fallback a español si falta en el idioma activo
+      // 2. Fallback to Spanish if missing in active language
       if (!val && locale !== 'es') {
         val = getNestedValue(dictionaries.es, key);
       }
 
-      // 3. Si aún no existe, devolver la clave
+      // 3. If still missing, return key
       if (!val) return key;
 
-      // 3.5. Elegir singular o plural antes de meter las variables.
-      val = elegirFormaPlural(val, vars?.n);
+      // 3.5. Choose singular or plural before interpolating variables.
+      val = choosePluralForm(val, vars?.n);
 
-      // 4. Reemplazar variables si existen
+      // 4. Replace variables if present
       if (vars && typeof vars === 'object') {
         for (const [vKey, vVal] of Object.entries(vars)) {
           val = val.replace(new RegExp(`\\{${vKey}\\}`, 'g'), String(vVal));

@@ -22,8 +22,8 @@ import {
 interface PlexConnectionCardProps {
   hubData: any;
   isPlexConnected: boolean;
-  servidoresAbiertos: Record<string, boolean>;
-  setServidoresAbiertos: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  openServers: Record<string, boolean>;
+  setOpenServers: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   setShowServerModal: (show: boolean) => void;
   setShowPlexModal: (show: boolean) => void;
   loadHubData: (silent?: boolean) => Promise<void>;
@@ -40,8 +40,8 @@ interface PlexConnectionCardProps {
 export function PlexConnectionCard({
   hubData,
   isPlexConnected,
-  servidoresAbiertos,
-  setServidoresAbiertos,
+  openServers,
+  setOpenServers,
   setShowServerModal,
   setShowPlexModal,
   loadHubData,
@@ -129,18 +129,18 @@ export function PlexConnectionCard({
           </div>
         </div>
 
-        {/* Plegado en movil: cuando la tarjeta esta cerrada solo hacen
-            falta el nombre y el estado; los botones son parte de lo que
-            se abre, y sueltos ahi partian en dos filas descuadradas. */}
+        {/* Collapsed on mobile: when card is closed only name
+            and status are needed; buttons are part of expanded content,
+            and uncollapsed they wrapped into two disjointed rows. */}
         <div
           className={`grid grid-cols-2 md:flex md:items-center gap-2 md:gap-2.5 md:flex-wrap ${
-            servidoresAbiertos.plex ? 'grid' : 'hidden'
+            openServers.plex ? 'grid' : 'hidden'
           }`}
         >
           <Link
             href="/docs?section=plex"
             className="btn-secondary text-xs"
-            title="Ver guía de configuración del webhook de Plex"
+            title={t('connections.plexGuideWebhook')}
           >
             <BookOpen className="w-3.5 h-3.5 text-amber-400" />
             <span>{t('connections.guide')}</span>
@@ -177,50 +177,49 @@ export function PlexConnectionCard({
         </div>
       </div>
 
-      {/* En movil el cuerpo se pliega; el boton dice que hace. */}
+      {/* On mobile body collapses; button describes action. */}
       <button
         type="button"
         onClick={() =>
-          setServidoresAbiertos((prev) => ({ ...prev, plex: !prev.plex }))
+          setOpenServers((prev) => ({ ...prev, plex: !prev.plex }))
         }
-        aria-expanded={!!servidoresAbiertos.plex}
+        aria-expanded={!!openServers.plex}
         className="md:hidden -mt-0.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[11px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
       >
         <span>
-          {servidoresAbiertos.plex
+          {openServers.plex
             ? t('connections.hideDetails')
             : t('connections.showDetails')}
         </span>
         <ChevronDown
           className={`w-3.5 h-3.5 transition-transform duration-200 ${
-            servidoresAbiertos.plex ? 'rotate-180' : ''
+            openServers.plex ? 'rotate-180' : ''
           }`}
           aria-hidden="true"
         />
       </button>
 
-      {/* El plegado se anima con la altura de una fila de rejilla:
-          de 0fr a 1fr. Es la unica forma de animar hasta "lo que mida
-          el contenido" sin fijar una altura a mano, que aqui cambia
-          segun tengas bibliotecas o no. En escritorio el contenedor
-          vuelve a ser un bloque normal y no hay nada que animar. */}
+      {/* Collapse animates via grid row height: from 0fr to 1fr.
+          Only way to animate to intrinsic content height without
+          hardcoded measurements, which vary depending on library count.
+          On desktop container reverts to normal block without animation. */}
       <div
         className={`grid md:block transition-[grid-template-rows,margin-top] duration-300 ease-out ${
-          servidoresAbiertos.plex
+          openServers.plex
             ? 'grid-rows-[1fr]'
             : 'grid-rows-[0fr] -mt-3.5 md:mt-0'
         }`}
       >
         <div className="overflow-hidden md:overflow-visible">
           <div className="flex flex-col gap-6">
-      {/* Estado cuando Plex no está conectado */}
+      {/* State when Plex is not connected */}
       {!isPlexConnected && (
         <div className="p-6 rounded-[6px] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-surface)] text-center space-y-2">
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('connections.noPlexLinked')}{' '}<strong className="text-[var(--text-primary)]">&quot;{t('connections.linkServer')}&quot;</strong>{' '}{t('connections.noPlexLinkedRest')}</p>
         </div>
       )}
 
-      {/* Categorías de Plex a Monitorear */}
+      {/* Plex Categories to Monitor */}
       {isPlexConnected && (
         <div className="space-y-3 pt-2">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -228,10 +227,10 @@ export function PlexConnectionCard({
               <div className="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)]">
                 <span>{t('connections.librariesToMonitor')}</span>
                 {/*
-                  Cuando Plex no responde, la lista de categorías llega vacía y
-                  el contador mostraba "(1 de 0 seleccionadas)": tu selección
-                  guardada frente a una lista de cero. Sin librerías que contar,
-                  se indica cuántas tienes guardadas y ya.
+                  When Plex does not respond, categories list arrives empty and
+                  counter showed "(1 of 0 selected)": your saved selection
+                  against a list of zero. With no libraries to tally,
+                  it displays saved count directly.
                 */}
                 <span className="font-mono font-semibold text-[var(--text-muted)]">
                   {availableLibraries.length > 0
@@ -265,12 +264,11 @@ export function PlexConnectionCard({
             </div>
           </div>
 
-          {/* Grid de Librerías */}
+          {/* Libraries Grid */}
           {availableLibraries.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pt-1">
               {availableLibraries.map((lib) => {
                 const isSelected = selectedLibraries.includes(lib.title);
-                const isAnime = lib.title.toLowerCase().includes('anime');
                 return (
                   <div
                     key={lib.key || lib.title}
@@ -297,12 +295,12 @@ export function PlexConnectionCard({
                           {lib.title}
                         </span>
                         <span className="badge-pill">
-                          {lib.type === 'show' ? 'SERIES TV' : 'PELÍCULAS'}
+                          {['show', 'tvshows'].includes(lib.type) ? t('connections.badgeSeriesTv') : ['movie', 'movies'].includes(lib.type) ? t('connections.badgeMovies') : t('connections.badgeLibrary')}
                         </span>
                       </div>
-                      <p className="text-[10px] text-[var(--text-muted)] font-mono truncate">
-                        {lib.path || (isAnime ? '/mnt/media/Animes' : '/mnt/media/TV')}
-                      </p>
+                      {lib.path && (
+                        <p className="text-[10px] text-[var(--text-muted)] font-mono truncate">{lib.path}</p>
+                      )}
                     </div>
                   </div>
                 );
@@ -327,7 +325,7 @@ export function PlexConnectionCard({
                 <Link
                   href="/docs?section=plex"
                   className="text-amber-400 hover:underline text-xs flex items-center gap-1 font-medium"
-                  title="Ver guía detallada"
+                  title={t('connections.viewDetailedGuide')}
                 >
                   <BookOpen className="w-3 h-3" />
                   <span>{t('connections.webhookGuide')}</span>

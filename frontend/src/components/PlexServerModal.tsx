@@ -70,7 +70,7 @@ export function PlexServerModal({
     setSaving(true);
     try {
       const res = await api.plex.selectServer(finalName, finalUrl);
-      showToast(`¡Servidor "${res.serverName}" activado! (${res.libraries?.length || 0} categorías detectadas)`, 'success');
+      showToast(t('modalPlexServer.serverActivated', { server: res.serverName, count: res.libraries?.length || 0 }), 'success');
       window.dispatchEvent(new CustomEvent('plexsync:connections-updated'));
       onSuccess();
       onClose();
@@ -81,7 +81,7 @@ export function PlexServerModal({
     }
   };
 
-  // Foco dentro al abrir, Tab acotado al diálogo y foco devuelto al cerrar.
+  // Focus inside on open, Tab trapped in the dialog, and focus returned on close.
   const { dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
@@ -131,7 +131,7 @@ export function PlexServerModal({
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  Servidores Detectados ({servers.length})
+                  {t('modalPlexServer.detectedServers', { count: servers.length })}
                 </button>
                 <button
                   type="button"

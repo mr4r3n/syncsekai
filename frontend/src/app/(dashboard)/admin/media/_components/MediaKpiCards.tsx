@@ -31,7 +31,7 @@ export function MediaKpiCards({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="glass-card p-4 space-y-1">
             <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-              <span className="font-semibold uppercase tracking-wider font-mono">Archivos Totales</span>
+              <span className="font-semibold uppercase tracking-wider font-mono">{t('admin.totalFiles')}</span>
               <ImageIcon className="w-4 h-4 text-sky-400" />
             </div>
             <div className="text-2xl font-bold text-[var(--text-primary)] font-heading">

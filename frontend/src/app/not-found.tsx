@@ -70,7 +70,7 @@ export default function NotFound() {
             <button
               onClick={toggleTheme}
               className="p-2.5 rounded-[6px] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all cursor-pointer shadow-sm"
-              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              title={theme === 'dark' ? t('topbar.switchToLight') : t('topbar.switchToDark')}
               aria-label={t('errors.themeToggle')}
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
@@ -82,7 +82,7 @@ export default function NotFound() {
       {/* CONTENIDO PRINCIPAL */}
       <main className="w-full max-w-xl mx-auto px-4 py-8 flex flex-col items-center text-center z-10 my-auto">
         <div className="glass-card p-7 sm:p-10 w-full space-y-6 shadow-2xl relative">
-          {/* Badge y Código 404 */}
+          {/* Badge and 404 Code */}
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[6px] text-xs font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 select-none">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -103,7 +103,7 @@ export default function NotFound() {
             <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed max-w-md mx-auto">{t('errors.notFoundDesc')}</p>
           </div>
 
-          {/* Botones de Acción */}
+          {/* Action Buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => router.back()}
@@ -130,10 +130,10 @@ export default function NotFound() {
             </Link>
           </div>
 
-          {/* Accesos Rápidos */}
+          {/* Quick Access */}
           <div className="pt-5 border-t border-[var(--border-subtle)] space-y-2.5">
             <span className="text-[11px] font-mono text-[var(--text-muted)] block uppercase tracking-wider">
-              Enlaces Frecuentes
+              {t('errors.quickLinks')}
             </span>
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
               <Link
@@ -148,7 +148,7 @@ export default function NotFound() {
                 className="px-2.5 py-1 rounded-[6px] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-1.5"
               >
                 <GitMerge className="w-3 h-3 text-amber-400" />
-                <span>Mapeos</span>
+                <span>{t('errors.mappings')}</span>
               </Link>
               <Link
                 href="/history"

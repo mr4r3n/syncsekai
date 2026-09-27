@@ -90,7 +90,7 @@ export default function MaintenancePage() {
               <span className="font-bold text-base tracking-tight font-heading">SyncSekai</span>
               <span className="px-2 py-0.5 rounded-[var(--radius-sm,4px)] text-[10px] font-mono font-bold uppercase bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
-                MANTENIMIENTO
+                {t('maintenance.badge')}
               </span>
             </div>
           </div>
@@ -102,9 +102,9 @@ export default function MaintenancePage() {
         </div>
       </header>
 
-      {/* CONTENIDO PRINCIPAL: FLOTANTE Y SIN CAJAS EN EL CENTRO DE LA PANTALLA */}
+      {/* MAIN CONTENT: FLOATING BOXLESS IN SCREEN CENTER */}
       <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 my-auto py-12 relative z-10 text-center space-y-8">
-        {/* ENGRANAJES PUROS SIN BACKGROUNDS */}
+        {/* PURE GEARS WITHOUT BACKGROUNDS */}
         <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
           {/* Engranaje Principal */}
           <Cog className="w-12 h-12 text-amber-500 dark:text-amber-400 animate-spin [animation-duration:10s] drop-shadow-md" />
@@ -112,7 +112,7 @@ export default function MaintenancePage() {
           <Cog className="w-7 h-7 text-[var(--accent-primary)] absolute -bottom-1 -right-1 animate-spin [animation-duration:6s] [animation-direction:reverse] drop-shadow-md" />
         </div>
 
-        {/* TÍTULO Y MENSAJE */}
+        {/* TITLE AND MESSAGE */}
         <div className="space-y-3">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--text-primary)] font-heading leading-tight">{t('maintenance.title')}</h1>
           <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed max-w-lg mx-auto">
@@ -121,12 +121,12 @@ export default function MaintenancePage() {
           {estimatedEnd && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20 mt-1">
               <Clock className="w-3.5 h-3.5" />
-              <span>Finalización estimada: {new Date(estimatedEnd).toLocaleTimeString()}</span>
+              <span>{t('maintenance.estimatedEnd', { time: new Date(estimatedEnd).toLocaleTimeString() })}</span>
             </div>
           )}
         </div>
 
-        {/* CONTADOR DE RECONEXIÓN & BARRA SUTIL */}
+        {/* RECONNECTION COUNTDOWN & SUBTLE BAR */}
         <div className="space-y-2 max-w-xs mx-auto pt-2">
           <div className="text-xs font-mono text-[var(--text-muted)] flex items-center justify-center gap-2">
             <span>{t('maintenance.retryingIn')}</span>
@@ -140,7 +140,7 @@ export default function MaintenancePage() {
           </div>
         </div>
 
-        {/* BOTONES DE ACCIÓN */}
+        {/* ACTION BUTTONS */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
           <button
             type="button"

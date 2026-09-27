@@ -1,52 +1,51 @@
-import type { DocumentoLegal } from '@/components/LegalDocument';
+import type { LegalDocumentData } from '@/components/LegalDocument';
 
 /*
- * Política de privacidad del servicio alojado en syncsekai.com.
+ * Privacy policy for service hosted on syncsekai.com.
  *
- * Mismo criterio que terms.ts: el inglés es la versión vinculante, el español
- * es traducción de cortesía, y vive aquí como documento y no como claves de
- * interfaz. Los proveedores de inicio de sesión listados son los que existen
- * en el código: Google y Discord.
+ * Same rationale as terms.ts: English is binding version, Spanish is courtesy
+ * translation, residing here as a document rather than UI keys.
+ * Listed authentication providers match code implementation: Google and Discord.
  */
 
-const ACTUALIZADO = { en: 'Last updated: September 26, 2026', es: 'Última actualización: 26 de septiembre de 2026' };
+const UPDATED = { en: 'Last updated: September 27, 2026', es: 'Última actualización: 27 de septiembre de 2026' };
 
-const CONTACTO_EN = [
+const CONTACT_EN = [
   'Email: mailto:mr4r3n@outlook.com',
   'GitHub: https://github.com/mr4r3n',
   'Support tickets inside the Service, once signed in.',
 ];
-const CONTACTO_ES = [
+const CONTACT_ES = [
   'Correo: mailto:mr4r3n@outlook.com',
   'GitHub: https://github.com/mr4r3n',
   'Tickets de soporte dentro del Servicio, una vez iniciada la sesión.',
 ];
 
-export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
+export const PRIVACY: Record<'en' | 'es', LegalDocumentData> = {
   en: {
-    titulo: 'Privacy Policy',
-    actualizado: ACTUALIZADO.en,
-    secciones: [
+    title: 'Privacy Policy',
+    updated: UPDATED.en,
+    sections: [
       {
-        titulo: 'Overview',
-        bloques: [
+        title: 'Overview',
+        blocks: [
           'This Privacy Policy explains how SyncSekai ("SyncSekai", "we", "us", or "our") collects, uses, stores, and protects information when you use the hosted SyncSekai service available at syncsekai.com.',
           'SyncSekai is an independent open-source project. The hosted service is operated by an individual project operator and is not operated by or affiliated with Plex, Jellyfin, Emby, AniList, MyAnimeList, Kitsu, Google, Discord, GitHub, or any other third-party service referenced by SyncSekai.',
           'This Privacy Policy applies to the hosted SyncSekai instance at syncsekai.com. If you run your own SyncSekai instance, the operator of that instance is responsible for its data practices and should provide their own privacy information.',
         ],
       },
       {
-        titulo: 'Privacy contact',
-        bloques: [
+        title: 'Privacy contact',
+        blocks: [
           "SyncSekai does not publish the operator's residential address or other unnecessary personal identifying information on this page.",
           'For privacy, legal, account, or data-protection questions, you may contact the project operator through:',
-          CONTACTO_EN,
+          CONTACT_EN,
           'The GitHub username is provided as a public project contact rather than as a substitute for any legal identity where applicable law requires additional information.',
         ],
       },
       {
-        titulo: 'Information we collect',
-        bloques: [
+        title: 'Information we collect',
+        blocks: [
           'Depending on how you use SyncSekai, the hosted service may process the following information.',
           'Account information:',
           [
@@ -97,8 +96,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'How we use information',
-        bloques: [
+        title: 'How we use information',
+        blocks: [
           'Information processed by SyncSekai is used only as reasonably necessary to operate and improve the hosted service, including to:',
           [
             'Create and maintain accounts',
@@ -118,8 +117,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Community mappings and leaderboard',
-        bloques: [
+        title: 'Community mappings and leaderboard',
+        blocks: [
           'When you correct a mapping by hand in the web interface (which anime a media-server title and season correspond to), that correction may be counted, together with the corrections of other users, to map the same title automatically for other users. A correction only counts when several accounts agree and none disagrees.',
           'Only the mapping itself is used: the title, the season, and the tracker identifiers and titles you chose. Your watch history, ratings, connections, and account details are not shared with other users. Mappings you import from a file are not counted.',
           'To limit abuse, only corrections from accounts that meet a minimum account age and have been used to synchronize on a minimum number of different days are counted. SyncSekai checks this with your account creation date and your synchronization history.',
@@ -130,8 +129,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Third-party services',
-        bloques: [
+        title: 'Third-party services',
+        blocks: [
           'SyncSekai may exchange information with third-party services when you explicitly connect or use them, or when they are required to operate the hosted service. These may include:',
           [
             'Plex',
@@ -148,16 +147,16 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Cookies and local storage',
-        bloques: [
+        title: 'Cookies and local storage',
+        blocks: [
           'SyncSekai uses a necessary authentication and session cookie to keep you signed in and protect your account. The current session cookie is configured with security attributes such as HttpOnly, Secure, and SameSite protections.',
           'The application may also use browser local storage for non-sensitive interface preferences such as theme, sidebar state, and cookie-consent preferences.',
           'SyncSekai does not use advertising cookies or cross-site behavioral advertising trackers as part of the current hosted service. If this changes, this Privacy Policy will be updated accordingly.',
         ],
       },
       {
-        titulo: 'Security',
-        bloques: [
+        title: 'Security',
+        blocks: [
           'SyncSekai uses reasonable technical and organizational measures designed to protect information processed by the hosted service. These measures include, where applicable:',
           [
             'Password hashing rather than plaintext password storage',
@@ -174,8 +173,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Retention and deletion',
-        bloques: [
+        title: 'Retention and deletion',
+        blocks: [
           'Information is generally retained for as long as necessary to provide the requested service, maintain account functionality, resolve support issues, protect the service, or satisfy applicable legal obligations.',
           'When an account deletion request is confirmed:',
           [
@@ -188,8 +187,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Your privacy rights',
-        bloques: [
+        title: 'Your privacy rights',
+        blocks: [
           'Depending on where you live and which laws apply, you may have rights concerning your personal information, including rights to:',
           [
             'Access information we hold about you',
@@ -205,44 +204,44 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Children',
-        bloques: [
+        title: 'Children',
+        blocks: [
           'SyncSekai is not directed to children. We do not knowingly collect personal information from children in violation of applicable law.',
           'SyncSekai does not require users to provide their date of birth as part of ordinary account registration.',
         ],
       },
       {
-        titulo: 'International users',
-        bloques: [
+        title: 'International users',
+        blocks: [
           'The hosted service is delivered through infrastructure and security providers that may operate in countries other than your own. As a result, information may be processed in jurisdictions different from yours.',
           'Where applicable law provides specific requirements for international transfers or privacy protections, SyncSekai will take reasonable steps to comply with those requirements.',
         ],
       },
       {
-        titulo: 'Open source and self-hosted instances',
-        bloques: [
+        title: 'Open source and self-hosted instances',
+        blocks: [
           "SyncSekai's source code is open source and can be independently reviewed or self-hosted.",
           "A self-hosted installation is not controlled by the hosted SyncSekai instance. The operator of a self-hosted installation is responsible for that installation's security, privacy practices, infrastructure, and legal obligations.",
         ],
       },
       {
-        titulo: 'Third-party trademarks',
-        bloques: [
+        title: 'Third-party trademarks',
+        blocks: [
           'Plex, Jellyfin, Emby, AniList, MyAnimeList, Kitsu, Google, Discord, GitHub, and other referenced names and trademarks belong to their respective owners. SyncSekai is an independent project and does not claim ownership of those trademarks.',
         ],
       },
       {
-        titulo: 'Changes to this Privacy Policy',
-        bloques: [
+        title: 'Changes to this Privacy Policy',
+        blocks: [
           'This Privacy Policy may be updated when the service, its data practices, or applicable requirements change.',
           'The "Last updated" date at the top of this page will be changed when material revisions are made.',
         ],
       },
       {
-        titulo: 'Contact',
-        bloques: [
+        title: 'Contact',
+        blocks: [
           'For privacy, legal, security, or data-protection questions:',
-          CONTACTO_EN,
+          CONTACT_EN,
           'This Privacy Policy is provided as general information about the hosted SyncSekai service and is not legal advice.',
         ],
       },
@@ -250,31 +249,31 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
   },
 
   es: {
-    titulo: 'Política de privacidad',
-    actualizado: ACTUALIZADO.es,
+    title: 'Política de privacidad',
+    updated: UPDATED.es,
     aviso:
       'Esta traducción se ofrece por comodidad. La versión en inglés es la que tiene valor vinculante; en caso de discrepancia, prevalece.',
-    secciones: [
+    sections: [
       {
-        titulo: 'Resumen',
-        bloques: [
+        title: 'Resumen',
+        blocks: [
           'Esta Política de privacidad explica cómo SyncSekai ("SyncSekai" o "nosotros") recoge, usa, almacena y protege la información cuando usas el servicio alojado de SyncSekai disponible en syncsekai.com.',
           'SyncSekai es un proyecto independiente de código abierto. El servicio alojado lo gestiona una persona a título individual y no está gestionado por Plex, Jellyfin, Emby, AniList, MyAnimeList, Kitsu, Google, Discord, GitHub ni por ningún otro servicio de terceros al que SyncSekai haga referencia, ni está afiliado a ellos.',
           'Esta Política de privacidad se aplica a la instancia alojada de SyncSekai en syncsekai.com. Si gestionas tu propia instancia de SyncSekai, el operador de esa instancia es responsable de sus prácticas de datos y debe facilitar su propia información de privacidad.',
         ],
       },
       {
-        titulo: 'Contacto de privacidad',
-        bloques: [
+        title: 'Contacto de privacidad',
+        blocks: [
           'SyncSekai no publica en esta página el domicilio del operador ni otros datos personales identificativos que no sean necesarios.',
           'Para cuestiones de privacidad, legales, de cuenta o de protección de datos, puedes contactar con el operador del proyecto a través de:',
-          CONTACTO_ES,
+          CONTACT_ES,
           'El nombre de usuario de GitHub se facilita como contacto público del proyecto y no sustituye a la identidad legal allí donde la ley aplicable exija información adicional.',
         ],
       },
       {
-        titulo: 'Información que recogemos',
-        bloques: [
+        title: 'Información que recogemos',
+        blocks: [
           'Según cómo uses SyncSekai, el servicio alojado puede tratar la siguiente información.',
           'Información de la cuenta:',
           [
@@ -325,8 +324,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Cómo usamos la información',
-        bloques: [
+        title: 'Cómo usamos la información',
+        blocks: [
           'La información que trata SyncSekai se usa únicamente en la medida razonablemente necesaria para operar y mejorar el servicio alojado, lo que incluye:',
           [
             'Crear y mantener las cuentas',
@@ -346,8 +345,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Mapeos de la comunidad y clasificación',
-        bloques: [
+        title: 'Mapeos de la comunidad y clasificación',
+        blocks: [
           'Cuando corriges a mano un mapeo en la web (a qué anime corresponden un título y una temporada de tu servidor multimedia), esa corrección puede contarse, junto con las de otros usuarios, para mapear el mismo título automáticamente a otros usuarios. Una corrección solo cuenta cuando varias cuentas coinciden y ninguna discrepa.',
           'Solo se usa el mapeo en sí: el título, la temporada y los identificadores y títulos del servicio de seguimiento que elegiste. Tu historial de visualización, tus puntuaciones, tus conexiones y los datos de tu cuenta no se comparten con otros usuarios. Los mapeos que importas desde un archivo no cuentan.',
           'Para limitar abusos, solo cuentan las correcciones de cuentas con una antigüedad mínima y que se hayan usado para sincronizar un número mínimo de días distintos. SyncSekai lo comprueba con la fecha de creación de tu cuenta y tu historial de sincronización.',
@@ -358,8 +357,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Servicios de terceros',
-        bloques: [
+        title: 'Servicios de terceros',
+        blocks: [
           'SyncSekai puede intercambiar información con servicios de terceros cuando los conectas o los usas expresamente, o cuando son necesarios para operar el servicio alojado. Entre ellos pueden estar:',
           [
             'Plex',
@@ -376,16 +375,16 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Cookies y almacenamiento local',
-        bloques: [
+        title: 'Cookies y almacenamiento local',
+        blocks: [
           'SyncSekai usa una cookie de autenticación y sesión necesaria para mantener tu sesión iniciada y proteger tu cuenta. La cookie de sesión actual está configurada con atributos de seguridad como HttpOnly, Secure y SameSite.',
           'La aplicación también puede usar el almacenamiento local del navegador para preferencias de interfaz no sensibles, como el tema, el estado de la barra lateral y las preferencias de consentimiento de cookies.',
           'SyncSekai no usa cookies publicitarias ni rastreadores de publicidad conductual entre sitios como parte del servicio alojado actual. Si esto cambia, esta Política de privacidad se actualizará en consecuencia.',
         ],
       },
       {
-        titulo: 'Seguridad',
-        bloques: [
+        title: 'Seguridad',
+        blocks: [
           'SyncSekai aplica medidas técnicas y organizativas razonables destinadas a proteger la información que trata el servicio alojado. Entre ellas, cuando corresponde:',
           [
             'Hash de contraseñas en lugar de almacenarlas en claro',
@@ -402,8 +401,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Conservación y eliminación',
-        bloques: [
+        title: 'Conservación y eliminación',
+        blocks: [
           'En general, la información se conserva mientras sea necesaria para prestar el servicio solicitado, mantener la funcionalidad de la cuenta, resolver incidencias de soporte, proteger el servicio o cumplir las obligaciones legales aplicables.',
           'Una vez confirmada una solicitud de eliminación de cuenta:',
           [
@@ -416,8 +415,8 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Tus derechos de privacidad',
-        bloques: [
+        title: 'Tus derechos de privacidad',
+        blocks: [
           'Según dónde vivas y qué legislación te sea aplicable, puedes tener derechos sobre tu información personal, entre ellos el derecho a:',
           [
             'Acceder a la información que tenemos sobre ti',
@@ -433,44 +432,44 @@ export const PRIVACY: Record<'en' | 'es', DocumentoLegal> = {
         ],
       },
       {
-        titulo: 'Menores',
-        bloques: [
+        title: 'Menores',
+        blocks: [
           'SyncSekai no está dirigido a menores. No recogemos a sabiendas información personal de menores infringiendo la ley aplicable.',
           'SyncSekai no pide la fecha de nacimiento en el registro ordinario de una cuenta.',
         ],
       },
       {
-        titulo: 'Usuarios internacionales',
-        bloques: [
+        title: 'Usuarios internacionales',
+        blocks: [
           'El servicio alojado se presta a través de proveedores de infraestructura y seguridad que pueden operar en países distintos del tuyo. Por tanto, la información puede tratarse en jurisdicciones diferentes de la tuya.',
           'Cuando la ley aplicable establezca requisitos específicos para las transferencias internacionales o para la protección de la privacidad, SyncSekai tomará medidas razonables para cumplirlos.',
         ],
       },
       {
-        titulo: 'Código abierto e instancias autoalojadas',
-        bloques: [
+        title: 'Código abierto e instancias autoalojadas',
+        blocks: [
           'El código fuente de SyncSekai es de código abierto y puede revisarse o autoalojarse de forma independiente.',
           'Una instalación autoalojada no está controlada por la instancia alojada de SyncSekai. El operador de una instalación autoalojada es responsable de su seguridad, de sus prácticas de privacidad, de su infraestructura y de sus obligaciones legales.',
         ],
       },
       {
-        titulo: 'Marcas de terceros',
-        bloques: [
+        title: 'Marcas de terceros',
+        blocks: [
           'Plex, Jellyfin, Emby, AniList, MyAnimeList, Kitsu, Google, Discord, GitHub y los demás nombres y marcas mencionados pertenecen a sus respectivos titulares. SyncSekai es un proyecto independiente y no reclama la propiedad de esas marcas.',
         ],
       },
       {
-        titulo: 'Cambios en esta política',
-        bloques: [
+        title: 'Cambios en esta política',
+        blocks: [
           'Esta Política de privacidad puede actualizarse cuando cambien el servicio, sus prácticas de datos o los requisitos aplicables.',
           'La fecha de "Última actualización" al principio de esta página se modificará cuando se hagan revisiones sustanciales.',
         ],
       },
       {
-        titulo: 'Contacto',
-        bloques: [
+        title: 'Contacto',
+        blocks: [
           'Para cuestiones de privacidad, legales, de seguridad o de protección de datos:',
-          CONTACTO_ES,
+          CONTACT_ES,
           'Esta Política de privacidad se facilita como información general sobre el servicio alojado de SyncSekai y no constituye asesoramiento legal.',
         ],
       },

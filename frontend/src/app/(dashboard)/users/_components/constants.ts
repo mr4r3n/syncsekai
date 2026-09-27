@@ -1,27 +1,27 @@
 /**
- * Los seis servicios que puede tener vinculados una cuenta.
+ * Six services an account can link.
  *
- * El color sale de las variables de marca y no de un hex suelto: escritas a
- * mano en dos sitios ya se habian separado, y Jellyfin salia azul en la tabla
- * de escritorio y morado en la tarjeta de movil.
+ * Color derives from brand variables rather than standalone hex values: hardcoded
+ * in two places they had drifted, making Jellyfin blue in desktop table
+ * and purple on mobile card.
  */
-const SERVICIOS_USUARIO = [
-  { id: 'plex', corto: 'PLEX', nombre: 'Plex', color: '--brand-plex' },
-  { id: 'jellyfin', corto: 'JF', nombre: 'Jellyfin', color: '--brand-jellyfin' },
-  { id: 'emby', corto: 'EM', nombre: 'Emby', color: '--brand-emby' },
-  { id: 'anilist', corto: 'AL', nombre: 'AniList', color: '--brand-anilist' },
-  { id: 'mal', corto: 'MAL', nombre: 'MyAnimeList', color: '--brand-mal' },
-  { id: 'kitsu', corto: 'KT', nombre: 'Kitsu', color: '--brand-kitsu' },
+const USER_SERVICES = [
+  { id: 'plex', short: 'PLEX', name: 'Plex', color: '--brand-plex' },
+  { id: 'jellyfin', short: 'JF', name: 'Jellyfin', color: '--brand-jellyfin' },
+  { id: 'emby', short: 'EM', name: 'Emby', color: '--brand-emby' },
+  { id: 'anilist', short: 'AL', name: 'AniList', color: '--brand-anilist' },
+  { id: 'mal', short: 'MAL', name: 'MyAnimeList', color: '--brand-mal' },
+  { id: 'kitsu', short: 'KT', name: 'Kitsu', color: '--brand-kitsu' },
 ] as const;
 
-/** Los seis permisos de cuenta, en el orden en que se pintan. */
-const PERMISOS_USUARIO = [
-  { campo: 'canScrobble', clave: 'users.permScrobble' },
-  { campo: 'canAccessCatalog', clave: 'users.catalogueAccess' },
-  { campo: 'canEditMappings', clave: 'users.mappingsEditing' },
-  { campo: 'canSyncAnilist', clave: 'users.permSyncAnilist' },
-  { campo: 'canSyncMal', clave: 'users.permSyncMal' },
-  { campo: 'canSyncKitsu', clave: 'users.permSyncKitsu' },
+/** Six account permissions, in rendering order. */
+const USER_PERMISSIONS = [
+  { field: 'canScrobble', key: 'users.permScrobble' },
+  { field: 'canAccessCatalog', key: 'users.catalogueAccess' },
+  { field: 'canEditMappings', key: 'users.mappingsEditing' },
+  { field: 'canSyncAnilist', key: 'users.permSyncAnilist' },
+  { field: 'canSyncMal', key: 'users.permSyncMal' },
+  { field: 'canSyncKitsu', key: 'users.permSyncKitsu' },
 ] as const;
 
-export { SERVICIOS_USUARIO, PERMISOS_USUARIO };
+export { USER_SERVICES, USER_PERMISSIONS };

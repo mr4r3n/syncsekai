@@ -16,7 +16,7 @@ export function ThemeSwatchesCard({
 }: ThemeSwatchesCardProps) {
   return (
     <div className="glass-card p-6 sm:p-7 space-y-4">
-      {/* CARD DE PERSONALIZACIÓN DE TEMAS (ESTILO DISCORD) */}
+      {/* THEME CUSTOMIZATION CARD (DISCORD STYLE) */}
       <div className="flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-[6px] bg-[var(--color-brand-primary)]/10 border border-[var(--color-brand-primary)]/20 flex items-center justify-center text-[var(--color-brand-primary)] shrink-0">
           <Palette className="w-4 h-4" />
@@ -49,7 +49,7 @@ export function ThemeSwatchesCard({
                 }}
                 aria-label={t(swatch.name)}
               >
-                {/* Contenido interior: dot de color o icono de rotación */}
+                {/* Inner content: color dot or rotation icon */}
                 {swatch.dotColor && (
                   <span
                     className="w-3.5 h-3.5 rounded-full shadow-md"
@@ -60,7 +60,7 @@ export function ThemeSwatchesCard({
                   <RotateCcw className="w-4.5 h-4.5 text-zinc-400 group-hover:text-zinc-200 transition-colors" />
                 )}
 
-                {/* Badge de Selección (Check circular en la esquina superior derecha) */}
+                {/* Selection Badge (Circular check in top right corner) */}
                 {isSelected && (
                   <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 rounded-full bg-[var(--color-brand-primary)] text-white flex items-center justify-center shadow-md border-2 border-[var(--bg-app)] animate-in zoom-in-50 duration-150">
                     <Check className="w-2.5 h-2.5 stroke-[3]" />
@@ -68,7 +68,7 @@ export function ThemeSwatchesCard({
                 )}
               </button>
 
-              {/* Tooltip flotante con flecha apuntando hacia abajo */}
+              {/* Floating tooltip with downward pointing arrow */}
               <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 rounded-[6px] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] border border-[var(--border-subtle)] text-[11px] font-semibold shadow-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-150 transform group-hover:-translate-y-0.5 z-30 whitespace-nowrap">
                 {t(swatch.name)}
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[var(--bg-surface-elevated)] border-r border-b border-[var(--border-subtle)] rotate-45" />
@@ -78,7 +78,7 @@ export function ThemeSwatchesCard({
         })}
       </div>
 
-      {/* Resumen del Tema Activo */}
+      {/* Active Theme Summary */}
       <div className="pt-2.5 flex items-center justify-between text-xs text-[var(--text-secondary)] border-t border-[var(--border-subtle)]">
         <span className="font-medium">{t('settings.activeTheme')}</span>
         <span className="font-bold text-[var(--text-primary)] font-mono">

@@ -24,7 +24,7 @@ export function UserActionSheet({
   setDeletingUser,
   t,
 }: UserActionSheetProps) {
-  {/* BOTTOM SHEET NATIVO MÓVIL PARA OPCIONES DE USUARIO */}
+  {/* NATIVE MOBILE BOTTOM SHEET FOR USER OPTIONS */}
   return (
     <>
       {(() => {

@@ -26,27 +26,27 @@ export default function CatalogPage() {
   const [favoritesList, setFavoritesList] = useState<string[]>([]);
   const [showStatsBar, setShowStatsBar] = useState(true);
   
-  // Tracker Selector & Paginación y Filtros (32 items = 4 filas completas x 8 columnas en desktop)
+  // Tracker Selector & Pagination and Filters (32 items = 4 full rows x 8 columns on desktop)
   const [selectedTracker, setSelectedTracker] = useState<'ANILIST' | 'MAL' | 'KITSU' | 'LOCAL'>('ANILIST');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  // Rejilla o lista.
-  const [vistaCatalogo, setVistaCatalogo] = useState<'grid' | 'list'>('grid');
+  // Grid or list.
+  const [catalogView, setCatalogView] = useState<'grid' | 'list'>('grid');
 
-  // Numero de la ultima peticion de catalogo lanzada.
+  // Sequence number of last catalog request launched.
   //
-  // Al abrir la pagina salen dos: la del tracker por defecto y, en cuanto se
-  // lee el ?tracker= de la URL, la del elegido. Si la primera tardaba mas,
-  // llegaba despues y pisaba a la buena: la pestana decia "Local" y la rejilla
-  // mostraba el catalogo vacio de AniList. Pasa igual al cambiar de pestana
-  // rapido. Cada respuesta comprueba que sigue siendo la ultima antes de
+  // Opening page launches two: default tracker and, as soon as
+  // ?tracker= is read from URL, selected one. If first took longer,
+  // it arrived later and overwrote the correct one: tab showed "Local" and grid
+  // displayed empty AniList catalog. Same happened when switching tabs
+  // quickly. Each response checks it is still the latest before applying
   // pintarse.
-  const peticionCatalogo = useRef(0);
+  const catalogRequest = useRef(0);
   const itemsPerPage = 32;
 
-  // Cargar estadísticas y favoritos del usuario
+  // Load user stats and favorites
   const loadUserStats = async () => {
     try {
       const [stats, favs] = await Promise.all([
@@ -60,7 +60,7 @@ export default function CatalogPage() {
     } catch {}
   };
 
-  // Cargar densidad, tracker y filtros guardados desde URL o localStorage
+  // Load saved density, tracker, and filters from URL or localStorage
   useEffect(() => {
     loadUserStats();
     if (typeof window !== 'undefined') {
@@ -68,13 +68,13 @@ export default function CatalogPage() {
       const urlTracker = params.get('tracker');
       const urlStatus = params.get('status');
 
-      // 'LOCAL' no se persiste: sólo vale en la URL, como petición para esta visita.
-      const guardado = localStorage.getItem('plexsync_catalog_tracker');
-      if (guardado === 'LOCAL') {
+      // 'LOCAL' is not persisted: only valid in URL, as a request for this visit.
+      const saved = localStorage.getItem('plexsync_catalog_tracker');
+      if (saved === 'LOCAL') {
         localStorage.removeItem('plexsync_catalog_tracker');
       }
 
-      const savedTracker = urlTracker || (guardado === 'LOCAL' ? null : guardado);
+      const savedTracker = urlTracker || (saved === 'LOCAL' ? null : saved);
       if (savedTracker === 'ANILIST' || savedTracker === 'MAL' || savedTracker === 'KITSU' || savedTracker === 'LOCAL') {
         setSelectedTracker(savedTracker as any);
       }
@@ -84,24 +84,24 @@ export default function CatalogPage() {
         setStatusFilter(savedFilter);
       }
 
-      const vista = localStorage.getItem('plexsync_catalog_view');
-      if (vista === 'grid' || vista === 'list') {
-        setVistaCatalogo(vista);
+      const view = localStorage.getItem('plexsync_catalog_view');
+      if (view === 'grid' || view === 'list') {
+        setCatalogView(view);
       }
     }
   }, []);
 
-  const alternarVista = () => {
-    const siguiente = vistaCatalogo === 'grid' ? 'list' : 'grid';
-    setVistaCatalogo(siguiente);
+  const toggleView = () => {
+    const next = catalogView === 'grid' ? 'list' : 'grid';
+    setCatalogView(next);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('plexsync_catalog_view', siguiente);
+      localStorage.setItem('plexsync_catalog_view', next);
     }
   };
 
   const catalogTopRef = useRef<HTMLDivElement>(null);
 
-  // Debounce para búsqueda en vivo sin saturar llamadas
+  // Debounce for live search without saturating calls
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -110,7 +110,7 @@ export default function CatalogPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Cargar catálogo cada vez que cambie la página, filtro, búsqueda o tracker
+  // Load catalog whenever page, filter, search, or tracker changes
   useEffect(() => {
     loadCatalog(currentPage, statusFilter, debouncedSearch, selectedTracker);
   }, [currentPage, statusFilter, debouncedSearch, selectedTracker]);
@@ -123,7 +123,7 @@ export default function CatalogPage() {
     const animeId = String(anime.anilistId || anime.malId || anime.kitsuId || anime.id);
     const isCurrentlyFav = favoritesList.includes(animeId);
 
-    // Actualización optimista inmediata
+    // Immediate optimistic update
     if (isCurrentlyFav) {
       setFavoritesList((prev) => prev.filter((id) => id !== animeId));
     } else {
@@ -138,7 +138,7 @@ export default function CatalogPage() {
         genres: anime.genres || [],
       });
       showToast(
-        res.isFavorite ? `★ "${anime.title}" añadido a tus Favoritos` : `"${anime.title}" removido de Favoritos`,
+        res.isFavorite ? t('catalog.favoriteAdded', { title: anime.title }) : t('catalog.favoriteRemoved', { title: anime.title }),
         res.isFavorite ? 'success' : 'info',
       );
       loadUserStats();
@@ -160,7 +160,7 @@ export default function CatalogPage() {
     tracker = selectedTracker,
     forceRefresh = false,
   ) => {
-    const miPeticion = ++peticionCatalogo.current;
+    const myRequest = ++catalogRequest.current;
     try {
       setLoading(true);
       const isFavFilter = status === 'FAVORITES';
@@ -181,25 +181,25 @@ export default function CatalogPage() {
         });
       }
 
-      // Respuesta obsoleta: ya se pidio otra cosa despues. Se descarta sin
-      // tocar el estado ni apagar el indicador de carga, que le toca a la
-      // peticion que si sigue vigente.
-      if (miPeticion !== peticionCatalogo.current) return;
+      // Stale response: something else was requested afterwards. Discarded without
+      // touching state or turning off loading indicator, handled by the
+      // request that remains active.
+      if (myRequest !== catalogRequest.current) return;
 
       setCatalogResponse(res);
       setCatalog(items);
 
-      // El backend es la autoridad sobre qué tracker está activo, incluido 'LOCAL'
-      // cuando no hay ninguno vinculado.
+      // Backend is authority on active tracker, including 'LOCAL'
+      // when none is linked.
       if (res.activeProvider && res.activeProvider !== tracker) {
         setSelectedTracker(res.activeProvider);
       }
     } catch (e: any) {
-      if (miPeticion !== peticionCatalogo.current) return;
+      if (myRequest !== catalogRequest.current) return;
       showToast(`${t('catalog.loadCatalogueError')} ` + e.message, 'error');
       setCatalog([]);
     } finally {
-      if (miPeticion === peticionCatalogo.current) setLoading(false);
+      if (myRequest === catalogRequest.current) setLoading(false);
     }
   };
 
@@ -210,10 +210,9 @@ export default function CatalogPage() {
         loadCatalog(currentPage, statusFilter, debouncedSearch, selectedTracker, true),
         loadUserStats(),
       ]);
+      const trackerName = selectedTracker === 'MAL' ? 'MyAnimeList' : selectedTracker === 'KITSU' ? 'Kitsu' : selectedTracker === 'LOCAL' ? t('catalog.localBase') : 'AniList';
       showToast(
-        `Catálogo sincronizado con éxito desde ${
-          selectedTracker === 'MAL' ? 'MyAnimeList' : selectedTracker === 'KITSU' ? 'Kitsu' : selectedTracker === 'LOCAL' ? 'Base Local' : 'AniList'
-        }`,
+        t('catalog.syncedFromTracker', { tracker: trackerName }),
         'success',
       );
     } catch (e: any) {
@@ -239,7 +238,7 @@ export default function CatalogPage() {
 
   const { getStatusIcon, getStatusBadge, getSeasonNumber } = useCatalogStatus();
 
-  // Identificar conectividad real de proveedores desde la respuesta del backend
+  // Identify actual provider connectivity from backend response
   const isPlexServerConnected = !!catalogResponse?.providers?.plex?.isConnected;
   const isJellyfinServerConnected = !!catalogResponse?.providers?.jellyfin?.isConnected;
   const isEmbyServerConnected = !!catalogResponse?.providers?.emby?.isConnected;
@@ -277,14 +276,14 @@ export default function CatalogPage() {
         isRefreshing={refreshing}
       />
 
-      {/* HEADER & FILTROS (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* HEADER & FILTERS (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <CatalogHeader
         catalogResponse={catalogResponse}
         selectedTracker={selectedTracker}
         setSelectedTracker={setSelectedTracker}
         pagination={pagination}
-        vistaCatalogo={vistaCatalogo}
-        alternarVista={alternarVista}
+        catalogView={catalogView}
+        toggleView={toggleView}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleRefresh={handleRefresh}
@@ -298,7 +297,7 @@ export default function CatalogPage() {
         isKitsuActive={isKitsuActive}
       />
 
-      {/* CONTENEDOR PRINCIPAL CON SCROLL */}
+      {/* MAIN SCROLLABLE CONTAINER */}
       <main className="w-full px-4 sm:px-6 md:px-8 py-6 space-y-7 min-w-0" ref={catalogTopRef}>
         <CatalogContent
           loading={loading}
@@ -306,7 +305,7 @@ export default function CatalogPage() {
           catalog={catalog}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          vistaCatalogo={vistaCatalogo}
+          catalogView={catalogView}
           setSelectedAnime={setSelectedAnime}
           getStatusBadge={getStatusBadge}
           getStatusIcon={getStatusIcon}
@@ -320,7 +319,7 @@ export default function CatalogPage() {
         />
       </main>
 
-      {/* MODAL SEMITRANSPARENTE VIDRIO TEMPLADO (TOTALMENTE RESPONSIVE EN MÓVIL Y DESKTOP) */}
+      {/* SEMI-TRANSPARENT TEMPERED GLASS MODAL (FULLY RESPONSIVE ON MOBILE AND DESKTOP) */}
       {selectedAnime && (
         <AnimeDetailModal
           selectedAnime={selectedAnime}

@@ -14,10 +14,10 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // El enlace "Saltar al contenido principal" vive en el layout raíz y por tanto
-  // aparece en todas las páginas, pero el ancla #main-content solo existía en la
-  // landing: en todo el panel apuntaba a un destino inexistente y no hacía nada.
-  // tabIndex={-1} permite que el foco aterrice aquí al seguir el enlace.
+  // The "Skip to main content" link lives in root layout and therefore
+  // appears on all pages, but the #main-content anchor only existed on
+  // landing: throughout the dashboard it pointed to a nonexistent target and did nothing.
+  // tabIndex={-1} allows focus to land here when following the link.
   return (
     <AuthGuard>
       <div id="main-content" tabIndex={-1} className="outline-none">

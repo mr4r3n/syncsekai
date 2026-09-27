@@ -234,7 +234,7 @@ export default function SetupPage() {
       {/* STEPPER PROGRESS */}
       <SetupStepper currentStep={currentStep} setCurrentStep={setCurrentStep} />
 
-      {/* CONTENEDOR DEL FORMULARIO */}
+      {/* FORM CONTAINER */}
       <div className="max-w-2xl mx-auto w-full">
         <div className="glass-card p-6 sm:p-8 space-y-6">
           {setupComplete ? (

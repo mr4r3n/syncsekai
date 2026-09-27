@@ -75,7 +75,7 @@ export function MappingActionSheet({
         ...(currentUser?.role === 'ADMIN'
           ? [
               {
-                label: activeMappingSheetItem.isGlobal ? 'Revocar Mapeo Global' : t('mappings.promoteToGlobal'),
+                label: activeMappingSheetItem.isGlobal ? t('mappings.revokeGlobalMapping') : t('mappings.promoteToGlobal'),
                 sublabel: activeMappingSheetItem.isGlobal
                   ? t('mappings.revertToUserMapping')
                   : t('mappings.makeVisibleToAll'),

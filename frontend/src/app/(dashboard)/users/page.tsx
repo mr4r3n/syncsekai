@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { useModalA11y } from '@/components/useModalA11y';
 import { ConfirmModal } from '@/components/ConfirmModal';
 
-import type { CampoOrden } from './_components/types';
+import type { SortField } from './_components/types';
 import { UsersPageHeader } from './_components/UsersPageHeader';
 import { UsersTable } from './_components/UsersTable';
 import { UsersCardGrid } from './_components/UsersCardGrid';
@@ -22,43 +22,43 @@ export default function UsersManagementPage() {
   const { isCollapsed } = useSidebar();
   const { showToast, showUndoToast } = useToast();
   const { t, locale } = useI18n();
-  const fechaAlta = (iso?: string) =>
+  const registrationDate = (iso?: string) =>
     iso ? new Date(iso).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-  const esReciente = (iso?: string) => !!iso && Date.now() - new Date(iso).getTime() < 7 * 24 * 60 * 60 * 1000;
+  const isRecent = (iso?: string) => !!iso && Date.now() - new Date(iso).getTime() < 7 * 24 * 60 * 60 * 1000;
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  // ?search= llega desde la notificación de "nuevo usuario" de la campana.
+  // ?search= arrives from the bell's "new user" notification.
   useEffect(() => {
-    const buscado = new URLSearchParams(window.location.search).get('search');
-    if (buscado) setSearchQuery(buscado);
+    const searched = new URLSearchParams(window.location.search).get('search');
+    if (searched) setSearchQuery(searched);
   }, []);
-  const [filtroRol, setFiltroRol] = useState<'ALL' | 'ADMIN' | 'USER'>('ALL');
-  const [filtroEstado, setFiltroEstado] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED' | 'NEW'>('ALL');
-  // La vista se recuerda por navegador: es una preferencia, no un dato.
-  const [vista, setVista] = useState<'lista' | 'tarjetas'>('lista');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'ADMIN' | 'USER'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED' | 'NEW'>('ALL');
+  // View preference remembered per browser: a preference, not account data.
+  const [vista, setView] = useState<'lista' | 'tarjetas'>('lista');
   useEffect(() => {
     try {
-      if (localStorage.getItem('plexsync_users_view') === 'tarjetas') setVista('tarjetas');
+      if (localStorage.getItem('plexsync_users_view') === 'tarjetas') setView('tarjetas');
     } catch {}
   }, []);
-  const abrirOpciones = (u: any) => {
+  const openOptions = (u: any) => {
     if (window.matchMedia('(min-width: 1024px)').matches) handleOpenEdit(u);
     else setActiveUserMenuId(u.id);
   };
-  const cambiarVista = (v: 'lista' | 'tarjetas') => {
-    setVista(v);
+  const changeView = (v: 'lista' | 'tarjetas') => {
+    setView(v);
     try {
       localStorage.setItem('plexsync_users_view', v);
     } catch {}
   };
-  const [orden, setOrden] = useState<{ campo: CampoOrden; asc: boolean }>({ campo: 'createdAt', asc: false });
-  const [porPagina, setPorPagina] = useState(10);
-  const [pagina, setPagina] = useState(1);
-  const ordenarPor = (campo: CampoOrden) =>
-    setOrden((prev) => ({ campo, asc: prev.campo === campo ? !prev.asc : campo === 'username' }));
-  const haceCuanto = (iso?: string | null) => {
+  const [sort, setSort] = useState<{ field: SortField; asc: boolean }>({ field: 'createdAt', asc: false });
+  const [perPage, setPerPage] = useState(10);
+  const [page, setPage] = useState(1);
+  const sortBy = (sortField: SortField) =>
+    setSort((prev) => ({ field: sortField, asc: prev.field === sortField ? !prev.asc : sortField === 'username' }));
+  const timeAgo = (iso?: string | null) => {
     if (!iso) return t('users.never');
     const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
     if (mins < 1) return t('topbar.momentAgo');
@@ -70,7 +70,7 @@ export default function UsersManagementPage() {
   const [activeUserMenuId, setActiveUserMenuId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  // Estado para el modal de edición
+  // Edit modal state
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({
     username: '',
@@ -88,13 +88,13 @@ export default function UsersManagementPage() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Estado para modal de eliminación
+  // Delete modal state
   const [deletingUser, setDeletingUser] = useState<any | null>(null);
 
-  // Semántica de diálogo y gestión de foco de los modales de esta vista.
-  const { dialogProps: propsEditar } = useModalA11y(Boolean(editingUser), () => setEditingUser(null));
-  // El borrado ya no necesita el suyo: ConfirmModal se encarga de su foco y de
-  // su Escape. Dejarlo aqui montaba dos trampas de foco sobre el mismo dialogo.
+  // Dialog semantics and focus management for modals in this view.
+  const { dialogProps: editProps } = useModalA11y(Boolean(editingUser), () => setEditingUser(null));
+  // Deletion no longer needs its own: ConfirmModal handles focus and
+  // Escape. Leaving it here mounted two focus traps on the same dialog.
 
   useEffect(() => {
     setMounted(true);
@@ -128,7 +128,7 @@ export default function UsersManagementPage() {
     showToast(t('users.userListUpdated'), 'success');
   };
 
-  // Abrir modal de edición
+  // Open edit modal
   const handleOpenEdit = (user: any) => {
     setEditingUser(user);
     setEditForm({
@@ -147,7 +147,7 @@ export default function UsersManagementPage() {
     });
   };
 
-  // Guardar edición de usuario
+  // Save user edit
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
@@ -180,7 +180,7 @@ export default function UsersManagementPage() {
       }
 
       await api.admin.updateUserPermissions(editingUser.id, payload);
-      showToast(`Usuario "${editForm.username}" actualizado correctamente.`, 'success');
+      showToast(t('users.userUpdated', { username: editForm.username }), 'success');
 
       // Actualizar listado local
       setUsersList((prev) =>
@@ -215,13 +215,13 @@ export default function UsersManagementPage() {
     }
   };
 
-  // Alternar bloqueo / suspensión rápido
+  // Quick toggle lock / suspension
   const handleToggleBlock = async (userId: string, currentSuspended: boolean, username: string) => {
     const nextState = !currentSuspended;
     try {
       await api.admin.updateUserPermissions(userId, { isSuspended: nextState });
       showToast(
-        nextState ? `Usuario "${username}" bloqueado.` : `Usuario "${username}" desbloqueado y reactivado.`,
+        nextState ? t('users.userBlocked', { username }) : t('users.userUnblocked', { username }),
         nextState ? 'info' : 'success'
       );
       setUsersList((prev) =>
@@ -241,7 +241,7 @@ export default function UsersManagementPage() {
     try {
       const updated = { [permKey]: !currentValue };
       await api.admin.updateUserPermissions(userId, updated);
-      showToast(`Permiso "${permKey}" actualizado.`, 'success');
+      showToast(t('users.permissionUpdated', { perm: permKey }), 'success');
       setUsersList((prev) =>
         prev.map((u) =>
           u.id === userId
@@ -254,12 +254,12 @@ export default function UsersManagementPage() {
     }
   };
 
-  // Alternar rol ADMIN <-> USER rápido
+  // Quick toggle ADMIN <-> USER role
   const handleToggleRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
     try {
       await api.admin.updateUserPermissions(userId, { role: newRole });
-      showToast(`Rol cambiado a ${newRole}.`, 'success');
+      showToast(t('users.roleChanged', { role: newRole }), 'success');
       setUsersList((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
@@ -268,21 +268,21 @@ export default function UsersManagementPage() {
     }
   };
 
-  // La fila sale de la lista al confirmar; la petición se envía cuando expira
-  // la cuenta atrás, así que Deshacer solo tiene que devolver la fila.
+  // Row leaves list on confirm; request sends when countdown
+  // expires, so Undo only needs to restore the row.
   const handleConfirmDelete = () => {
     if (!deletingUser) return;
-    const usuario = deletingUser;
-    setUsersList((prev) => prev.filter((u) => u.id !== usuario.id));
+    const user = deletingUser;
+    setUsersList((prev) => prev.filter((u) => u.id !== user.id));
     setDeletingUser(null);
-    showUndoToast(t('users.deletingUser', { username: usuario.username }), {
-      alDeshacer: () => setUsersList((prev) => [...prev, usuario]),
-      alExpirar: async () => {
+    showUndoToast(t('users.deletingUser', { username: user.username }), {
+      onUndo: () => setUsersList((prev) => [...prev, user]),
+      onExpire: async () => {
         try {
-          await api.admin.deleteUser(usuario.id);
-          showToast(t('users.userDeleted', { username: usuario.username }), 'info');
+          await api.admin.deleteUser(user.id);
+          showToast(t('users.userDeleted', { username: user.username }), 'info');
         } catch (err: any) {
-          setUsersList((prev) => [...prev, usuario]);
+          setUsersList((prev) => [...prev, user]);
           showToast(`${t('users.deleteUserError')} ` + err.message, 'error');
         }
       },
@@ -297,18 +297,18 @@ export default function UsersManagementPage() {
       u.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const isSuspended = u.permissions?.isSuspended;
-    const rolOk = filtroRol === 'ALL' || u.role === filtroRol;
-    const estadoOk =
-      filtroEstado === 'ALL' ||
-      (filtroEstado === 'ACTIVE' && !isSuspended) ||
-      (filtroEstado === 'SUSPENDED' && isSuspended) ||
-      (filtroEstado === 'NEW' && esReciente(u.createdAt));
-    return matchesSearch && rolOk && estadoOk;
+    const roleOk = roleFilter === 'ALL' || u.role === roleFilter;
+    const statusOk =
+      statusFilter === 'ALL' ||
+      (statusFilter === 'ACTIVE' && !isSuspended) ||
+      (statusFilter === 'SUSPENDED' && isSuspended) ||
+      (statusFilter === 'NEW' && isRecent(u.createdAt));
+    return matchesSearch && roleOk && statusOk;
   });
 
-  // Orden estable: el desempate es el nombre, para que dos filas iguales no bailen.
-  const valorOrden = (u: any): string | number => {
-    switch (orden.campo) {
+  // Stable sort: tiebreaker is name, preventing identical rows from jittering.
+  const sortValue = (u: any): string | number => {
+    switch (sort.field) {
       case 'status': return u.permissions?.isSuspended ? 1 : 0;
       case 'role': return u.role === 'ADMIN' ? 0 : 1;
       case 'createdAt': return new Date(u.createdAt).getTime();
@@ -316,29 +316,29 @@ export default function UsersManagementPage() {
       default: return (u.username || '').toLowerCase();
     }
   };
-  const usuariosOrdenados = [...filteredUsers].sort((a, b) => {
-    const va = valorOrden(a);
-    const vb = valorOrden(b);
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const va = sortValue(a);
+    const vb = sortValue(b);
     const cmp = va < vb ? -1 : va > vb ? 1 : a.username.localeCompare(b.username);
-    return orden.asc ? cmp : -cmp;
+    return sort.asc ? cmp : -cmp;
   });
-  const totalPaginas = Math.max(1, Math.ceil(usuariosOrdenados.length / porPagina));
-  const paginaActual = Math.min(pagina, totalPaginas);
-  const usuariosPagina = usuariosOrdenados.slice((paginaActual - 1) * porPagina, paginaActual * porPagina);
-  const ORDENES: Array<{ value: string; label: string; campo: CampoOrden; asc: boolean }> = [
-    { value: 'newest', label: t('users.sortNewest'), campo: 'createdAt', asc: false },
-    { value: 'oldest', label: t('users.sortOldest'), campo: 'createdAt', asc: true },
-    { value: 'name-asc', label: t('users.sortNameAsc'), campo: 'username', asc: true },
-    { value: 'name-desc', label: t('users.sortNameDesc'), campo: 'username', asc: false },
-    { value: 'active', label: t('users.sortLastActive'), campo: 'lastActiveAt', asc: false },
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / perPage));
+  const currentPage = Math.min(page, totalPages);
+  const pageUsers = sortedUsers.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const SORTS: Array<{ value: string; label: string; field: SortField; asc: boolean }> = [
+    { value: 'newest', label: t('users.sortNewest'), field: 'createdAt', asc: false },
+    { value: 'oldest', label: t('users.sortOldest'), field: 'createdAt', asc: true },
+    { value: 'name-asc', label: t('users.sortNameAsc'), field: 'username', asc: true },
+    { value: 'name-desc', label: t('users.sortNameDesc'), field: 'username', asc: false },
+    { value: 'active', label: t('users.sortLastActive'), field: 'lastActiveAt', asc: false },
   ];
-  const ordenActual = ORDENES.find((o) => o.campo === orden.campo && o.asc === orden.asc)?.value || '';
+  const currentSort = SORTS.find((o) => o.field === sort.field && o.asc === sort.asc)?.value || '';
 
   const totalUsersCount = usersList.length;
   const adminUsersCount = usersList.filter((u) => u.role === 'ADMIN').length;
   const activeUsersCount = usersList.filter((u) => !u.permissions?.isSuspended).length;
   const suspendedUsersCount = usersList.filter((u) => u.permissions?.isSuspended).length;
-  const newUsersCount = usersList.filter((u) => esReciente(u.createdAt)).length;
+  const newUsersCount = usersList.filter((u) => isRecent(u.createdAt)).length;
 
   return (
     <div
@@ -351,18 +351,18 @@ export default function UsersManagementPage() {
       <UsersPageHeader
         handleRefresh={handleRefresh}
         isRefreshing={isRefreshing}
-        filtroRol={filtroRol}
-        setFiltroRol={setFiltroRol}
-        filtroEstado={filtroEstado}
-        setFiltroEstado={setFiltroEstado}
-        ordenActual={ordenActual}
-        setOrden={setOrden}
-        ORDENES={ORDENES}
+        roleFilter={roleFilter}
+        setRoleFilter={setRoleFilter}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        currentSort={currentSort}
+        setSort={setSort}
+        SORTS={SORTS}
         vista={vista}
-        cambiarVista={cambiarVista}
+        changeView={changeView}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        setPagina={setPagina}
+        setPage={setPage}
         totalUsersCount={totalUsersCount}
         adminUsersCount={adminUsersCount}
         activeUsersCount={activeUsersCount}
@@ -376,18 +376,18 @@ export default function UsersManagementPage() {
         <UsersTable
           vista={vista}
           loading={loading}
-          orden={orden}
-          ordenarPor={ordenarPor}
-          usuariosPagina={usuariosPagina}
-          usuariosOrdenados={usuariosOrdenados}
-          porPagina={porPagina}
-          setPorPagina={setPorPagina}
-          paginaActual={paginaActual}
-          setPagina={setPagina}
-          totalPaginas={totalPaginas}
-          fechaAlta={fechaAlta}
-          haceCuanto={haceCuanto}
-          esReciente={esReciente}
+          sort={sort}
+          sortBy={sortBy}
+          pageUsers={pageUsers}
+          sortedUsers={sortedUsers}
+          perPage={perPage}
+          setPerPage={setPerPage}
+          currentPage={currentPage}
+          setPage={setPage}
+          totalPages={totalPages}
+          registrationDate={registrationDate}
+          timeAgo={timeAgo}
+          isRecent={isRecent}
           handleToggleBlock={handleToggleBlock}
           handleToggleRole={handleToggleRole}
           handleOpenEdit={handleOpenEdit}
@@ -396,17 +396,17 @@ export default function UsersManagementPage() {
         />
 
         <UsersCardGrid
-          vista={vista}
+          view={vista}
           loading={loading}
           filteredUsers={filteredUsers}
-          usuariosPagina={usuariosPagina}
-          totalPaginas={totalPaginas}
-          paginaActual={paginaActual}
-          setPagina={setPagina}
-          fechaAlta={fechaAlta}
-          haceCuanto={haceCuanto}
-          esReciente={esReciente}
-          abrirOpciones={abrirOpciones}
+          pageUsers={pageUsers}
+          totalPages={totalPages}
+          currentPage={currentPage}
+          setPage={setPage}
+          registrationDate={registrationDate}
+          timeAgo={timeAgo}
+          isRecent={isRecent}
+          openOptions={openOptions}
           setActiveUserMenuId={setActiveUserMenuId}
           handleOpenEdit={handleOpenEdit}
           handleToggleBlock={handleToggleBlock}
@@ -427,13 +427,13 @@ export default function UsersManagementPage() {
       </main>
 
       {/* ========================================================= */}
-      {/* MODAL DE EDICIÓN DE USUARIO (HORIZONTAL WIDE) */}
+      {/* USER EDIT MODAL (HORIZONTAL WIDE) */}
       {/* ========================================================= */}
       {editingUser && (
         <UserEditModal
           editingUser={editingUser}
           setEditingUser={setEditingUser}
-          propsEditar={propsEditar}
+          editProps={editProps}
           editForm={editForm}
           setEditForm={setEditForm}
           handleSaveEdit={handleSaveEdit}
@@ -443,12 +443,12 @@ export default function UsersManagementPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      {/* DELETION CONFIRMATION MODAL */}
       {/* ========================================================= */}
-      {/* El mismo dialogo de confirmacion que el historial, no uno propio.
-          El de aqui estaba escrito a mano: sin boton de cerrar, sin animacion
-          de entrada, con el texto en castellano fijo y con su propia idea de
-          como se ve un borrado. */}
+      {/* Same confirmation dialog as history, not a custom one.
+          The one here was hand-coded: no close button, no entrance
+          animation, hardcoded Spanish copy, and idiosyncratic
+          deletion styling. */}
       <ConfirmModal
         isOpen={Boolean(deletingUser)}
         title={t('users.deleteUser')}

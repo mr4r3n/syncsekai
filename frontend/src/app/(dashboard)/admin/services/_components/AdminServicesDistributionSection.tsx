@@ -18,7 +18,7 @@ export function AdminServicesDistributionSection({
 
   return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Distribución de Trackers */}
+          {/* Tracker Distribution */}
           <div className="glass-card p-6 space-y-5">
             <div className="flex items-center gap-2.5">
               <Radio className="w-4 h-4 text-[var(--text-muted)]" />
@@ -77,7 +77,7 @@ export function AdminServicesDistributionSection({
                 </p>
               </div>
 
-              {/* Sincronización Dual */}
+              {/* Dual Sync */}
               <div className="p-4 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-[var(--text-primary)] flex items-center gap-2">
@@ -94,7 +94,7 @@ export function AdminServicesDistributionSection({
             </div>
           </div>
 
-          {/* Pipeline & Rendimiento de Sincronización Global */}
+          {/* Global Sync Pipeline & Performance */}
           <div className="glass-card p-6 space-y-5">
             <div className="flex items-center gap-2.5">
               <Zap className="w-4 h-4 text-[var(--text-muted)]" />
@@ -102,7 +102,7 @@ export function AdminServicesDistributionSection({
             </div>
 
             <div className="space-y-4">
-              {/* 1. Tasa Global de Éxito */}
+              {/* 1. Global Success Rate */}
               <div className="p-4 rounded-[6px] border border-emerald-500/20 bg-emerald-500/5 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-[var(--text-primary)] flex items-center gap-2">
@@ -198,7 +198,7 @@ export function AdminServicesDistributionSection({
                 </p>
               </div>
 
-              {/* 5. Mapeos de Título en Base de Datos */}
+              {/* 5. Title Mappings in Database */}
               <div className="p-4 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-[var(--text-primary)] flex items-center gap-2">

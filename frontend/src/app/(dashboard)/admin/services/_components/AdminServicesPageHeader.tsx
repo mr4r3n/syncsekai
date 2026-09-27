@@ -54,7 +54,7 @@ export function AdminServicesPageHeader({
                     autoRefreshInterval > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'
                   }`}
                 />
-                Sondeo:
+                {t('admin.polling')}
               </span>
               {[
                 { label: 'Off', val: 0 },
@@ -68,7 +68,7 @@ export function AdminServicesPageHeader({
                   onClick={() => {
                     setAutoRefreshInterval(opt.val);
                     if (opt.val > 0) {
-                      showToast(`Sondeo automático configurado cada ${opt.label}`, 'info');
+                      showToast(t('admin.autoPollingConfigured', { interval: opt.label }), 'info');
                     } else {
                       showToast(t('admin.autoPollingPaused'), 'info');
                     }
@@ -84,7 +84,7 @@ export function AdminServicesPageHeader({
               ))}
             </div>
 
-            {/* Botón de Modo Mantenimiento */}
+            {/* Maintenance Mode Button */}
             <button
               type="button"
               onClick={() => {
@@ -97,10 +97,10 @@ export function AdminServicesPageHeader({
                   ? 'bg-amber-500/15 text-amber-400 border-amber-500/40 hover:bg-amber-500/25 hover:border-amber-500/60 shadow-sm'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
-              title="Configurar modo mantenimiento"
+              title={t('admin.configureMaintenance')}
             >
               <Wrench className={`w-3.5 h-3.5 ${maintenance.enabled ? 'text-amber-400 animate-spin [animation-duration:8s]' : 'text-[var(--text-muted)]'}`} />
-              <span>{maintenance.enabled ? t('admin.maintenanceActive') : 'Mantenimiento'}</span>
+              <span>{maintenance.enabled ? t('admin.maintenanceActive') : t('admin.maintenance')}</span>
             </button>
 
             <button
@@ -119,10 +119,10 @@ export function AdminServicesPageHeader({
           <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)] border-t border-[var(--glass-border)] pt-2">
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              Última comprobación: {lastUpdated.toLocaleTimeString()}
+              {t('admin.lastCheckTime', { time: lastUpdated.toLocaleTimeString() })}
             </span>
             <span className="text-[var(--accent-text)]">
-              {autoRefreshInterval > 0 ? `Refresco activo (cada ${autoRefreshInterval}s)` : 'Modo manual'}
+              {autoRefreshInterval > 0 ? t('admin.activeRefreshInterval', { interval: autoRefreshInterval }) : t('admin.manualMode')}
             </span>
           </div>
         )}

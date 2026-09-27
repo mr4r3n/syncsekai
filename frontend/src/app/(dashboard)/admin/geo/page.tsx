@@ -20,21 +20,21 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CountryFlag } from '@/components/CountryFlag';
-import { Paginacion } from '@/components/Paginacion';
-import { nombreRegion } from '@/lib/region';
+import { Pagination } from '@/components/Pagination';
+import { regionName } from '@/lib/region';
 
-// Import dinámico del componente de Mapa Leaflet
+// Dynamic import of Leaflet Map component
 const WorldVisitorsMap = dynamic(
   () => import('@/components/WorldVisitorsMap').then((mod) => mod.WorldVisitorsMap),
   {
     ssr: false,
-    loading: () => <MapaCargando />,
+    loading: () => <MapLoading />,
   }
 );
 
-// El "loading" de dynamic() se evalua en ambito de modulo, donde no hay hook.
-// Como componente aparte lo renderiza React y si puede traducirse.
-function MapaCargando() {
+// The "loading" in dynamic() is evaluated at module scope, where no hook exists.
+// As a separate component, React renders it and it can be translated.
+function MapLoading() {
   const { t } = useI18n();
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-[#0c0c0e] p-12 text-center text-xs font-mono text-zinc-500 animate-pulse">
@@ -48,23 +48,23 @@ export default function AdminGeoPage() {
   const { isCollapsed } = useSidebar();
   const { showToast } = useToast();
   const { t, locale } = useI18n();
-  const pais = (code: string | undefined, fallback: string) => nombreRegion(code, locale, fallback);
+  const pais = (code: string | undefined, fallback: string) => regionName(code, locale, fallback);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
 
   /*
-   * Las dos listas se paginan aqui, no en el servidor.
+   * Both lists are paginated here, not on server.
    *
-   * Los datos ya vienen enteros dentro del panel -son los mismos que alimentan
-   * el mapa- asi que pedirlos por trozos seria una llamada de mas para recortar
-   * un array que ya esta en memoria. Lo que hacia falta era que la tarjeta no
-   * creciera sin fin: con 28 paises medía 2284 px de alto, y en produccion hay
-   * mas.
+   * Data already arrives complete in dashboard—same feeding the
+   * map—so requesting in chunks would add an unnecessary call to slice
+   * an in-memory array. Goal was preventing unbounded card
+   * growth: with 28 countries it measured 2284 px high, with more in
+   * production.
    */
-  const [paginaPaises, setPaginaPaises] = useState(1);
-  const [paginaIps, setPaginaIps] = useState(1);
+  const [countriesPage, setCountriesPage] = useState(1);
+  const [ipsPage, setIpsPage] = useState(1);
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
@@ -118,19 +118,19 @@ export default function AdminGeoPage() {
   const recentIps = data?.recentIps || [];
   const totalVisits = geoVisits.reduce((acc: number, curr: any) => acc + (curr.visits || 0), 0);
 
-  // 8 filas: es lo que cabe sin que la tarjeta pase de la altura de la ventana
-  // en un portatil, y sigue enseñando el grueso del trafico de un vistazo.
-  const POR_PAGINA = 8;
+  // 8 rows: fits without card exceeding viewport height
+  // on a laptop, while showing bulk of traffic at a glance.
+  const PER_PAGE = 8;
 
-  // La pagina se limita al total en vez de guardarse corregida: si al refrescar
-  // hay menos paises, la lista se queda en la ultima que existe y no en blanco.
-  const totalPaginasPaises = Math.max(1, Math.ceil(geoVisits.length / POR_PAGINA));
-  const totalPaginasIps = Math.max(1, Math.ceil(recentIps.length / POR_PAGINA));
-  const pagPaises = Math.min(paginaPaises, totalPaginasPaises);
-  const pagIps = Math.min(paginaIps, totalPaginasIps);
+  // Page is clamped to total rather than stored corrected: if on refresh
+  // fewer countries exist, list stays on last existing page rather than blank.
+  const totalPagesCountries = Math.max(1, Math.ceil(geoVisits.length / PER_PAGE));
+  const totalPagesIps = Math.max(1, Math.ceil(recentIps.length / PER_PAGE));
+  const currentCountriesPage = Math.min(countriesPage, totalPagesCountries);
+  const currentIpsPage = Math.min(ipsPage, totalPagesIps);
 
-  const paisesVisibles = geoVisits.slice((pagPaises - 1) * POR_PAGINA, pagPaises * POR_PAGINA);
-  const ipsVisibles = recentIps.slice((pagIps - 1) * POR_PAGINA, pagIps * POR_PAGINA);
+  const paisesVisibles = geoVisits.slice((currentCountriesPage - 1) * PER_PAGE, currentCountriesPage * PER_PAGE);
+  const visibleIps = recentIps.slice((currentIpsPage - 1) * PER_PAGE, currentIpsPage * PER_PAGE);
 
   return (
     <div
@@ -140,7 +140,7 @@ export default function AdminGeoPage() {
     >
       <Topbar rootLabel={t('navigation.systemAdmin')} currentLabel={t('admin.geoTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -181,7 +181,7 @@ export default function AdminGeoPage() {
 
       {/* CONTENIDO PRINCIPAL */}
       <main className="w-full px-4 sm:px-6 md:px-8 py-8 space-y-8 min-w-0">
-        {/* RESUMEN DE MÉTRICAS GEO */}
+        {/* GEO METRICS SUMMARY */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="glass-card p-4 flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-[8px] bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
@@ -225,12 +225,12 @@ export default function AdminGeoPage() {
             <span className="text-xs text-[var(--text-muted)] font-mono shrink-0">{t('admin.worldMapSubtitle')}</span>
           </div>
 
-          <WorldVisitorsMap locations={mapLocations} />
+          <WorldVisitorsMap locations={mapLocations} countries={geoVisits} />
         </div>
 
-        {/* TABLA DE TRÁFICO POR PAÍS Y CIUDAD */}
+        {/* TRAFFIC TABLE BY COUNTRY AND CITY */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Por Países */}
+          {/* By Countries */}
           <div className="glass-card p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-[var(--glass-border)]">
               <MapPin className="w-4 h-4 text-emerald-400" />
@@ -275,17 +275,17 @@ export default function AdminGeoPage() {
               )}
             </div>
 
-            <Paginacion
-              pagina={pagPaises}
-              totalPaginas={totalPaginasPaises}
-              onCambio={setPaginaPaises}
-              resumen={t('admin.countriesCounted', { n: geoVisits.length })}
-              etiquetaAnterior={t('mappings.previousPage')}
-              etiquetaSiguiente={t('mappings.nextPage')}
+            <Pagination
+              page={currentCountriesPage}
+              totalPages={totalPagesCountries}
+              onChange={setCountriesPage}
+              summary={t('admin.countriesCounted', { n: geoVisits.length })}
+              prevLabel={t('mappings.previousPage')}
+              nextLabel={t('mappings.nextPage')}
             />
           </div>
 
-          {/* Por Ciudades / Sistemas */}
+          {/* By Cities / Systems */}
           <div className="glass-card p-6 space-y-4">
             <div className="flex items-center gap-2.5 pb-2 border-b border-[var(--glass-border)]">
               <Activity className="w-4 h-4 text-purple-400" />
@@ -298,7 +298,7 @@ export default function AdminGeoPage() {
               {recentIps.length === 0 ? (
                 <div className="py-8 text-center text-xs font-mono text-[var(--text-muted)]">{t('admin.noConnections24h')}</div>
               ) : (
-                ipsVisibles.map((entry: any, i: number) => (
+                visibleIps.map((entry: any, i: number) => (
                   <div key={i} className="p-3.5 rounded-[6px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1 flex items-start gap-2.5">
                       <CountryFlag code={entry.code || entry.countryCode || entry.country} countryName={pais(entry.code, entry.country)} size="sm" className="mt-0.5" />
@@ -333,19 +333,19 @@ export default function AdminGeoPage() {
               )}
             </div>
 
-            <Paginacion
-              pagina={pagIps}
-              totalPaginas={totalPaginasIps}
-              onCambio={setPaginaIps}
-              resumen={t('admin.connectionsCounted', { n: recentIps.length })}
-              etiquetaAnterior={t('mappings.previousPage')}
-              etiquetaSiguiente={t('mappings.nextPage')}
+            <Pagination
+              page={currentIpsPage}
+              totalPages={totalPagesIps}
+              onChange={setIpsPage}
+              summary={t('admin.connectionsCounted', { n: recentIps.length })}
+              prevLabel={t('mappings.previousPage')}
+              nextLabel={t('mappings.nextPage')}
             />
           </div>
         </div>
       </main>
 
-      {/* MODAL DE CONFIRMACIÓN DE REINICIO */}
+      {/* RESET CONFIRMATION MODAL */}
       <ConfirmModal
         isOpen={showResetModal}
         title={t('admin.resetGeoStats')}

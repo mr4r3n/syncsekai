@@ -31,14 +31,14 @@ export function HistoryPagination({
 }: HistoryPaginationProps) {
   return (
     <>
-      {/* BARRA DE PAGINACIÓN COMPLETA */}
+      {/* COMPLETE PAGINATION BAR */}
       {totalPages > 1 && (
         <div className="pt-4 px-3 sm:px-0 border-t border-[var(--glass-border)] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs font-mono text-[var(--text-muted)]">{t('history.page')}{' '}<strong className="text-[var(--text-primary)]">{page}</strong> {t('history.of')} <strong className="text-[var(--text-primary)]">{totalPages}</strong>
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Ir a Primera Página */}
+            {/* Go to First Page */}
             <button
               onClick={() => handlePageChange(1)}
               disabled={page === 1 || loading}
@@ -48,7 +48,7 @@ export function HistoryPagination({
               <ChevronsLeft className="w-3.5 h-3.5" />
             </button>
 
-            {/* Página Anterior */}
+            {/* Previous Page */}
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1 || loading}
@@ -58,7 +58,7 @@ export function HistoryPagination({
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
 
-            {/* Números de Página */}
+            {/* Page Numbers */}
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum = page;
               if (totalPages <= 5) {
@@ -87,7 +87,7 @@ export function HistoryPagination({
               );
             })}
 
-            {/* Página Siguiente */}
+            {/* Next Page */}
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page === totalPages || loading}
@@ -97,7 +97,7 @@ export function HistoryPagination({
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
 
-            {/* Ir a Última Página */}
+            {/* Go to Last Page */}
             <button
               onClick={() => handlePageChange(totalPages)}
               disabled={page === totalPages || loading}
@@ -108,7 +108,7 @@ export function HistoryPagination({
             </button>
           </div>
 
-          {/* Salto Directo a Página */}
+          {/* Direct Jump to Page */}
           <form onSubmit={handleJumpSubmit} className="flex items-center gap-2">
             <span className="text-xs font-mono text-[var(--text-muted)] hidden sm:inline">{t('mappings.goToPage')}</span>
             <input

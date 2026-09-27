@@ -56,7 +56,7 @@ export function MalModal({ isOpen, onClose, onSuccess }: MalModalProps) {
     }
   };
 
-  // Foco dentro al abrir, Tab acotado al diálogo y foco devuelto al cerrar.
+  // Focus inside on open, Tab trapped in the dialog, and focus returned on close.
   const { dialogProps } = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
@@ -84,7 +84,7 @@ export function MalModal({ isOpen, onClose, onSuccess }: MalModalProps) {
           </button>
         </div>
 
-        {/* MÉTODO 1: AUTORIZACIÓN OAUTH OFICIAL 1-CLIC */}
+        {/* METHOD 1: OFFICIAL 1-CLICK OAUTH AUTHORIZATION */}
         <div className="space-y-3">
           <button
             type="button"
@@ -114,7 +114,7 @@ export function MalModal({ isOpen, onClose, onSuccess }: MalModalProps) {
           <div className="border-t border-[var(--border-subtle)] w-full" />
         </div>
 
-        {/* MÉTODO 2: ACCESS TOKEN MANUAL */}
+        {/* METHOD 2: MANUAL ACCESS TOKEN */}
         {showManualInput && (
           <form onSubmit={handleSubmit} className="space-y-3.5 text-xs animate-in slide-in-from-top-2">
             <div className="space-y-1.5">

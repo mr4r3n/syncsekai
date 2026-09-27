@@ -3,14 +3,14 @@ import { Trash2 } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface AdminBackupDeleteModalProps {
-  propsBorrar: Record<string, any>;
+  deleteProps: Record<string, any>;
   setDeleteTarget: (val: any | null) => void;
   deleteTarget: any;
   handleDelete: () => void;
 }
 
 export function AdminBackupDeleteModal({
-  propsBorrar,
+  deleteProps,
   setDeleteTarget,
   deleteTarget,
   handleDelete,
@@ -20,7 +20,7 @@ export function AdminBackupDeleteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        {...propsBorrar}
+        {...deleteProps}
         className="w-full max-w-sm p-6 rounded-[6px] border border-red-500/30 bg-[var(--bg-surface-elevated)] backdrop-blur-2xl shadow-2xl space-y-4">
         <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-subtle)]">
           <div className="w-9 h-9 rounded-[6px] bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">

@@ -23,9 +23,9 @@ export function ThemeToggle() {
     } else {
       setTheme(savedTheme);
       setSelectedThemeId(savedSelectedTheme);
-      // Esta rama actualizaba el estado de React pero no el DOM. Como el servidor
-      // emite siempre data-theme="dark", al recargar la página volvía a oscuro
-      // aunque el botón mostrara "claro" y la preferencia estuviera guardada.
+      // This branch updated React state but not DOM. Since the server
+      // always outputs data-theme="dark", reloading page reverted to dark
+      // even if button showed "light" and preference was saved.
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
   };
@@ -46,7 +46,7 @@ export function ThemeToggle() {
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     
-    // Transición suave
+    // Smooth transition
     document.documentElement.classList.add('theme-transitioning');
     setTheme(next);
     localStorage.setItem('plexsync_theme', next);
@@ -70,13 +70,13 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={
         theme === 'dark'
-          ? t('topbar.switchToLight', { defaultValue: 'Cambiar a Modo Claro' })
-          : t('topbar.switchToDark', { defaultValue: 'Cambiar a Modo Oscuro' })
+          ? t('topbar.switchToLight')
+          : t('topbar.switchToDark')
       }
       title={
         theme === 'dark'
-          ? t('topbar.switchToLight', { defaultValue: 'Cambiar a Modo Claro' })
-          : t('topbar.switchToDark', { defaultValue: 'Cambiar a Modo Oscuro' })
+          ? t('topbar.switchToLight')
+          : t('topbar.switchToDark')
       }
       className="w-9 h-9 rounded-[6px] flex items-center justify-center transition-all duration-200 border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] backdrop-blur-md hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface-hover)] active:scale-[0.96] text-[var(--text-primary)] shadow-sm cursor-pointer"
     >

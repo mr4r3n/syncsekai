@@ -11,7 +11,7 @@ import { LazyMediaThumbnail } from './LazyMediaThumbnail';
 
 interface MediaGridSectionProps {
   loading: boolean;
-  errorCarga: boolean;
+  loadError: boolean;
   loadMedia: () => Promise<void>;
   filteredMedia: MediaItem[];
   paginatedMedia: MediaItem[];
@@ -26,7 +26,7 @@ interface MediaGridSectionProps {
 
 export function MediaGridSection({
   loading,
-  errorCarga,
+  loadError,
   loadMedia,
   filteredMedia,
   paginatedMedia,
@@ -40,7 +40,7 @@ export function MediaGridSection({
 }: MediaGridSectionProps) {
   return (
     <>
-          {/* GRID DE MINIATURAS CON LAZY LOADING */}
+          {/* THUMBNAIL GRID WITH LAZY LOADING */}
           <div className="w-full space-y-4">
             {loading ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
@@ -48,7 +48,7 @@ export function MediaGridSection({
                   <div key={i} className="skeleton aspect-square w-full rounded-[8px]" />
                 ))}
               </div>
-            ) : errorCarga ? (
+            ) : loadError ? (
               <div className="py-20 text-center space-y-3">
                 <AlertTriangle className="w-12 h-12 text-[var(--status-danger)] mx-auto opacity-70" aria-hidden="true" />
                 <p className="text-sm font-semibold text-[var(--text-primary)]">{t('admin.mediaLoadFailed')}</p>
@@ -76,23 +76,15 @@ export function MediaGridSection({
               </div>
             )}
 
-            {/* BARRA DE PAGINACIÓN */}
+            {/* PAGINATION BAR */}
             {totalPages > 1 && (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-[var(--glass-border)] text-xs font-mono text-[var(--text-secondary)]">
                 <div>
-                  Mostrando{' '}
-                  <span className="font-bold text-[var(--text-primary)]">
-                    {(page - 1) * itemsPerPage + 1}
-                  </span>{' '}
-                  a{' '}
-                  <span className="font-bold text-[var(--text-primary)]">
-                    {Math.min(page * itemsPerPage, filteredMedia.length)}
-                  </span>{' '}
-                  de{' '}
-                  <span className="font-bold text-[var(--text-primary)]">
-                    {filteredMedia.length}
-                  </span>{' '}
-                  archivos
+                  {t('admin.showingMediaRange', {
+                    from: (page - 1) * itemsPerPage + 1,
+                    to: Math.min(page * itemsPerPage, filteredMedia.length),
+                    total: filteredMedia.length,
+                  })}
                 </div>
 
                 <div className="flex items-center gap-1.5">

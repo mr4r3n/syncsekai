@@ -33,7 +33,7 @@ export function PasswordCard({
 }: PasswordCardProps) {
   return (
     <>
-      {/* CARD 1: CAMBIO DE CONTRASEÑA */}
+      {/* CARD 1: PASSWORD CHANGE */}
       <div className="glass-card p-6 sm:p-7 space-y-6">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-[6px] bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border border-[var(--nav-active-border)] flex items-center justify-center font-bold">

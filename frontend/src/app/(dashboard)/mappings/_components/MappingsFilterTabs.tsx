@@ -14,22 +14,22 @@ export function MappingsFilterTabs({
   handleStatusFilterChange,
   t,
 }: MappingsFilterTabsProps) {
-  {/* FILTROS, FUERA DEL CONTENEDOR
-      Estaban dentro de la tarjeta, apretados contra su cabecera y
-      compitiendo con el buscador por la misma fila. Filtrar decide QUE
-      lista se ve, asi que va antes de la lista, no dentro. Es ademas
-      como funciona el catalogo, que tenia el mismo problema.
+  {/* FILTERS, OUTSIDE THE CONTAINER
+      Previously inside the card, squeezed against its header and
+      competing with search bar for the same row. Filtering decides WHICH
+      list is viewed, so it belongs before the list, not within. Also
+      aligns with catalog behavior, which shared the same issue.
 
-      Pildoras en escritorio y desplegable en movil, por lo mismo que
-      alli: cuatro pestanas no caben en 375 px sin cortarse. */}
+      Pills on desktop and dropdown on mobile, for same reason:
+      four tabs cannot fit on 375 px without clipping. */}
   return (
     <>
       {(() => {
-        const filtros: { id: 'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL'; etiqueta: string; cuenta: number; activo: string }[] = [
-          { id: 'ALL', etiqueta: t('mappings.filterAll'), cuenta: mappings.length, activo: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
-          { id: 'APPROVED', etiqueta: t('mappings.filterLinked'), cuenta: mappings.filter((m) => m.isApproved).length, activo: 'bg-[var(--status-success-bg)] text-[var(--status-success)] border-[var(--status-success)]/30' },
-          { id: 'PENDING', etiqueta: t('mappings.filterPending'), cuenta: mappings.filter((m) => !m.isApproved).length, activo: 'bg-[var(--status-warning-bg)] text-[var(--status-warning)] border-[var(--status-warning)]/30' },
-          { id: 'GLOBAL', etiqueta: t('mappings.filterGlobal'), cuenta: mappings.filter((m) => m.isGlobal).length, activo: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
+        const filters: { id: 'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL'; label: string; count: number; active: string }[] = [
+          { id: 'ALL', label: t('mappings.filterAll'), count: mappings.length, active: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
+          { id: 'APPROVED', label: t('mappings.filterLinked'), count: mappings.filter((m) => m.isApproved).length, active: 'bg-[var(--status-success-bg)] text-[var(--status-success)] border-[var(--status-success)]/30' },
+          { id: 'PENDING', label: t('mappings.filterPending'), count: mappings.filter((m) => !m.isApproved).length, active: 'bg-[var(--status-warning-bg)] text-[var(--status-warning)] border-[var(--status-warning)]/30' },
+          { id: 'GLOBAL', label: t('mappings.filterGlobal'), count: mappings.filter((m) => m.isGlobal).length, active: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
         ];
 
         return (
@@ -38,10 +38,10 @@ export function MappingsFilterTabs({
               <CustomSelect
                 value={statusFilter}
                 onChange={(v: string) => handleStatusFilterChange(v as any)}
-                options={filtros.map((f) => ({
+                options={filters.map((f) => ({
                   value: f.id,
-                  label: f.etiqueta,
-                  badge: String(f.cuenta),
+                  label: f.label,
+                  badge: String(f.count),
                 }))}
               />
             </div>
@@ -51,7 +51,7 @@ export function MappingsFilterTabs({
               aria-label={t('mappings.filterByStatus')}
               className="hidden sm:flex items-center gap-1.5 flex-wrap text-xs"
             >
-              {filtros.map((f) => (
+              {filters.map((f) => (
                 <button
                   key={f.id}
                   type="button"
@@ -60,11 +60,11 @@ export function MappingsFilterTabs({
                   onClick={() => handleStatusFilterChange(f.id)}
                   className={`px-3 py-1.5 rounded-[var(--radius-md)] font-semibold border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     statusFilter === f.id
-                      ? `${f.activo} font-bold shadow-sm`
+                      ? `${f.active} font-bold shadow-sm`
                       : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]'
                   }`}
                 >
-                  {f.etiqueta} ({f.cuenta})
+                  {f.label} ({f.count})
                 </button>
               ))}
             </div>

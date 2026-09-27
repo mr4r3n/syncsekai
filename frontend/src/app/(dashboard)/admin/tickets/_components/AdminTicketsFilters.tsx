@@ -33,12 +33,12 @@ export function AdminTicketsFilters({
     <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3.5 rounded-[8px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] shadow-sm">
       <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
         {[
-          { key: 'ALL', label: 'Todos' },
-          { key: 'OPEN', label: 'Abiertos' },
-          { key: 'WAITING_USER', label: 'Esperando Usuario' },
-          { key: 'IN_PROGRESS', label: t('tickets.underReview') },
-          { key: 'RESOLVED', label: 'Resueltos' },
-          { key: 'CLOSED', label: 'Cerrados' },
+          { key: 'ALL', labelKey: 'common.all' },
+          { key: 'OPEN', labelKey: 'tickets.filterOpen' },
+          { key: 'WAITING_USER', labelKey: 'admin.waitingUser' },
+          { key: 'IN_PROGRESS', labelKey: 'tickets.underReview' },
+          { key: 'RESOLVED', labelKey: 'tickets.filterResolved' },
+          { key: 'CLOSED', labelKey: 'tickets.filterClosed' },
         ].map((st) => (
           <button
             key={st.key}
@@ -53,7 +53,7 @@ export function AdminTicketsFilters({
                 : 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-[var(--border-subtle)]'
             }`}
           >
-            {t(st.label)}
+            {t(st.labelKey)}
           </button>
         ))}
       </div>
@@ -74,7 +74,7 @@ export function AdminTicketsFilters({
           />
         </div>
 
-        {/* Categoría */}
+        {/* Category */}
         <div className="w-48 shrink-0">
           <CustomSelect
             value={selectedCategory}
@@ -86,7 +86,7 @@ export function AdminTicketsFilters({
               { value: 'ALL', label: t('admin.categoryAll') },
               ...Object.entries(CATEGORY_LABELS).map(([key, val]) => ({
                 value: key,
-                label: val,
+                label: t(val),
               })),
             ]}
             accentColor="cinnabar"
@@ -103,10 +103,10 @@ export function AdminTicketsFilters({
             }}
             options={[
               { value: 'ALL', label: t('admin.priorityAll') },
-              { value: 'LOW', label: 'Baja' },
-              { value: 'NORMAL', label: 'Normal' },
-              { value: 'HIGH', label: 'Alta' },
-              { value: 'URGENT', label: 'Urgente' },
+              { value: 'LOW', label: t('tickets.prioLow') },
+              { value: 'NORMAL', label: t('tickets.prioNormal') },
+              { value: 'HIGH', label: t('tickets.prioHigh') },
+              { value: 'URGENT', label: t('tickets.prioUrgent') },
             ]}
             accentColor="cinnabar"
           />

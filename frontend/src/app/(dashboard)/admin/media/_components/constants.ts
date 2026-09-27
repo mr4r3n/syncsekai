@@ -1,4 +1,4 @@
-// Array a nivel de modulo: guarda claves y se traduce donde se consume.
+// Module-level array: stores keys, translated at consumption point.
 const sortOptions = [
   { value: 'RECENT', label: 'admin.sortNewest' },
   { value: 'OLDEST', label: 'admin.sortOldest' },

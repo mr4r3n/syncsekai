@@ -30,7 +30,7 @@ export function LibraryPortabilityCard({ loadHubData }: LibraryPortabilityCardPr
   const handleExport = async (format: 'mal_xml' | 'json' | 'csv') => {
     try {
       setExportLoading(format);
-      showToast(`Generando archivo de exportación (${format.toUpperCase()})...`, 'info');
+      showToast(t('connections.generatingExport', { format: format.toUpperCase() }), 'info');
       const res = await api.catalog.exportData(format);
 
       const blob = new Blob([res.content], { type: res.contentType });
@@ -43,7 +43,7 @@ export function LibraryPortabilityCard({ loadHubData }: LibraryPortabilityCardPr
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showToast(`¡Biblioteca exportada con éxito como ${res.filename}!`, 'success');
+      showToast(t('connections.exportSuccess', { filename: res.filename }), 'success');
     } catch (err: any) {
       showToast(`${t('connections.exportError')} ` + err.message, 'error');
     } finally {
@@ -85,7 +85,7 @@ export function LibraryPortabilityCard({ loadHubData }: LibraryPortabilityCardPr
         </div>
       </div>
 
-      {/* ACCIONES DE EXPORTACIÓN */}
+      {/* EXPORT ACTIONS */}
       <div className="space-y-3 pt-1">
         <span className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase font-mono tracking-wider">
           {t('connections.exportWatched')}
@@ -150,7 +150,7 @@ export function LibraryPortabilityCard({ loadHubData }: LibraryPortabilityCardPr
         </div>
       </div>
 
-      {/* ACCIONES DE IMPORTACIÓN */}
+      {/* IMPORT ACTIONS */}
       <div className="space-y-3 pt-3 border-t border-[var(--border-subtle)]">
         <span className="block text-[11px] font-bold text-[var(--text-secondary)] uppercase font-mono tracking-wider">
           {t('connections.importHistory')}

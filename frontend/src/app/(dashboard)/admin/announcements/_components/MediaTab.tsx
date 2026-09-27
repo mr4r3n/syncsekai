@@ -66,7 +66,7 @@ export function MediaTab({
 
                     <label className="px-4 py-2 rounded-[6px] text-xs font-semibold border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-primary)] transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-sm">
                       <Upload className="w-3.5 h-3.5 text-sky-400" />
-                      <span>{uploadingMedia ? 'Subiendo...' : 'Seleccionar Archivo'}</span>
+                      <span>{uploadingMedia ? t('announcements.uploading') : t('announcements.selectFile')}</span>
                       <input
                         type="file"
                         accept="image/*"

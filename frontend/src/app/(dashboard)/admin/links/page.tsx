@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-/** Los enlaces del pie viven en Ajustes del sitio; la ruta queda por los marcadores. */
+/** Footer links live in Site Settings; route remains for bookmarks. */
 export default function AdminLinksPage() {
   redirect('/admin/site');
 }

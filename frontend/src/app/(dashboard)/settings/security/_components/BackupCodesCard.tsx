@@ -24,7 +24,7 @@ export function BackupCodesCard({
 }: BackupCodesCardProps) {
   return (
     <>
-              {/* CARD 3: CÓDIGOS DE RECUPERACIÓN DE EMERGENCIA */}
+              {/* CARD 3: EMERGENCY RECOVERY CODES */}
               <div className="glass-card p-6 sm:p-7 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3.5">
@@ -36,7 +36,7 @@ export function BackupCodesCard({
                         <h2 className="text-base font-bold text-[var(--text-primary)] font-heading">{t('security.emergencyCodes')}</h2>
                         {backupStatus?.hasBackupCodes ? (
                           <span className="badge-status-success font-mono text-[10.5px]">
-                            {backupStatus.remainingCount} {backupStatus.remainingCount === 1 ? 'CÓDIGO' : 'CÓDIGOS'}
+                            {t('security.codeBadge', { n: backupStatus.remainingCount })}
                           </span>
                         ) : (
                           <span className="badge-status-neutral font-mono text-[10.5px]">{t('security.notGenerated')}</span>
@@ -68,7 +68,7 @@ export function BackupCodesCard({
                     <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                     <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {backupStatus?.hasBackupCodes ? (
-                        <p>{t('security.youHave')}{' '}<strong>{backupStatus.remainingCount} códigos de recuperación válidos</strong>{' '}{t('security.codesOnceOnly')}</p>
+                        <p>{t('security.youHave')}{' '}<strong>{t('security.validBackupCodesCount', { n: backupStatus.remainingCount })}</strong>{' '}{t('security.codesOnceOnly')}</p>
                       ) : (
                         <p>{t('security.noCodesYet')}</p>
                       )}

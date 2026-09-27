@@ -3,7 +3,7 @@ import { Upload, FileText, Loader2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface AdminBackupUploadModalProps {
-  propsSubir: Record<string, any>;
+  uploadProps: Record<string, any>;
   setShowUploadModal: (val: boolean) => void;
   setUploadFile: (file: File | null) => void;
   uploadFile: File | null;
@@ -13,7 +13,7 @@ interface AdminBackupUploadModalProps {
 }
 
 export function AdminBackupUploadModal({
-  propsSubir,
+  uploadProps,
   setShowUploadModal,
   setUploadFile,
   uploadFile,
@@ -26,7 +26,7 @@ export function AdminBackupUploadModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div
-        {...propsSubir}
+        {...uploadProps}
         className="w-full max-w-md p-6 rounded-[6px] border border-[var(--glass-border)] bg-[var(--bg-surface-elevated)] backdrop-blur-2xl shadow-2xl space-y-5">
         <div className="flex items-center gap-3 pb-3 border-b border-[var(--border-subtle)]">
           <div className="w-9 h-9 rounded-[6px] bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
@@ -34,7 +34,7 @@ export function AdminBackupUploadModal({
           </div>
           <div>
             <h3 className="text-sm font-bold font-heading text-[var(--text-primary)]">
-              Subir &amp; Restaurar Copia Externa
+              {t('backups.uploadRestoreExternal')}
             </h3>
             <p className="text-xs text-[var(--text-muted)]">{t('backups.uploadBackupFile')}</p>
           </div>

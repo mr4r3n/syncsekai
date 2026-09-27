@@ -49,11 +49,11 @@ export function TicketsList({
     const diffMs = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diffMs / 60000);
     if (mins < 1) return t('topbar.momentAgo');
-    if (mins < 60) return `Hace ${mins} min`;
+    if (mins < 60) return t('topbar.minutesAgo', { mins });
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `Hace ${hours} h`;
+    if (hours < 24) return t('topbar.hoursAgo', { hours });
     const days = Math.floor(hours / 24);
-    if (days < 30) return `Hace ${days} d`;
+    if (days < 30) return t('topbar.daysAgo', { days });
     return new Date(dateStr).toLocaleDateString();
   };
 
@@ -127,7 +127,7 @@ export function TicketsList({
                       <div className="text-left sm:text-right space-y-0.5">
                         <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
                           <MessageSquare className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                          <span>{ticket._count?.messages || 1} mensaje{(ticket._count?.messages || 1) > 1 ? 's' : ''}</span>
+                          <span>{t('tickets.messageCount', { n: ticket._count?.messages || 1 })}</span>
                         </div>
                         <div className="flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
                           <Clock className="w-3 h-3" />
@@ -144,11 +144,11 @@ export function TicketsList({
               );
             })}
 
-            {/* Paginación */}
+            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
                 <span className="text-xs text-[var(--text-muted)]">
-                  Página {page} de {totalPages} ({totalCount} tickets)
+                  {t('tickets.paginationInfo', { page, totalPages, totalCount })}
                 </span>
                 <div className="flex items-center gap-2">
                   <button

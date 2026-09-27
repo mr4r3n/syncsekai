@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface CountryFlagProps {
   code?: string;
@@ -28,6 +29,7 @@ export function CountryFlag({
   className = '',
   size = 'md',
 }: CountryFlagProps) {
+  const { t } = useI18n();
   const [imgError, setImgError] = useState(false);
   const cleanCode = (code || 'XX').trim().toUpperCase();
 
@@ -48,7 +50,7 @@ export function CountryFlag({
     return (
       <span
         className={`inline-flex items-center justify-center shrink-0 text-[var(--text-muted)] ${className}`}
-        title={countryName || 'Red Local / Desconocido'}
+        title={countryName || t('common.localNetworkUnknown')}
       >
         🌐
       </span>

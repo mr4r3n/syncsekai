@@ -35,7 +35,7 @@ export default function SecuritySettingsPage() {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
 
-  // Contraseña
+  // Password
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -57,7 +57,7 @@ export default function SecuritySettingsPage() {
   const [revokingOthers, setRevokingOthers] = useState(false);
   const [unlinkingSocial, setUnlinkingSocial] = useState<string | null>(null);
 
-  // Códigos de Recuperación de Emergencia (Backup Codes)
+  // Emergency Recovery Codes (Backup Codes)
   const [backupStatus, setBackupStatus] = useState<{ hasBackupCodes: boolean; remainingCount: number; generatedAt: string | null } | null>(null);
   const [loadingBackupStatus, setLoadingBackupStatus] = useState(false);
   const [generatingBackup, setGeneratingBackup] = useState(false);
@@ -70,7 +70,7 @@ export default function SecuritySettingsPage() {
   const [verifyingBackup, setVerifyingBackup] = useState(false);
   const [copiedAllCodes, setCopiedAllCodes] = useState(false);
 
-  // Modal de Confirmación
+  // Confirmation Modal
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -85,15 +85,15 @@ export default function SecuritySettingsPage() {
     onConfirm: () => {},
   });
 
-  // --- ZONA DE PELIGRO: ELIMINACIÓN DE CUENTA (2 FASES & GRACIA 24H) ---
+  // --- DANGER ZONE: ACCOUNT DELETION (2 PHASES & 24H GRACE) ---
   const [showDeletionModal, setShowDeletionModal] = useState(false);
 
-  // Semántica de diálogo y gestión de foco para los modales de esta vista.
-  const { dialogProps: propsBorrado } = useModalA11y(
+  // Dialog semantics and focus management for modals in this view.
+  const { dialogProps: deleteProps } = useModalA11y(
     showDeletionModal,
     useCallback(() => setShowDeletionModal(false), []),
   );
-  const { dialogProps: propsRespaldo } = useModalA11y(
+  const { dialogProps: backupProps } = useModalA11y(
     backupModalOpen,
     useCallback(() => setBackupModalOpen(false), []),
   );
@@ -110,7 +110,7 @@ export default function SecuritySettingsPage() {
       if (error) {
         if (error.includes('NOT_CONFIGURED')) {
           const provName = error.split('_')[0];
-          showToast(`El proveedor ${provName} no está configurado aún en backend/.env`, 'info');
+          showToast(t('security.providerNotConfiguredEnv', { provider: provName }), 'info');
         } else if (error === 'ACCESS_DENIED') {
           showToast(t('security.linkCancelled'), 'info');
         } else {
@@ -232,8 +232,8 @@ export default function SecuritySettingsPage() {
       '=========================================',
       `  ${t('security.fileHeader')}`,
       '=========================================',
-      `Usuario: ${userProfile?.username || 'Usuario'}`,
-      `Fecha: ${new Date().toLocaleString()}`,
+      t('security.backupFileUser', { user: userProfile?.username || t('common.user') }),
+      t('security.backupFileDate', { date: new Date().toLocaleString() }),
       '',
       t('security.fileLineOnce'),
       t('security.fileLineStore'),
@@ -254,8 +254,8 @@ export default function SecuritySettingsPage() {
       '=========================================',
       `  ${t('security.fileHeader')}`,
       '=========================================',
-      `Usuario: ${userProfile?.username || 'Usuario'}`,
-      `Fecha: ${new Date().toLocaleString()}`,
+      t('security.backupFileUser', { user: userProfile?.username || t('common.user') }),
+      t('security.backupFileDate', { date: new Date().toLocaleString() }),
       '',
       t('security.onceOnlyPart1'),
       t('security.onceOnlyPart2'),
@@ -319,7 +319,7 @@ export default function SecuritySettingsPage() {
   };
 
   const handleLinkSocial = async (provider: 'google' | 'discord') => {
-    showToast(`Redirigiendo a ${provider === 'google' ? 'Google' : 'Discord'} para vincular cuenta...`, 'info');
+    showToast(t('security.redirectingSocialLink', { provider: provider === 'google' ? 'Google' : 'Discord' }), 'info');
     try {
       const result = provider === 'google'
         ? await api.auth.startGoogleLink()
@@ -473,12 +473,12 @@ export default function SecuritySettingsPage() {
     });
   };
 
-  // --- GESTIÓN DE SESIONES ACTIVAS ---
+  // --- ACTIVE SESSIONS MANAGEMENT ---
   const handleRevokeSession = (sessionId: string, deviceName: string) => {
     setConfirmModal({
       isOpen: true,
       title: t('security.closeSessionQuestion'),
-      description: `¿Cerrar sesión en "${deviceName}"? El dispositivo perderá el acceso inmediatamente.`,
+      description: t('security.confirmRevokeSessionDesc', { device: deviceName }),
       confirmText: t('security.signOut'),
       variant: 'danger',
       onConfirm: async () => {
@@ -545,7 +545,7 @@ export default function SecuritySettingsPage() {
     >
       <Topbar rootLabel={t('topbar.settings')} currentLabel={t('security.securityTitle')} />
 
-      {/* TOP HEADER (STATIC EN MÓVIL, STICKY EN DESKTOP) */}
+      {/* TOP HEADER (STATIC ON MOBILE, STICKY ON DESKTOP) */}
       <div className="relative sm:sticky sm:top-16 z-20 w-full px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 border-b border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-sm space-y-4">
         <div className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -573,7 +573,7 @@ export default function SecuritySettingsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-            {/* COLUMNA IZQUIERDA: CONTRASEÑA & 2FA (7 COLS) */}
+            {/* LEFT COLUMN: PASSWORD & 2FA (7 COLS) */}
             <div className="xl:col-span-7 space-y-6">
               <PasswordCard
                 handleSavePassword={handleSavePassword}
@@ -654,7 +654,7 @@ export default function SecuritySettingsPage() {
 
       <AccountDeletionModal
         showDeletionModal={showDeletionModal}
-        propsBorrado={propsBorrado}
+        deleteProps={deleteProps}
         setShowDeletionModal={setShowDeletionModal}
         userProfile={userProfile}
         handleRequestDeletion={handleRequestDeletion}
@@ -668,7 +668,7 @@ export default function SecuritySettingsPage() {
 
       <BackupCodesModal
         backupModalOpen={backupModalOpen}
-        propsRespaldo={propsRespaldo}
+        backupProps={backupProps}
         backupStep={backupStep}
         setBackupModalOpen={setBackupModalOpen}
         generatedCodes={generatedCodes}

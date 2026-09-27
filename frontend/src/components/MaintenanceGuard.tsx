@@ -10,17 +10,17 @@ export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    // Si ya estamos en /maintenance, no comprobar ni redirigir
+    // If already on /maintenance, do not check or redirect
     if (pathname.startsWith('/maintenance')) {
       setChecked(true);
       return;
     }
 
-    // Rutas administrativas o internas que los administradores pueden usar para gestionar
-    // Las rutas de autenticacion tienen que quedar fuera o el mantenimiento se
-    // vuelve una trampa: sin sesion no eres admin, asi que /login rebotaba a
-    // /maintenance y nadie podia entrar nunca a administrar. El propio enlace
-    // "Iniciar Sesion de Staff" de esa pantalla devolvia al punto de partida.
+    // Administrative or internal routes that administrators can use to manage
+    // Authentication routes must be excluded or maintenance becomes
+    // a trap: without a session you are not admin, so /login bounced to
+    // /maintenance and no one could ever log in to administer. The link itself
+    // "Staff Login" on that screen looped right back to the start.
     const isExemptRoute =
       pathname.startsWith('/admin') ||
       pathname.startsWith('/api') ||
@@ -34,7 +34,7 @@ export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
       .getMaintenanceStatus()
       .then(async (status) => {
         if (status.inMaintenance) {
-          // Comprobar si el usuario actual es administrador
+          // Check if current user is administrator
           const me = await api.auth.me().catch(() => null);
           const user = me?.user || me;
           const isAdmin = user && user.role === 'ADMIN';

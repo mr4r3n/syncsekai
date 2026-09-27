@@ -1,0 +1,102 @@
+services:
+  # Base de datos PostgreSQL 16
+  postgres:
+    image: postgres:16-alpine
+    container_name: plexsync-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-plexsync_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-plexsync_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-plexsync_user} -d ${POSTGRES_DB:-plexsync_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Servidor Redis 7 para colas y caché
+  redis:
+    image: redis:7-alpine
+    container_name: plexsync-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend NestJS Core
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: plexsync-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-plexsync_user}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-plexsync_db}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_ISSUER: ${JWT_ISSUER:-plexsync}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-plexsync-web}
+      OAUTH_STATE_SECRET: ${OAUTH_STATE_SECRET:?OAUTH_STATE_SECRET is required}
+      SETUP_BOOTSTRAP_TOKEN: ${SETUP_BOOTSTRAP_TOKEN:?SETUP_BOOTSTRAP_TOKEN is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      FRONTEND_URL: ${FRONTEND_URL:-https://syncsekai.com}
+      ADMIN_ALLOWED_HOSTS: ${ADMIN_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - uploads_data:/app/uploads
+      - backups_data:/app/backups
+
+  # Frontend Next.js 15 Standalone
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: plexsync-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://syncsekai.com}
+    ports:
+      - "${FRONTEND_BIND_IP:-127.0.0.1}:3000:3000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid,nodev
+      - /app/.next/cache:size=128m,uid=1001,gid=1001,mode=0750,nosuid,nodev
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local
+  backups_data:
+    driver: local

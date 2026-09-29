@@ -5,6 +5,7 @@ import { EmbyService } from './emby.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PlexWebhookService } from '../plex/plex-webhook.service';
+import { requestIp } from '../../common/security/client-ip';
 
 @Controller('api/emby')
 export class EmbyController {
@@ -72,13 +73,13 @@ export class EmbyController {
    */
   @Get('webhook/ping')
   async pingWebhookGet(@Req() req: any) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     return this.embyService.recordPing(clientIp);
   }
 
   @Post('webhook/ping')
   async pingWebhookPost(@Req() req: any) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     return this.embyService.recordPing(clientIp);
   }
 
@@ -115,7 +116,7 @@ export class EmbyController {
       payload = {};
     }
 
-    const clientIp = req.ip || req.socket?.remoteAddress || 'unknown';
+    const clientIp = requestIp(req);
     this.logger.log(`[EMBY_INCOMING_WEBHOOK] Event: ${payload?.NotificationType || payload?.Event || 'raw'}, IP: ${clientIp}`);
 
     setImmediate(() => {

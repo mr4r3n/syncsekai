@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { JellyfinService } from './jellyfin.service';
 import axios from 'axios';
+import { recordActivity } from '../../common/logging/activity-log';
 
 interface TrackedJellyfinSession {
   sessionKey: string;
@@ -171,7 +172,7 @@ export class JellyfinWatcherService implements OnModuleInit, OnModuleDestroy {
           tracked = newSession;
           this.sessionsMap.set(sessionKey, tracked);
 
-          await this.prisma.auditLog.create({
+          await recordActivity({
             data: {
               level: 'INFO',
               service: 'JELLYFIN_LIVE_TRACKER',
@@ -201,7 +202,7 @@ export class JellyfinWatcherService implements OnModuleInit, OnModuleDestroy {
             tracked.scrobbled = false; // Reset so the new episode gets scrobbled
             tracked.lastUpdatedAt = Date.now();
 
-            await this.prisma.auditLog.create({
+            await recordActivity({
               data: {
                 level: 'INFO',
                 service: 'JELLYFIN_LIVE_TRACKER',
@@ -223,7 +224,7 @@ export class JellyfinWatcherService implements OnModuleInit, OnModuleDestroy {
             const pctJump = Math.abs(viewPercentage - tracked.lastPercentage) >= 20;
 
             if (stateChanged || pctJump) {
-              await this.prisma.auditLog.create({
+              await recordActivity({
                 data: {
                   level: 'INFO',
                   service: 'JELLYFIN_LIVE_TRACKER',

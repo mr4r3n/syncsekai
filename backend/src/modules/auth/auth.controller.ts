@@ -36,6 +36,7 @@ import {
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { setSessionCookie, clearSessionCookie, deviceIdFrom } from './auth-cookies';
+import { requestIp } from '../../common/security/client-ip';
 
 @Controller('api/auth')
 export class AuthController {
@@ -78,7 +79,7 @@ export class AuthController {
     @Req() req: any,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     const userAgent = req.headers['user-agent'] || '';
     const result = await this.authService.login(dto, clientIp, userAgent, deviceIdFrom(req, res));
     if (result.accessToken) {
@@ -339,7 +340,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('sessions')
   async getSessions(@CurrentUser() user: any, @Req() req: any) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     const userAgent = req.headers['user-agent'] || '';
     return this.sessionsService.getSessions(user.id, user.currentSessionToken, clientIp, userAgent);
   }

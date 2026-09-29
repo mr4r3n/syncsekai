@@ -8,6 +8,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { CommunityMappingService } from '../mappings/community-mapping.service';
 import { SyncStatus, Prisma, MappingSource } from '@prisma/client';
 import axios from 'axios';
+import { recordActivity } from '../../common/logging/activity-log';
 
 // Common intermediate shape across sources (Plex, Jellyfin, whatever comes next).
 // Each source knows how to translate ITS payload into this; from here on nothing
@@ -113,7 +114,7 @@ export class ScrobblePipelineService {
         this.logger.debug(
           `${source} event ignored: play by an unregistered user (@${accountTitle}) on "${showTitle}".`,
         );
-        await this.prisma.auditLog.create({
+        await recordActivity({
           data: {
             level: 'INFO',
             service: `${source}_WEBHOOK`,
@@ -139,7 +140,7 @@ export class ScrobblePipelineService {
 
     if (!user.isActive || user.settings?.isSuspended) {
       this.logger.warn(`Webhook rejected: user "${user.username}" is inactive or suspended.`);
-      await this.prisma.auditLog.create({
+      await recordActivity({
         data: {
           level: 'WARN',
           service: `${source}_WEBHOOK`,
@@ -152,7 +153,7 @@ export class ScrobblePipelineService {
 
     if (user.settings && !user.settings.canScrobble && user.role !== 'ADMIN') {
       this.logger.warn(`Webhook rejected: user "${user.username}" has no automatic scrobble permission.`);
-      await this.prisma.auditLog.create({
+      await recordActivity({
         data: {
           level: 'WARN',
           service: `${source}_WEBHOOK`,
@@ -190,7 +191,7 @@ export class ScrobblePipelineService {
       : `@${user.username}`;
 
     // Record in AuditLog right away so it shows up immediately in the Logs console with the exact minute
-    await this.prisma.auditLog.create({
+    await recordActivity({
       data: {
         level: 'INFO',
         service: `${source}_WEBHOOK`,
@@ -228,7 +229,7 @@ export class ScrobblePipelineService {
 
       if (!isMonitored) {
         this.logger.debug(`${originLabel} event ignored: library "${librarySectionTitle}" is not monitored.`);
-        await this.prisma.auditLog.create({
+        await recordActivity({
           data: {
             level: 'WARN',
             service: `${source}_WEBHOOK`,
@@ -567,7 +568,7 @@ export class ScrobblePipelineService {
       this.coversService.getOrFetchCover(showTitle, anilistMediaId).catch(() => {});
 
       if (isMappingPendingApproval) {
-        await this.prisma.auditLog.create({
+        await recordActivity({
           data: {
             level: 'WARN',
             service: `${source}_SCROBBLE`,
@@ -618,7 +619,7 @@ export class ScrobblePipelineService {
       await this.touchLastSync(user.id, source);
 
       // 6. Record in AuditLog for the admin Logs console
-      await this.prisma.auditLog.create({
+      await recordActivity({
         data: {
           level: anilistSyncStatus === SyncStatus.SUCCESS ? 'INFO' : 'WARN',
           service: `${source}_SCROBBLE`,

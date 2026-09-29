@@ -10,6 +10,7 @@ import {
   validateOutboundTarget,
   type ValidatedNetworkTarget,
 } from '../../common/security/network-target';
+import { recordActivity } from '../../common/logging/activity-log';
 
 export interface JellyfinLibraryItem {
   id: string;
@@ -371,7 +372,7 @@ export class JellyfinService {
   }
 
   async recordPing(clientIp: string) {
-    await this.prisma.auditLog.create({
+    await recordActivity({
       data: {
         level: 'INFO',
         service: 'JELLYFIN_WEBHOOK',
@@ -405,7 +406,7 @@ export class JellyfinService {
 
     if (!webhookOwner) {
       this.logger.warn(`Webhook ignored: unrecognized webhook token (${webhookToken}) from IP ${clientIp}`);
-      await this.prisma.auditLog.create({
+      await recordActivity({
         data: {
           level: 'WARN',
           service: 'JELLYFIN_WEBHOOK',

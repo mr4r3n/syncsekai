@@ -5,6 +5,7 @@ import { JellyfinService } from './jellyfin.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PlexWebhookService } from '../plex/plex-webhook.service';
+import { requestIp } from '../../common/security/client-ip';
 
 @Controller('api/jellyfin')
 export class JellyfinController {
@@ -71,13 +72,13 @@ export class JellyfinController {
    */
   @Get('webhook/ping')
   async pingWebhookGet(@Req() req: any) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     return this.jellyfinService.recordPing(clientIp);
   }
 
   @Post('webhook/ping')
   async pingWebhookPost(@Req() req: any) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     return this.jellyfinService.recordPing(clientIp);
   }
 
@@ -118,7 +119,7 @@ export class JellyfinController {
       payload = {};
     }
 
-    const clientIp = req.ip || req.socket?.remoteAddress || 'unknown';
+    const clientIp = requestIp(req);
     this.logger.log(`[JELLYFIN_INCOMING_WEBHOOK] Event: ${payload?.NotificationType || 'raw'}, IP: ${clientIp}`);
 
     // Move heavy processing (AniList/MAL API, covers, Discord) off the request, to the event loop

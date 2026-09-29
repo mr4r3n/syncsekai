@@ -9,6 +9,7 @@ import {
   validateOutboundTarget,
   type ValidatedNetworkTarget,
 } from '../../common/security/network-target';
+import { recordActivity } from '../../common/logging/activity-log';
 
 export interface EmbyLibraryItem {
   id: string;
@@ -363,7 +364,7 @@ export class EmbyService {
   }
 
   async recordPing(clientIp: string) {
-    await this.prisma.auditLog.create({
+    await recordActivity({
       data: {
         level: 'INFO',
         service: 'EMBY_WEBHOOK',
@@ -398,7 +399,7 @@ export class EmbyService {
 
     if (!webhookOwner) {
       this.logger.warn(`Webhook ignored: unrecognized webhook token (${webhookToken}) from IP ${clientIp}`);
-      await this.prisma.auditLog.create({
+      await recordActivity({
         data: {
           level: 'WARN',
           service: 'EMBY_WEBHOOK',

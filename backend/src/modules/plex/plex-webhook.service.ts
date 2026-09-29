@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import * as os from 'os';
 import { ScrobblePipelineService, NormalizedScrobbleEvent } from './scrobble-pipeline.service';
+import { recordActivity } from '../../common/logging/activity-log';
 
 /** Plex webhook: setup data, pings and event reception. */
 @Injectable()
@@ -73,7 +74,7 @@ export class PlexWebhookService {
    * Records a webhook connectivity test ping.
    */
   async recordPing(clientIp: string) {
-    await this.prisma.auditLog.create({
+    await recordActivity({
       data: {
         level: 'INFO',
         service: 'PLEX_WEBHOOK',
@@ -111,7 +112,7 @@ export class PlexWebhookService {
 
     if (!webhookOwner) {
       this.logger.warn(`Webhook ignored: unrecognized webhook token (${webhookToken}) from IP ${clientIp}`);
-      await this.prisma.auditLog.create({
+      await recordActivity({
         data: {
           level: 'WARN',
           service: 'PLEX_WEBHOOK',

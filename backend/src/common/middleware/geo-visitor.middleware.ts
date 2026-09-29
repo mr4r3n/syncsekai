@@ -1,11 +1,11 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
-import { isIP } from 'net';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { VisitorsService, type GeoHeaders } from '../../modules/admin/visitors.service';
 import { readCookie } from '../../modules/auth/auth-cookies';
 import { getRequiredSecret } from '../security/required-secret';
+import { requestIp } from '../security/client-ip';
 
 /**
  * Automated clients that are not visitors: search engines, link previewers,
@@ -19,66 +19,6 @@ const AUTOMATED_UA =
 /** Media server webhooks: machine-to-machine traffic, not visits. */
 const WEBHOOK_PATH = /^\/api\/(plex|jellyfin|emby)\/webhook\//;
 
-function normalizeIp(value: string): string {
-  return value.replace(/^::ffff:/, '').trim();
-}
-
-function isPrivateOrReserved(ip: string): boolean {
-  return (
-    ip === '127.0.0.1' ||
-    ip === '::1' ||
-    ip === '0.0.0.0' ||
-    ip.startsWith('10.') ||
-    ip.startsWith('192.168.') ||
-    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(ip) ||
-    ip.startsWith('169.254.') ||
-    ip.startsWith('fe80:') ||
-    ip.startsWith('fc') ||
-    ip.startsWith('fd')
-  );
-}
-
-/**
- * An IP header is only usable if it holds a well-formed public address.
- *
- * Nginx does not filter CF-Connecting-IP or True-Client-IP, so anyone who
- * reaches the frontend directly (it is published on the LAN) can make them up.
- * Without this validation, the value reaches the database as is and triggers
- * an outbound query to the GeoIP provider for every distinct value.
- *
- * A genuine CF-Connecting-IP is always public: if it is private, it is forged.
- */
-function isUsableHeaderIp(value: unknown): value is string {
-  if (typeof value !== 'string') return false;
-  const ip = normalizeIp(value);
-  return isIP(ip) !== 0 && !isPrivateOrReserved(ip);
-}
-
-function extractClientIp(req: Request): string {
-  // 1. CDN / proxy headers, in order of preference (Cloudflare, enterprise CDN, Nginx)
-  for (const header of ['cf-connecting-ip', 'true-client-ip', 'x-real-ip']) {
-    const value = req.headers[header];
-    if (isUsableHeaderIp(value)) {
-      return normalizeIp(value);
-    }
-  }
-
-  // 2. X-Forwarded-For: first entry that is a valid public IP
-  const forwardedFor = req.headers['x-forwarded-for'];
-  if (forwardedFor) {
-    const rawList = Array.isArray(forwardedFor) ? forwardedFor.join(',') : String(forwardedFor);
-    for (const part of rawList.split(',')) {
-      if (isUsableHeaderIp(part)) {
-        return normalizeIp(part);
-      }
-    }
-  }
-
-  // 3. Express req.ip or the socket. Private addresses are accepted here: it is the
-  //    real peer and the panel shows them as "Local network (LAN)".
-  const peer = normalizeIp(String(req.ip || req.socket?.remoteAddress || '127.0.0.1'));
-  return isIP(peer) !== 0 ? peer : '127.0.0.1';
-}
 
 @Injectable()
 export class GeoVisitorMiddleware implements NestMiddleware {
@@ -161,7 +101,7 @@ export class GeoVisitorMiddleware implements NestMiddleware {
       // the app always does.
       if (req.headers['x-requested-with'] !== 'SyncSekai') return next();
 
-      const clientIp = extractClientIp(req);
+      const ip = requestIp(req);
       const user = this.sessionUser(req);
 
       // Cloudflare geo headers. Country is always present; city, region and
@@ -182,7 +122,7 @@ export class GeoVisitorMiddleware implements NestMiddleware {
 
       const now = Date.now();
       // Throttled per account when signed in, so signing in counts at once.
-      const throttleKey = user ? `user:${user.id}` : clientIp;
+      const throttleKey = user ? `user:${user.id}` : ip;
       const lastRecorded = this.recentIps.get(throttleKey) || 0;
 
       // 2-minute throttle per IP, to record activity without flooding the database
@@ -196,7 +136,7 @@ export class GeoVisitorMiddleware implements NestMiddleware {
         }
 
         this.visitorsService
-          .recordVisitorIp(clientIp, user, userAgent, geoHeaders)
+          .recordVisitorIp(ip, user, userAgent, geoHeaders)
           .catch(() => {});
       }
     } catch {}

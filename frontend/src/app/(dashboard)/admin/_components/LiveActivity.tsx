@@ -52,6 +52,46 @@ export function LiveActivity({ activity, loading }: { activity?: LiveActivityDat
   const syncing = activity?.syncing ?? [];
   const anonymous = activity?.anonymousOnline ?? 0;
 
+  // One panel per list, styled like the stat cards above: icon, label and figure,
+  // then compact rows that stay inside the panel however wide the screen is.
+  const panel = (
+    icon: React.ReactNode,
+    tone: string,
+    label: string,
+    count: number,
+    empty: string,
+    rows: React.ReactNode,
+    hasRows: boolean,
+  ) => (
+    <div className="rounded-[8px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 space-y-3 min-w-0">
+      <div className="flex items-center gap-3">
+        <div className={`w-9 h-9 rounded-[6px] flex items-center justify-center shrink-0 ${tone}`}>{icon}</div>
+        <div className="min-w-0">
+          <div className="text-[10.5px] font-bold font-mono tracking-wider text-[var(--text-secondary)] uppercase">{label}</div>
+          <div className="text-xl font-bold text-[var(--text-primary)] font-heading leading-tight">{loading ? '-' : count}</div>
+        </div>
+      </div>
+      {!loading && !hasRows ? (
+        <p className="text-xs text-[var(--text-muted)] rounded-[6px] border border-dashed border-[var(--border-subtle)] px-3 py-4 text-center">{empty}</p>
+      ) : (
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2">{rows}</ul>
+      )}
+    </div>
+  );
+
+  const row = (key: string, username: string, avatarUrl: string | null, detail: React.ReactNode, time: string) => (
+    <li key={key} className="flex items-center gap-3 rounded-[6px] px-2.5 py-2 bg-[var(--bg-app)]/40 text-xs min-w-0">
+      {avatar(username, avatarUrl)}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="font-semibold text-[var(--text-primary)] truncate">@{username}</span>
+          <span className="font-mono text-[10px] text-[var(--text-muted)] shrink-0">{time}</span>
+        </div>
+        <div className="text-[11px] text-[var(--text-muted)] truncate">{detail}</div>
+      </div>
+    </li>
+  );
+
   return (
     <section className="glass-card p-5 sm:p-6 space-y-4">
       <div className="flex items-center gap-2.5">
@@ -62,66 +102,53 @@ export function LiveActivity({ activity, loading }: { activity?: LiveActivityDat
         <h2 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('admin.liveTitle')}</h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Online now */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-2 font-semibold text-[var(--text-secondary)]">
-              <Radio className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
-              {t('admin.liveOnlineNow')}
-            </span>
-            <span className="font-mono font-bold text-[var(--text-primary)]">{loading ? '-' : online.length + anonymous}</span>
-          </div>
-          {!loading && online.length === 0 && anonymous === 0 ? (
-            <p className="text-xs text-[var(--text-muted)] py-2">{t('admin.liveNobodyOnline')}</p>
-          ) : (
-            <ul className="space-y-2">
-              {online.map((u) => (
-                <li key={u.username} className="flex items-center gap-3 text-xs">
-                  {avatar(u.username, u.avatarUrl)}
-                  <span className="font-semibold text-[var(--text-primary)] truncate">@{u.username}</span>
-                  <span className="flex items-center gap-1 text-[var(--text-muted)] truncate">
-                    <Monitor className="w-3 h-3 shrink-0" aria-hidden="true" />
-                    {u.device}
-                  </span>
-                  <span className="ml-auto font-mono text-[var(--text-muted)] shrink-0">{ago(u.lastActiveAt)}</span>
-                </li>
-              ))}
-              {anonymous > 0 && (
-                <li className="text-xs text-[var(--text-muted)] pl-10">{t('admin.liveAnonymous', { n: anonymous })}</li>
-              )}
-            </ul>
-          )}
-        </div>
-
-        {/* Syncing now */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-2 font-semibold text-[var(--text-secondary)]">
-              <RefreshCw className="w-3.5 h-3.5 text-sky-400" aria-hidden="true" />
-              {t('admin.liveSyncingNow')}
-            </span>
-            <span className="font-mono font-bold text-[var(--text-primary)]">{loading ? '-' : syncing.length}</span>
-          </div>
-          {!loading && syncing.length === 0 ? (
-            <p className="text-xs text-[var(--text-muted)] py-2">{t('admin.liveNothingSyncing')}</p>
-          ) : (
-            <ul className="space-y-2">
-              {syncing.map((s) => (
-                <li key={s.username} className="flex items-center gap-3 text-xs">
-                  {avatar(s.username, s.avatarUrl)}
-                  <span className="min-w-0">
-                    <span className="block font-semibold text-[var(--text-primary)] truncate">@{s.username}</span>
-                    <span className="block text-[var(--text-muted)] truncate">
-                      {s.title} · {t('admin.liveEpisode', { season: s.season, episode: s.episode })}
-                    </span>
-                  </span>
-                  <span className="ml-auto font-mono text-[var(--text-muted)] shrink-0">{ago(s.at)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {panel(
+          <Radio className="w-4 h-4" aria-hidden="true" />,
+          'bg-emerald-500/10 text-emerald-400',
+          t('admin.liveOnlineNow'),
+          online.length + anonymous,
+          t('admin.liveNobodyOnline'),
+          <>
+            {online.map((u) =>
+              row(
+                u.username,
+                u.username,
+                u.avatarUrl,
+                <span className="inline-flex items-center gap-1">
+                  <Monitor className="w-3 h-3 shrink-0" aria-hidden="true" />
+                  {u.device}
+                </span>,
+                ago(u.lastActiveAt),
+              ),
+            )}
+            {anonymous > 0 && (
+              <li className="col-span-full px-2.5 text-[11px] text-[var(--text-muted)]">{t('admin.liveAnonymous', { n: anonymous })}</li>
+            )}
+          </>,
+          online.length + anonymous > 0,
+        )}
+        {panel(
+          <RefreshCw className="w-4 h-4" aria-hidden="true" />,
+          'bg-sky-500/10 text-sky-400',
+          t('admin.liveSyncingNow'),
+          syncing.length,
+          t('admin.liveNothingSyncing'),
+          <>
+            {syncing.map((s) =>
+              row(
+                s.username,
+                s.username,
+                s.avatarUrl,
+                <>
+                  {s.title} · {t('admin.liveEpisode', { season: s.season, episode: s.episode })}
+                </>,
+                ago(s.at),
+              ),
+            )}
+          </>,
+          syncing.length > 0,
+        )}
       </div>
     </section>
   );

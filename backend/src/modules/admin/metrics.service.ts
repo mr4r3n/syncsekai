@@ -1,10 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { recentActivity } from '../../common/logging/activity-log';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SyncStatus } from '@prisma/client';
 
 /** Panel metrics: summary, charts, activity heatmap, genres and failures. */
 @Injectable()
-export class MetricsService {
+export class MetricsService implements OnModuleInit {
   private readonly logger = new Logger(MetricsService.name);
 
   // In-memory TTL cache for aggregated metrics (reduces database load)
@@ -16,6 +18,28 @@ export class MetricsService {
   constructor(
     private prisma: PrismaService,
   ) {}
+
+  /** Stored events kept on purpose: administration and account security. */
+  private static readonly AUDIT_SERVICES = ['BACKUP', 'AUTH_SECURITY', 'EMERGENCY_RECOVERY', 'HISTORY_REVERT'];
+  private static readonly AUDIT_RETENTION_DAYS = 90;
+
+  onModuleInit() {
+    this.purgeAuditLog().catch((e) => this.logger.warn(`Could not purge the audit log: ${e.message}`));
+  }
+
+  /**
+   * Keeps AuditLog to administrative and security events of the last 90 days.
+   * Media-server activity was stored here too until it moved to memory
+   * (common/logging/activity-log.ts); the first run clears what is left of it.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async purgeAuditLog() {
+    const cutoff = new Date(Date.now() - MetricsService.AUDIT_RETENTION_DAYS * 86_400_000);
+    const { count } = await this.prisma.auditLog.deleteMany({
+      where: { OR: [{ createdAt: { lt: cutoff } }, { service: { notIn: MetricsService.AUDIT_SERVICES } }] },
+    });
+    if (count > 0) this.logger.log(`Audit log: ${count} old or non-audit entries deleted.`);
+  }
 
   /**
    * Invalidates the metrics cache after an admin action or a scrobble.
@@ -409,10 +433,11 @@ export class MetricsService {
     ]);
 
     // 8. System logs (audit + recent scrobbles + authentication)
-    const recentAuditLogs = await this.prisma.auditLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 25,
-    });
+    // Stored administrative events plus the media-server activity kept in memory.
+    const recentAuditLogs = [
+      ...(await this.prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 25 })),
+      ...recentActivity(25),
+    ];
 
     const recentScrobbles = await this.prisma.scrobbleHistory.findMany({
       orderBy: { createdAt: 'desc' },

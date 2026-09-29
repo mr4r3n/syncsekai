@@ -5,6 +5,7 @@ import { EncryptionService } from '../../common/crypto/encryption.service';
 import axios from 'axios';
 import { PlexService } from './plex.service';
 import { PlexWebhookService } from './plex-webhook.service';
+import { recordActivity } from '../../common/logging/activity-log';
 
 interface TrackedSession {
   sessionKey: string;
@@ -179,7 +180,7 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
           this.sessionsMap.set(sessionKey, tracked);
 
           // Record the start of live playback in AuditLog with the exact minute
-          await this.prisma.auditLog.create({
+          await recordActivity({
             data: {
               level: 'INFO',
               service: 'PLEX_LIVE_TRACKER',
@@ -203,7 +204,7 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
           const pctJump = Math.abs(viewPercentage - tracked.lastPercentage) >= 20;
 
           if (stateChanged || pctJump) {
-            await this.prisma.auditLog.create({
+            await recordActivity({
               data: {
                 level: 'INFO',
                 service: 'PLEX_LIVE_TRACKER',

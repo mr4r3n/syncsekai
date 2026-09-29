@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PlexService } from './plex.service';
 import { PlexWebhookService } from './plex-webhook.service';
+import { requestIp } from '../../common/security/client-ip';
 
 @Controller('api/plex')
 export class PlexController {
@@ -100,13 +101,13 @@ export class PlexController {
    */
   @Get('webhook/ping')
   async pingWebhookGet(@Req() req: any) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     return this.plexWebhookService.recordPing(clientIp);
   }
 
   @Post('webhook/ping')
   async pingWebhookPost(@Req() req: any) {
-    const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+    const clientIp = requestIp(req);
     return this.plexWebhookService.recordPing(clientIp);
   }
 
@@ -146,7 +147,7 @@ export class PlexController {
       }
     }
 
-    const clientIp = req.ip || req.socket?.remoteAddress || 'unknown';
+    const clientIp = requestIp(req);
     this.logger.log(`[PLEX_INCOMING_WEBHOOK] Event: ${payload?.event || 'raw'}, IP: ${clientIp}`);
 
     // Move heavy processing (AniList/MAL API, covers, Discord) off the request, to the event loop

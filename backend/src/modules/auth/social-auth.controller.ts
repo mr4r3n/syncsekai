@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { setOAuthTxCookie, setSessionCookie, clearOAuthTxCookie, readCookie, deviceIdFrom } from './auth-cookies';
+import { requestIp } from '../../common/security/client-ip';
 
 /** Sign-in and account linking with Google and Discord (OAuth). */
 @Controller('api/auth')
@@ -179,7 +180,7 @@ export class SocialAuthController {
       });
       const profile = await userRes.json();
 
-      const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+      const clientIp = requestIp(req);
       const userAgent = req.headers['user-agent'] || '';
 
       const { user, accessToken } = await this.authService.handleSocialAuthLogin(
@@ -287,7 +288,7 @@ export class SocialAuthController {
         ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
         : null;
 
-      const clientIp = req.ip || req.socket?.remoteAddress || '127.0.0.1';
+      const clientIp = requestIp(req);
       const userAgent = req.headers['user-agent'] || '';
 
       const { user, accessToken } = await this.authService.handleSocialAuthLogin(

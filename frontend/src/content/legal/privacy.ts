@@ -1,4 +1,5 @@
 import type { LegalDocumentData } from '@/components/LegalDocument';
+import { updatedLabel } from './updated';
 
 /*
  * Privacy policy for service hosted on syncsekai.com.
@@ -8,7 +9,9 @@ import type { LegalDocumentData } from '@/components/LegalDocument';
  * Listed authentication providers match code implementation: Google and Discord.
  */
 
-const UPDATED = { en: 'Last updated: September 27, 2026', es: 'Última actualización: 27 de septiembre de 2026' };
+/** Date of the last material change; also the page's lastmod in the sitemap. */
+export const PRIVACY_UPDATED_ON = '2026-09-29';
+const UPDATED = updatedLabel(PRIVACY_UPDATED_ON);
 
 const CONTACT_EN = [
   'Email: mailto:mr4r3n@outlook.com',
@@ -93,6 +96,8 @@ export const PRIVACY: Record<'en' | 'es', LegalDocumentData> = {
           'Sessions and security information. SyncSekai may process session identifiers, IP address, user agent, browser, operating system and device information, session activity timestamps, and security and audit information. This information may be used to authenticate users, protect accounts, detect abuse, and maintain service security.',
           'Support information. If you contact SyncSekai support, the service may store the ticket subject and messages, information you provide in the ticket, attachments you intentionally submit, and technical information associated with the request.',
           'Technical and operational information. The hosted service may process technical information such as IP addresses, application logs, reverse-proxy and security logs, error information, and aggregated operational metrics needed to run and protect the service.',
+          'Visit counting. To know how many people use the site, SyncSekai counts each visitor once a day without storing their IP address and without placing any cookie: a daily identifier is derived from the IP address and browser (or, if you are signed in, from your account) with a key that is deleted the next day, so visits cannot be linked from one day to another. For each visit it keeps the approximate country and city and the network provider derived from the IP address, the browser and operating system, and, if you are signed in, your username.',
+          'Account activity visible to administrators. To operate, support and protect the service, administrators can see for each account when it was last active, whether it is using the site right now and on which device, and the episodes it has synced recently.',
         ],
       },
       {
@@ -321,6 +326,8 @@ export const PRIVACY: Record<'en' | 'es', LegalDocumentData> = {
           'Sesiones e información de seguridad. SyncSekai puede tratar identificadores de sesión, dirección IP, agente de usuario, información del navegador, del sistema operativo y del dispositivo, marcas de tiempo de actividad de la sesión e información de seguridad y auditoría. Esta información puede usarse para autenticar a los usuarios, proteger las cuentas, detectar abusos y mantener la seguridad del servicio.',
           'Información de soporte. Si contactas con el soporte de SyncSekai, el servicio puede guardar el asunto y los mensajes del ticket, la información que facilites en él, los adjuntos que envíes voluntariamente y la información técnica asociada a la solicitud.',
           'Información técnica y operativa. El servicio alojado puede tratar información técnica como direcciones IP, registros de la aplicación, registros del proxy inverso y de seguridad, información de errores y métricas operativas agregadas necesarias para operar y proteger el servicio.',
+          'Recuento de visitas. Para saber cuántas personas usan la web, SyncSekai cuenta a cada visitante una vez al día sin guardar su dirección IP y sin instalar ninguna cookie: un identificador diario se obtiene de la dirección IP y el navegador (o, si has iniciado sesión, de tu cuenta) con una clave que se borra al día siguiente, así que las visitas no pueden relacionarse de un día a otro. De cada visita se guardan el país, la ciudad aproximada y el proveedor de red deducidos de la dirección IP, el navegador y el sistema operativo y, si has iniciado sesión, tu nombre de usuario.',
+          'Actividad de la cuenta visible para los administradores. Para operar, dar soporte y proteger el servicio, los administradores pueden ver de cada cuenta cuándo estuvo activa por última vez, si está usando la web en este momento y desde qué dispositivo, y los episodios que ha sincronizado recientemente.',
         ],
       },
       {

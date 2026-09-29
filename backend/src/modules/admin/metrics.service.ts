@@ -41,9 +41,15 @@ export class MetricsService {
 
     // 1. User and scrobble statistics
     const totalUsers = await this.prisma.user.count();
-    const activeUsers24h = await this.prisma.user.count({
-      where: { isActive: true },
-    });
+    // Active means using the service: at least one episode synced in the last 24 h.
+    // (It used to count verified accounts; the panel itself is rarely opened.)
+    const activeUsers24h = (
+      await this.prisma.scrobbleHistory.findMany({
+        where: { viewedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+        select: { userId: true },
+        distinct: ['userId'],
+      })
+    ).length;
 
     const totalScrobbles = await this.prisma.scrobbleHistory.count();
     const successfulScrobbles = await this.prisma.scrobbleHistory.count({
@@ -74,6 +80,12 @@ export class MetricsService {
     const uniqueIpVisits = await this.prisma.systemMetric.count({
       where: { metricKey: 'UNIQUE_IP_VISIT' },
     });
+    // One row per visitor and day (see VisitorsService), so a date range counts visitor-days.
+    const dayKey = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString().split('T')[0];
+    const visitsSince = (daysAgo: number) =>
+      this.prisma.systemMetric.count({ where: { metricKey: 'UNIQUE_IP_VISIT', dateKey: { gte: dayKey(daysAgo) } } });
+    const [visitsToday, visitsLast7Days, visitsLast30Days] = await Promise.all([visitsSince(0), visitsSince(6), visitsSince(29)]);
+    const liveActivity = await this.getLiveActivity();
 
     const successRate = totalScrobbles > 0
       ? `${((successfulScrobbles / totalScrobbles) * 100).toFixed(1)}%`
@@ -446,6 +458,9 @@ export class MetricsService {
         activeUsers24h,
         totalUsers,
         uniqueIpVisits: Math.max(uniqueIpVisits, 1),
+        visitsToday,
+        visitsLast7Days,
+        visitsLast30Days,
         totalScrobbles,
         successfulScrobbles,
         failedScrobbles,
@@ -481,10 +496,71 @@ export class MetricsService {
       activityHeatmap,
       genreOverview,
       systemLogs,
+      liveActivity,
     };
 
     this.dashboardMetricsCache.set(cacheKey, { data: result, timestamp: Date.now() });
     return result;
+  }
+
+  /**
+   * Who is here right now: accounts with a session used in the last 5 minutes,
+   * anonymous visitors seen in that time, and accounts that synced an episode in
+   * the last hour (the service is used by watching, not by opening the panel).
+   */
+  private async getLiveActivity() {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const today = new Date().toISOString().split('T')[0];
+
+    const [sessions, todaysVisits, recentSyncs] = await Promise.all([
+      this.prisma.session.findMany({
+        where: { lastActiveAt: { gte: fiveMinutesAgo } },
+        orderBy: { lastActiveAt: 'desc' },
+        take: 100,
+        select: { lastActiveAt: true, deviceName: true, deviceType: true, user: { select: { username: true, avatarUrl: true } } },
+      }),
+      // ponytail: today's visits are filtered in memory; fine for a few thousand a day,
+      // a JSON path filter in SQL if it grows.
+      this.prisma.systemMetric.findMany({ where: { metricKey: 'UNIQUE_IP_VISIT', dateKey: today }, select: { metadata: true } }),
+      this.prisma.scrobbleHistory.findMany({
+        where: { viewedAt: { gte: oneHourAgo } },
+        orderBy: { viewedAt: 'desc' },
+        take: 200,
+        select: { showTitle: true, episodeNumber: true, seasonNumber: true, viewedAt: true, user: { select: { username: true, avatarUrl: true } } },
+      }),
+    ]);
+
+    // One entry per account: its most recent session or episode.
+    const online = new Map<string, { username: string; avatarUrl: string | null; device: string; lastActiveAt: Date }>();
+    for (const s of sessions) {
+      if (!online.has(s.user.username)) {
+        online.set(s.user.username, {
+          username: s.user.username,
+          avatarUrl: s.user.avatarUrl,
+          device: s.deviceName || s.deviceType || 'Web',
+          lastActiveAt: s.lastActiveAt,
+        });
+      }
+    }
+    const anonymousOnline = todaysVisits.filter((v) => {
+      const meta = (v.metadata as any) || {};
+      return !meta.username && meta.lastSeenAt && new Date(meta.lastSeenAt) >= fiveMinutesAgo;
+    }).length;
+    const syncing = new Map<string, { username: string; avatarUrl: string | null; title: string; season: number; episode: number; at: Date }>();
+    for (const r of recentSyncs) {
+      if (!syncing.has(r.user.username)) {
+        syncing.set(r.user.username, {
+          username: r.user.username,
+          avatarUrl: r.user.avatarUrl,
+          title: r.showTitle,
+          season: r.seasonNumber ?? 1,
+          episode: r.episodeNumber,
+          at: r.viewedAt,
+        });
+      }
+    }
+    return { online: [...online.values()], anonymousOnline, syncing: [...syncing.values()] };
   }
 
   /**

@@ -122,6 +122,9 @@ export function WorldVisitorsMap({ locations = [], countries = [] }: WorldVisito
       cancelled = true;
       resize.disconnect();
       map?.destroy();
+      // destroy() leaves the drawing in place: without this, the map rebuilt when the data
+      // arrives lands under the first, empty one and the page shows no countries.
+      container.replaceChildren();
       // destroy() leaves the shared tooltip in <body> when the last map goes.
       document.querySelectorAll('.jvm-tooltip').forEach((el) => el.remove());
     };

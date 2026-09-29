@@ -1,7 +1,11 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
 import { isIP } from 'net';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { VisitorsService, type GeoHeaders } from '../../modules/admin/visitors.service';
+import { readCookie } from '../../modules/auth/auth-cookies';
+import { getRequiredSecret } from '../security/required-secret';
 
 /**
  * Automated clients that are not visitors: search engines, link previewers,
@@ -89,7 +93,34 @@ export class GeoVisitorMiddleware implements NestMiddleware {
   private windowStartedAt = Date.now();
   private recordedInWindow = 0;
 
-  constructor(private readonly visitorsService: VisitorsService) {}
+  // Middleware runs before the auth guard, so req.user is never set here: the
+  // session cookie is read directly (signature and expiry checked, no database).
+  private readonly jwt: JwtService;
+  private readonly jwtOptions: { issuer: string; audience: string };
+
+  constructor(
+    private readonly visitorsService: VisitorsService,
+    config: ConfigService,
+  ) {
+    this.jwt = new JwtService({ secret: getRequiredSecret(config, 'JWT_SECRET') });
+    this.jwtOptions = {
+      issuer: config.get<string>('JWT_ISSUER') || 'plexsync',
+      audience: config.get<string>('JWT_AUDIENCE') || 'plexsync-web',
+    };
+  }
+
+  private sessionUser(req: Request): { id: string; username: string } | undefined {
+    const token = readCookie(req, 'plexsync_session');
+    if (!token) return undefined;
+    try {
+      const payload: any = this.jwt.verify(token, this.jwtOptions);
+      return typeof payload?.sub === 'string' && typeof payload?.username === 'string'
+        ? { id: payload.sub, username: payload.username }
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
 
   private canRecordNewIp(now: number): boolean {
     if (now - this.windowStartedAt > GeoVisitorMiddleware.RATE_WINDOW_MS) {
@@ -131,7 +162,7 @@ export class GeoVisitorMiddleware implements NestMiddleware {
       if (req.headers['x-requested-with'] !== 'SyncSekai') return next();
 
       const clientIp = extractClientIp(req);
-      const user = (req as any).user;
+      const user = this.sessionUser(req);
 
       // Cloudflare geo headers. Country is always present; city, region and
       // coordinates only with the "visitor location headers" transform enabled.
@@ -150,11 +181,13 @@ export class GeoVisitorMiddleware implements NestMiddleware {
       };
 
       const now = Date.now();
-      const lastRecorded = this.recentIps.get(clientIp) || 0;
+      // Throttled per account when signed in, so signing in counts at once.
+      const throttleKey = user ? `user:${user.id}` : clientIp;
+      const lastRecorded = this.recentIps.get(throttleKey) || 0;
 
       // 2-minute throttle per IP, to record activity without flooding the database
       if (now - lastRecorded > 2 * 60 * 1000 && this.canRecordNewIp(now)) {
-        this.recentIps.set(clientIp, now);
+        this.recentIps.set(throttleKey, now);
         if (this.recentIps.size > 2_000) {
           const oldest = [...this.recentIps.entries()]
             .sort((a, b) => a[1] - b[1])
@@ -163,7 +196,7 @@ export class GeoVisitorMiddleware implements NestMiddleware {
         }
 
         this.visitorsService
-          .recordVisitorIp(clientIp, user?.username, userAgent, geoHeaders)
+          .recordVisitorIp(clientIp, user, userAgent, geoHeaders)
           .catch(() => {});
       }
     } catch {}

@@ -9,6 +9,7 @@ import { useSidebar } from '@/components/SidebarProvider';
 import { useI18n } from '@/i18n/I18nProvider';
 import { ActivityHeatmap } from '@/components/ActivityHeatmap';
 import { GenreOverview } from '@/components/GenreOverview';
+import { LiveActivity } from './_components/LiveActivity';
 import {
   LayoutDashboard,
   Users,
@@ -252,6 +253,9 @@ export default function AdminOverviewPage() {
               </div>
             </div>
           </div>
+
+          {/* WHO IS HERE NOW */}
+          <LiveActivity activity={data?.liveActivity} loading={loading} />
 
           {/* 1. MAIN RECHARTS CHART (FULL WIDTH TOP) */}
           <div className="glass-card -mx-4 sm:mx-0 rounded-none sm:rounded-[10px] border-x-0 sm:border-x px-3 py-5 sm:p-6 space-y-6">

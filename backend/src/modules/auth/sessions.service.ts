@@ -61,10 +61,11 @@ export class SessionsService {
     return !!session;
   }
 
+  /** Marks the session as used; at most one write a minute, enough for "online now". */
   async touchSession(sessionToken: string) {
     try {
-      await this.prisma.session.update({
-        where: { sessionToken },
+      await this.prisma.session.updateMany({
+        where: { sessionToken, lastActiveAt: { lt: new Date(Date.now() - 60_000) } },
         data: { lastActiveAt: new Date() },
       });
     } catch {}

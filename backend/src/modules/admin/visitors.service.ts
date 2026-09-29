@@ -57,6 +57,19 @@ export interface GeoHeaders {
   lon?: number;
 }
 
+/**
+ * The daily visitor key: one per person and day, from which neither the IP nor
+ * the account can be read back. Signed-in visitors are keyed by account, so a
+ * change of IP or device does not count them twice; everyone else by IP and
+ * browser. Pure, so scripts/check-visitors.ts can test it.
+ */
+export function visitorKey(salt: Buffer, visitor: { ip: string; userAgent?: string; userId?: string }): string {
+  const who = visitor.userId ? `user:${visitor.userId}` : `${visitor.ip}|${visitor.userAgent || ''}`;
+  return crypto.createHmac('sha256', salt).update(who).digest('hex').slice(0, 40);
+}
+
+const SALT_METRIC = 'VISITOR_SALT';
+
 /** Visit counter without IPs, with geolocation by country. */
 @Injectable()
 export class VisitorsService {
@@ -256,34 +269,40 @@ export class VisitorsService {
   }
 
   /**
-   * Visitor identifier valid only for the current day.
+   * The salt of the day's visitor keys (see visitorKey).
    *
    * It counts one visit per person per day without storing their IP: the same
-   * visitor produces the same key within the day, and once the salt changes
-   * yesterday's value cannot be reproduced, so nobody can be followed across
-   * days.
+   * visitor produces the same key within the day, and once the day's salt is
+   * deleted yesterday's keys cannot be reproduced, so nobody can be followed
+   * across days. Nothing is stored on the visitor's device (no cookie, no
+   * fingerprint): outside article 5.3 of ePrivacy, no consent banner needed,
+   * the same approach as Plausible and Fathom.
    *
-   * Since nothing is stored on the visitor's device (no cookie, no
-   * fingerprint), it falls outside article 5.3 of ePrivacy and needs no consent
-   * banner. It is the same approach Plausible and Fathom use.
-   *
-   * The salt lives in process memory. When the backend restarts it changes,
-   * and that day's visitors are counted once more. That small deviation is
-   * acceptable compared to persisting it; if it ever matters, it goes to Redis
-   * with expiry at midnight.
+   * Kept in the database, not in memory: a restart or a deploy used to draw a
+   * new salt and count that day's visitors a second time.
    */
-  private dailyVisitorKey(ip: string, userAgent: string | undefined, date: string): string {
-    if (!this.dailySalt || this.dailySalt.date !== date) {
-      this.dailySalt = { date, value: crypto.randomBytes(32) };
+  private async saltFor(date: string): Promise<Buffer> {
+    if (this.dailySalt?.date === date) return this.dailySalt.value;
+    const where = { metricKey_ipAddress_dateKey: { metricKey: SALT_METRIC, ipAddress: 'salt', dateKey: date } };
+    let row = await this.prisma.systemMetric.findUnique({ where });
+    if (!row) {
+      try {
+        row = await this.prisma.systemMetric.create({
+          data: { metricKey: SALT_METRIC, ipAddress: 'salt', dateKey: date, metadata: { value: crypto.randomBytes(32).toString('hex') } },
+        });
+      } catch {
+        // Another request created it first: use that one.
+        row = await this.prisma.systemMetric.findUnique({ where });
+      }
+      await this.prisma.systemMetric.deleteMany({ where: { metricKey: SALT_METRIC, dateKey: { not: date } } });
     }
-    return crypto
-      .createHmac('sha256', this.dailySalt.value)
-      .update(`${ip}|${userAgent || ''}`)
-      .digest('hex')
-      .slice(0, 40);
+    const value = Buffer.from(String((row?.metadata as any)?.value || ''), 'hex');
+    if (value.length !== 32) throw new Error('Visitor salt unavailable.');
+    this.dailySalt = { date, value };
+    return value;
   }
 
-  async recordVisitorIp(rawIp: string, username?: string, userAgent?: string, geoHeaders?: GeoHeaders) {
+  async recordVisitorIp(rawIp: string, user?: { id: string; username: string }, userAgent?: string, geoHeaders?: GeoHeaders) {
     try {
       if (!rawIp) return;
       const ip = rawIp.replace(/^::ffff:/, '').trim();
@@ -304,13 +323,22 @@ export class VisitorsService {
       // The country is resolved BEFORE discarding the IP: the country identifies
       // nobody, the IP does.
       const geoData = await this.resolveGeoIp(ip, geoHeaders);
-      const visitorKey = this.dailyVisitorKey(ip, userAgent, todayStr);
+      const salt = await this.saltFor(todayStr);
+      const key = visitorKey(salt, { ip, userAgent, userId: user?.id });
+      const username = user?.username;
+      if (user) {
+        // Before signing in, the same person was an anonymous visit from this IP and
+        // browser: one person, one visit.
+        await this.prisma.systemMetric.deleteMany({
+          where: { metricKey: 'UNIQUE_IP_VISIT', dateKey: todayStr, ipAddress: visitorKey(salt, { ip, userAgent }) },
+        });
+      }
 
       // 1. Was this visit already recorded today?
       const existing = await this.prisma.systemMetric.findFirst({
         where: {
           metricKey: 'UNIQUE_IP_VISIT',
-          ipAddress: visitorKey,
+          ipAddress: key,
           dateKey: todayStr,
         },
       });
@@ -339,7 +367,7 @@ export class VisitorsService {
       await this.prisma.systemMetric.create({
         data: {
           metricKey: 'UNIQUE_IP_VISIT',
-          ipAddress: visitorKey,
+          ipAddress: key,
           dateKey: todayStr,
           value: 1,
           metadata: {

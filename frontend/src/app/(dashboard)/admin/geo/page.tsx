@@ -116,7 +116,6 @@ export default function AdminGeoPage() {
   const geoVisits = data?.geographicVisits || [];
   const mapLocations = data?.mapLocations || [];
   const recentIps = data?.recentIps || [];
-  const totalVisits = geoVisits.reduce((acc: number, curr: any) => acc + (curr.visits || 0), 0);
 
   // 8 rows: fits without card exceeding viewport height
   // on a laptop, while showing bulk of traffic at a glance.
@@ -188,8 +187,11 @@ export default function AdminGeoPage() {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-[var(--text-muted)] font-mono uppercase tracking-wider">{t('admin.totalUniqueVisits')}</div>
-              <div className="text-xl font-bold text-[var(--text-primary)] font-heading">{totalVisits}</div>
+              <div className="text-[11px] text-[var(--text-muted)] font-mono uppercase tracking-wider">{t('admin.visitorsToday')}</div>
+              <div className="text-xl font-bold text-[var(--text-primary)] font-heading">{data?.stats?.visitsToday ?? 0}</div>
+              <div className="text-[11px] text-[var(--text-muted)] font-mono">
+                {t('admin.visitsRange', { week: data?.stats?.visitsLast7Days ?? 0, month: data?.stats?.visitsLast30Days ?? 0 })}
+              </div>
             </div>
           </div>
 

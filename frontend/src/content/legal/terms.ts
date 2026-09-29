@@ -1,4 +1,5 @@
 import type { LegalDocumentData } from '@/components/LegalDocument';
+import { updatedLabel } from './updated';
 
 /*
  * Terms of service for hosted syncsekai.com service.
@@ -10,7 +11,9 @@ import type { LegalDocumentData } from '@/components/LegalDocument';
  * Pending: applicable law and dispute resolution.
  */
 
-const UPDATED = { en: 'Last updated: September 11, 2026', es: 'Última actualización: 11 de septiembre de 2026' };
+/** Date of the last material change; also the page's lastmod in the sitemap. */
+export const TERMS_UPDATED_ON = '2026-09-11';
+const UPDATED = updatedLabel(TERMS_UPDATED_ON);
 
 const CONTACT_EN = [
   'Email: mailto:mr4r3n@outlook.com',

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { enterDemo } from '@/lib/demo';
+import { api } from '@/lib/api';
 import { useI18n } from '@/i18n/I18nProvider';
 
 /** Turns the demo on for this tab and opens the panel (see lib/demo.ts). */
@@ -11,6 +12,9 @@ export default function DemoPage() {
   const { t } = useI18n();
 
   useEffect(() => {
+    // Sent before the demo turns on (after that, requests stay in the browser), so
+    // visits to the demo are counted like any other.
+    api.setup.getMaintenanceStatus().catch(() => {});
     enterDemo();
     router.replace('/catalog');
   }, [router]);

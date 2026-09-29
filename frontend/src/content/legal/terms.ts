@@ -12,7 +12,7 @@ import { updatedLabel } from './updated';
  */
 
 /** Date of the last material change; also the page's lastmod in the sitemap. */
-export const TERMS_UPDATED_ON = '2026-09-11';
+export const TERMS_UPDATED_ON = '2026-09-29';
 const UPDATED = updatedLabel(TERMS_UPDATED_ON);
 
 const CONTACT_EN = [
@@ -139,6 +139,17 @@ export const TERMS: Record<'en' | 'es', LegalDocumentData> = {
           'You retain rights to information and content that you provide or connect to SyncSekai, subject to the rights necessary for SyncSekai to operate the Service.',
           'You grant SyncSekai the limited permission necessary to process your information and connected-service data solely to provide the features you request, maintain the Service, provide support, protect security, and comply with applicable law.',
           'SyncSekai does not claim ownership of your media library or watch history merely because the Service processes that information.',
+        ],
+      },
+      {
+        title: 'Disclaimer regarding user-hosted content',
+        blocks: [
+          'SYNCSEKAI IS NOT RESPONSIBLE FOR THE IMPROPER USE OF COPYRIGHTED MATERIAL ON USERS\' PERSONAL MEDIA SERVERS.',
+          'SyncSekai is a synchronization service. It does not host, store, stream, transmit, index, distribute or provide access to video files or any other media content. The media servers you connect (Plex, Jellyfin, Emby or others) are operated and controlled solely by you or by third parties, and SyncSekai has no control over, and no knowledge of, the files stored on them.',
+          'To provide its features, SyncSekai only receives metadata about your playback, such as the title, season, episode number and watch progress. Receiving, processing or synchronizing that metadata does not mean that SyncSekai has reviewed, verified, authorized or endorsed the content it refers to, or the way in which that content was obtained.',
+          'You are solely and exclusively responsible for the content stored on, accessed through or played from your media servers, and for holding all the rights, licenses and permissions required by applicable law, including copyright and related rights.',
+          'You may not use SyncSekai to facilitate, promote or conceal the infringement of copyright or of any other intellectual-property right. SyncSekai may suspend or terminate accounts that it reasonably believes are used for that purpose, in accordance with the "Suspension and termination" section.',
+          'To the maximum extent permitted by applicable law, you agree to hold the SyncSekai operator harmless from any claim, loss or liability arising from the content on your media servers or from your use of that content.',
         ],
       },
       {
@@ -386,6 +397,17 @@ export const TERMS: Record<'en' | 'es', LegalDocumentData> = {
           'Conservas los derechos sobre la información y el contenido que facilitas o conectas a SyncSekai, sin perjuicio de los derechos necesarios para que SyncSekai pueda operar el Servicio.',
           'Concedes a SyncSekai el permiso limitado necesario para tratar tu información y los datos de los servicios conectados con el único fin de ofrecer las funciones que solicitas, mantener el Servicio, prestar soporte, proteger la seguridad y cumplir la ley aplicable.',
           'SyncSekai no reclama la propiedad de tu biblioteca multimedia ni de tu historial de visualización por el mero hecho de que el Servicio trate esa información.',
+        ],
+      },
+      {
+        title: 'Descargo de responsabilidad sobre el contenido de los usuarios',
+        blocks: [
+          'SYNCSEKAI NO SE HACE RESPONSABLE DEL USO INDEBIDO DE MATERIAL PROTEGIDO POR DERECHOS DE AUTOR EN LOS SERVIDORES PERSONALES DE LOS USUARIOS.',
+          'SyncSekai es un servicio de sincronización. No aloja, almacena, emite, transmite, indexa, distribuye ni da acceso a archivos de vídeo ni a ningún otro contenido multimedia. Los servidores multimedia que conectas (Plex, Jellyfin, Emby u otros) los gestionas y controlas exclusivamente tú o terceros, y SyncSekai no tiene control sobre los archivos que contienen ni conocimiento de ellos.',
+          'Para ofrecer sus funciones, SyncSekai solo recibe metadatos sobre tu reproducción, como el título, la temporada, el número de episodio y el progreso de visionado. Recibir, tratar o sincronizar esos metadatos no significa que SyncSekai haya revisado, verificado, autorizado ni respaldado el contenido al que se refieren, ni la forma en que se obtuvo.',
+          'Eres el único y exclusivo responsable del contenido almacenado en tus servidores multimedia, del contenido al que accedes a través de ellos y del que reproduces desde ellos, así como de contar con todos los derechos, licencias y permisos exigidos por la ley aplicable, incluidos los derechos de autor y los derechos conexos.',
+          'No puedes usar SyncSekai para facilitar, promover u ocultar la infracción de derechos de autor ni de ningún otro derecho de propiedad intelectual. SyncSekai podrá suspender o cancelar las cuentas que razonablemente considere que se usan con ese fin, conforme a la sección "Suspensión y cancelación".',
+          'En la máxima medida permitida por la ley aplicable, aceptas mantener indemne al operador de SyncSekai frente a cualquier reclamación, pérdida o responsabilidad derivada del contenido de tus servidores multimedia o del uso que hagas de él.',
         ],
       },
       {

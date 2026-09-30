@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { KeyRound, Loader2, Mail, Save, Trash2 } from 'lucide-react';
+import { KeyRound, Loader2, Mail, Pencil, Save, Trash2, X } from 'lucide-react';
 import { Topbar } from '@/components/Topbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastProvider';
@@ -65,6 +65,8 @@ export default function CredentialsPage() {
 
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [isLoading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const firstInputRef = useRef<HTMLInputElement>(null);
   /*
    * Touched fields only. Untouched fields are not sent: sending all
    * would rewrite working credentials, and a mid-save network failure
@@ -101,6 +103,16 @@ export default function CredentialsPage() {
 
   const changeCount = Object.keys(changes).length;
 
+  const handleStartEditing = () => {
+    setEditing(true);
+    setTimeout(() => firstInputRef.current?.focus(), 0);
+  };
+
+  const handleCancel = () => {
+    setChanges({});
+    setEditing(false);
+  };
+
   const save = async () => {
     try {
       setSaving(true);
@@ -109,6 +121,7 @@ export default function CredentialsPage() {
       setChanges({});
       setKey('');
       setRequestingPassword(false);
+      setEditing(false);
       await load();
     } catch (e: any) {
       showToast(e.message, 'error');
@@ -142,18 +155,42 @@ export default function CredentialsPage() {
             <p className="text-xs text-[var(--text-secondary)] mt-1">{t('credentials.subtitle')}</p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setRequestingPassword(true)}
-            disabled={changeCount === 0 || isLoading}
-            className="btn-primary shrink-0 w-full sm:w-auto justify-center disabled:opacity-40 disabled:cursor-default"
-          >
-            <Save className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>
-              {t('credentials.save')}
-              {changeCount > 0 ? ` (${changeCount})` : ''}
-            </span>
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+            {editing ? (
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isLoading || saving}
+                className="btn-secondary w-full sm:w-auto justify-center"
+              >
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{t('common.cancel')}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleStartEditing}
+                disabled={isLoading}
+                className="btn-secondary w-full sm:w-auto justify-center"
+              >
+                <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{t('common.edit')}</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setRequestingPassword(true)}
+              disabled={!editing || changeCount === 0 || isLoading || saving}
+              className="btn-primary w-full sm:w-auto justify-center disabled:opacity-40 disabled:cursor-default"
+            >
+              <Save className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>
+                {t('credentials.save')}
+                {changeCount > 0 ? ` (${changeCount})` : ''}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -167,103 +204,110 @@ export default function CredentialsPage() {
             <Loader2 className="w-6 h-6 animate-spin text-[var(--accent-text)]" aria-hidden="true" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {GROUPS.map((group) => {
-              const inGroup = credentials.filter((c) => c.group === group.id);
-              if (inGroup.length === 0) return null;
+          <fieldset disabled={!editing} className="contents">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {GROUPS.map((group) => {
+                const inGroup = credentials.filter((c) => c.group === group.id);
+                if (inGroup.length === 0) return null;
 
-              return (
-                <section key={group.id} className="glass-card p-5 sm:p-6 space-y-4">
-                  <div className="pb-3 border-b border-[var(--glass-border)] flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius-md)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0">
-                      {group.logo ? (
-                        <img
-                          src={group.logo}
-                          alt=""
-                          aria-hidden="true"
-                          width={20}
-                          height={20}
-                          className="w-5 h-5 object-contain"
-                        />
-                      ) : (
-                        <Mail className="w-4 h-4 text-[var(--text-secondary)]" aria-hidden="true" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="text-sm font-bold font-heading">{group.name}</h2>
-                      <p className="text-[11px] font-mono text-[var(--text-muted)] mt-0.5 truncate">
-                        {group.hint}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-6 gap-x-4 gap-y-4">
-                    {inGroup.map((cred) => (
-                      <div key={cred.key} className={`space-y-1.5 min-w-0 ${COLUMNS[cred.key] || 'sm:col-span-6'}`}>
-                        <label
-                          htmlFor={`cred-${cred.key}`}
-                          className="block text-xs font-medium text-[var(--text-secondary)]"
-                        >
-                          {cred.label}
-                        </label>
-
-                        <div className="relative">
-                          <input
-                            id={`cred-${cred.key}`}
-                            type={cred.isSecret ? 'password' : 'text'}
-                            autoComplete="off"
-                            suppressHydrationWarning
-                            value={changes[cred.key] ?? cred.value ?? ''}
-                            onChange={(e) =>
-                              setChanges((prev) => ({ ...prev, [cred.key]: e.target.value }))
-                            }
-                            placeholder={
-                              cred.isSecret && cred.configured
-                                ? t('credentials.secretHidden')
-                                : t('credentials.leaveBlank')
-                            }
-                            className={`glass-input text-xs font-mono w-full ${cred.configured ? 'pr-9' : ''}`}
+                return (
+                  <section key={group.id} className="glass-card p-5 sm:p-6 space-y-4">
+                    <div className="pb-3 border-b border-[var(--glass-border)] flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-[var(--radius-md)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0">
+                        {group.logo ? (
+                          <img
+                            src={group.logo}
+                            alt=""
+                            aria-hidden="true"
+                            width={20}
+                            height={20}
+                            className="w-5 h-5 object-contain"
                           />
-                          {cred.configured && (
-                            <button
-                              type="button"
-                              onClick={() => setChanges((prev) => ({ ...prev, [cred.key]: '' }))}
-                              title={t('credentials.clear')}
-                              aria-label={`${t('credentials.clear')} — ${cred.label}`}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--status-danger)] hover:bg-[var(--status-danger-bg)] transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                            </button>
-                          )}
-                        </div>
-
-                        {/*
-                          Status belongs on this line, not in a separate pill:
-                          it is the same info—configured status and timestamp—
-                          and splitting it forced looking twice.
-                          Color is not standalone: unconfigured is stated in copy,
-                          which aids those who cannot distinguish green from red.
-                        */}
-                        <p
-                          className={`text-[10.5px] font-mono ${
-                            cred.configured
-                              ? 'text-[var(--status-success)]'
-                              : 'text-[var(--status-danger)]'
-                          }`}
-                        >
-                          {cred.configured
-                            ? cred.updatedAt
-                              ? t('credentials.changedOn', { date: date(cred.updatedAt) })
-                              : t('credentials.configured')
-                            : t('credentials.notConfigured')}
+                        ) : (
+                          <Mail className="w-4 h-4 text-[var(--text-secondary)]" aria-hidden="true" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="text-sm font-bold font-heading">{group.name}</h2>
+                        <p className="text-[11px] font-mono text-[var(--text-muted)] mt-0.5 truncate">
+                          {group.hint}
                         </p>
                       </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-6 gap-x-4 gap-y-4">
+                      {inGroup.map((cred) => (
+                        <div key={cred.key} className={`space-y-1.5 min-w-0 ${COLUMNS[cred.key] || 'sm:col-span-6'}`}>
+                          <label
+                            htmlFor={`cred-${cred.key}`}
+                            className="block text-xs font-medium text-[var(--text-secondary)]"
+                          >
+                            {cred.label}
+                          </label>
+
+                          <div className="relative">
+                            <input
+                              ref={(el) => {
+                                if (!firstInputRef.current && el) {
+                                  firstInputRef.current = el;
+                                }
+                              }}
+                              id={`cred-${cred.key}`}
+                              type={cred.isSecret ? 'password' : 'text'}
+                              autoComplete="off"
+                              suppressHydrationWarning
+                              value={changes[cred.key] ?? cred.value ?? ''}
+                              onChange={(e) =>
+                                setChanges((prev) => ({ ...prev, [cred.key]: e.target.value }))
+                              }
+                              placeholder={
+                                cred.isSecret && cred.configured
+                                  ? t('credentials.secretHidden')
+                                  : t('credentials.leaveBlank')
+                              }
+                              className={`glass-input text-xs font-mono w-full ${cred.configured ? 'pr-9' : ''}`}
+                            />
+                            {cred.configured && (
+                              <button
+                                type="button"
+                                onClick={() => setChanges((prev) => ({ ...prev, [cred.key]: '' }))}
+                                title={t('credentials.clear')}
+                                aria-label={`${t('credentials.clear')} — ${cred.label}`}
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--status-danger)] hover:bg-[var(--status-danger-bg)] transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/*
+                            Status belongs on this line, not in a separate pill:
+                            it is the same info—configured status and timestamp—
+                            and splitting it forced looking twice.
+                            Color is not standalone: unconfigured is stated in copy,
+                            which aids those who cannot distinguish green from red.
+                          */}
+                          <p
+                            className={`text-[10.5px] font-mono ${
+                              cred.configured
+                                ? 'text-[var(--status-success)]'
+                                : 'text-[var(--status-danger)]'
+                            }`}
+                          >
+                            {cred.configured
+                              ? cred.updatedAt
+                                ? t('credentials.changedOn', { date: date(cred.updatedAt) })
+                                : t('credentials.configured')
+                              : t('credentials.notConfigured')}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </fieldset>
         )}
       </main>
 

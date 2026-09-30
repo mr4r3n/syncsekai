@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { Topbar } from '@/components/Topbar';
 import { useToast } from '@/components/ToastProvider';
@@ -19,6 +19,8 @@ import {
   Clock,
   ShieldCheck,
   Zap,
+  Pencil,
+  X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CustomSelect } from '@/components/CustomSelect';
@@ -45,6 +47,8 @@ export default function RulesSettingsPage() {
     preferredTracker: string;
   } | null>(null);
   const [savingPreferences, setSavingPreferences] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
 
   // Simulador interactivo de minutos
   const [sampleDurationMinutes, setSampleDurationMinutes] = useState(24);
@@ -129,6 +133,17 @@ export default function RulesSettingsPage() {
     }
   };
 
+  const handleCancelPreferences = () => {
+    if (initialSettings) {
+      setCompletionPercentage(initialSettings.completionPercentage);
+      setSyncRatings(initialSettings.syncRatings);
+      setAutoApproveMappings(initialSettings.autoApproveMappings);
+      setShowInLeaderboard(initialSettings.showInLeaderboard);
+      setPreferredTracker(initialSettings.preferredTracker);
+    }
+    setEditing(false);
+  };
+
   const handleSavePreferences = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     try {
@@ -148,6 +163,7 @@ export default function RulesSettingsPage() {
         preferredTracker,
       });
       showToast(t('rules.rulesUpdated'), 'success');
+      setEditing(false);
     } catch (e: any) {
       showToast(t('rules.somethingWentWrong'), 'error');
     } finally {
@@ -214,113 +230,141 @@ export default function RulesSettingsPage() {
                 </div>
 
                 <form onSubmit={handleSavePreferences} className="space-y-5 pt-1">
-                  {/* Slider: Minimum scrobble percentage */}
-                  <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                        <Percent className="w-3.5 h-3.5 text-emerald-400" />{t('rules.minWatchThreshold')}</span>
-                      <span className="font-mono font-bold text-emerald-400 text-xs px-2 py-0.5 rounded-[4px] bg-emerald-500/10 border border-emerald-500/20">
-                        {completionPercentage}%
-                      </span>
-                    </div>
-
-                    <input
-                      type="range"
-                      min="50"
-                      max="95"
-                      step="5"
-                      value={completionPercentage}
-                      onChange={(e) => setCompletionPercentage(Number(e.target.value))}
-                      className="w-full accent-[var(--accent-primary)] cursor-pointer h-2 bg-[var(--bg-surface-elevated)] rounded-[6px]"
-                    />
-
-                    {/* Quick presets */}
-                    <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)] pt-1">
-                      <span>{t('rules.flexible')}</span>
-                      <div className="flex items-center gap-1.5">
-                        {[70, 80, 90].map((val) => (
-                          <button
-                            key={val}
-                            type="button"
-                            onClick={() => setCompletionPercentage(val)}
-                            className={
-                              completionPercentage === val
-                                ? 'filter-tab-active !h-7 !text-xs !px-2.5'
-                                : 'filter-tab !h-7 !text-xs !px-2.5'
-                            }
-                          >
-                            {val}%
-                          </button>
-                        ))}
+                  <fieldset disabled={!editing} className="contents">
+                    {/* Slider: Minimum scrobble percentage */}
+                    <div className="p-4 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                          <Percent className="w-3.5 h-3.5 text-emerald-400" />{t('rules.minWatchThreshold')}</span>
+                        <span className="font-mono font-bold text-emerald-400 text-xs px-2 py-0.5 rounded-[4px] bg-emerald-500/10 border border-emerald-500/20">
+                          {completionPercentage}%
+                        </span>
                       </div>
-                      <span>{t('rules.strict')}</span>
+
+                      <input
+                        ref={firstFieldRef}
+                        type="range"
+                        min="50"
+                        max="95"
+                        step="5"
+                        value={completionPercentage}
+                        onChange={(e) => setCompletionPercentage(Number(e.target.value))}
+                        className="w-full accent-[var(--accent-primary)] cursor-pointer h-2 bg-[var(--bg-surface-elevated)] rounded-[6px]"
+                      />
+
+                      {/* Quick presets */}
+                      <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)] pt-1">
+                        <span>{t('rules.flexible')}</span>
+                        <div className="flex items-center gap-1.5">
+                          {[70, 80, 90].map((val) => (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setCompletionPercentage(val)}
+                              className={
+                                completionPercentage === val
+                                  ? 'filter-tab-active !h-7 !text-xs !px-2.5'
+                                  : 'filter-tab !h-7 !text-xs !px-2.5'
+                              }
+                            >
+                              {val}%
+                            </button>
+                          ))}
+                        </div>
+                        <span>{t('rules.strict')}</span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Switch: Sincronizar Calificaciones */}
-                  <div className="p-4 rounded-[var(--radius-md,6px)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />{t('rules.syncRatingsTitle')}</div>
-                      <p className="text-xs text-[var(--text-secondary)]">{t('rules.syncRatingsDescription')}</p>
+                    {/* Switch: Sincronizar Calificaciones */}
+                    <div className="p-4 rounded-[var(--radius-md,6px)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-400" />{t('rules.syncRatingsTitle')}</div>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('rules.syncRatingsDescription')}</p>
+                      </div>
+                      <Switch
+                        checked={syncRatings}
+                        onChange={setSyncRatings}
+                        ariaLabel={t('rules.syncRatingsTitle')}
+                      />
                     </div>
-                    <Switch
-                      checked={syncRatings}
-                      onChange={setSyncRatings}
-                      ariaLabel={t('rules.syncRatingsTitle')}
-                    />
-                  </div>
 
-                  {/* Switch: Auto-aprobar mapeos exactos */}
-                  <div className="p-4 rounded-[var(--radius-md,6px)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-semibold text-[var(--text-primary)]">{t('rules.autoApproveExact')}</div>
-                      <p className="text-xs text-[var(--text-secondary)]">{t('rules.autoApproveDesc')}</p>
+                    {/* Switch: Auto-aprobar mapeos exactos */}
+                    <div className="p-4 rounded-[var(--radius-md,6px)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-semibold text-[var(--text-primary)]">{t('rules.autoApproveExact')}</div>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('rules.autoApproveDesc')}</p>
+                      </div>
+                      <Switch
+                        checked={autoApproveMappings}
+                        onChange={setAutoApproveMappings}
+                        ariaLabel={t('rules.autoApproveExact')}
+                      />
                     </div>
-                    <Switch
-                      checked={autoApproveMappings}
-                      onChange={setAutoApproveMappings}
-                      ariaLabel={t('rules.autoApproveExact')}
-                    />
-                  </div>
 
-                  {/* Switch: appear on the community leaderboard (opt-in) */}
-                  <div className="p-4 rounded-[var(--radius-md,6px)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-semibold text-[var(--text-primary)]">{t('rules.showInLeaderboard')}</div>
-                      <p className="text-xs text-[var(--text-secondary)]">{t('rules.showInLeaderboardDesc')}</p>
+                    {/* Switch: appear on the community leaderboard (opt-in) */}
+                    <div className="p-4 rounded-[var(--radius-md,6px)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex items-center justify-between gap-4">
+                      <div className="space-y-0.5">
+                        <div className="text-xs font-semibold text-[var(--text-primary)]">{t('rules.showInLeaderboard')}</div>
+                        <p className="text-xs text-[var(--text-secondary)]">{t('rules.showInLeaderboardDesc')}</p>
+                      </div>
+                      <Switch
+                        checked={showInLeaderboard}
+                        onChange={setShowInLeaderboard}
+                        ariaLabel={t('rules.showInLeaderboard')}
+                      />
                     </div>
-                    <Switch
-                      checked={showInLeaderboard}
-                      onChange={setShowInLeaderboard}
-                      ariaLabel={t('rules.showInLeaderboard')}
-                    />
-                  </div>
 
-                  {/* Tracker Preferido */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[var(--text-secondary)]">{t('rules.preferredTracker')}</label>
-                    <CustomSelect
-                      value={preferredTracker}
-                      onChange={setPreferredTracker}
-                      accentColor="emerald"
-                      options={[
-                        { value: 'BOTH', label: t('rules.engineDual') },
-                        { value: 'ANILIST', label: t('rules.engineAniListOnly') },
-                        { value: 'MAL', label: t('rules.engineMalOnly') },
-                        { value: 'KITSU', label: t('rules.engineKitsuOnly') },
-                      ]}
-                    />
-                  </div>
+                    {/* Tracker Preferido */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-[var(--text-secondary)]">{t('rules.preferredTracker')}</label>
+                      <CustomSelect
+                        value={preferredTracker}
+                        onChange={setPreferredTracker}
+                        accentColor="emerald"
+                        options={[
+                          { value: 'BOTH', label: t('rules.engineDual') },
+                          { value: 'ANILIST', label: t('rules.engineAniListOnly') },
+                          { value: 'MAL', label: t('rules.engineMalOnly') },
+                          { value: 'KITSU', label: t('rules.engineKitsuOnly') },
+                        ]}
+                      />
+                    </div>
+                  </fieldset>
 
-                  <button
-                    type="submit"
-                    disabled={savingPreferences}
-                    className="btn-primary w-full py-2.5"
-                  >
-                    {savingPreferences ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    <span>{t('rules.saveRules')}</span>
-                  </button>
+                  <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                    {!editing ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditing(true);
+                          setTimeout(() => firstFieldRef.current?.focus(), 50);
+                        }}
+                        className="btn-secondary w-full sm:w-auto px-4 py-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>{t('common.edit')}</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleCancelPreferences}
+                        disabled={savingPreferences}
+                        className="btn-secondary w-full sm:w-auto px-4 py-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>{t('common.cancel')}</span>
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={!editing || savingPreferences}
+                      className="btn-primary w-full sm:w-auto px-4 py-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {savingPreferences ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      <span>{t('rules.saveRules')}</span>
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>

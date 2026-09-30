@@ -306,7 +306,7 @@ export default async function RootLayout({
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
-              "try{var s=localStorage.getItem('plexsync_selected_theme');var t=s==='claro'?'light':(localStorage.getItem('plexsync_theme')||'dark');document.documentElement.setAttribute('data-theme',t);var l=localStorage.getItem('plexsync_locale');if(l==='es'||l==='en'){document.documentElement.lang=l;}}catch(e){}",
+              "try{var s=localStorage.getItem('plexsync_selected_theme');var t=s==='claro'?'light':(localStorage.getItem('plexsync_theme')||'dark');document.documentElement.setAttribute('data-theme',t);var p=localStorage.getItem('plexsync_palette');p={'discord-dark':'grafito','discord-ash':'carbon','discord-light':'marfil'}[p]||p;if(p){document.documentElement.setAttribute('data-palette',p);}var l=localStorage.getItem('plexsync_locale');if(l==='es'||l==='en'){document.documentElement.lang=l;}}catch(e){}",
           }}
         />
       </body>

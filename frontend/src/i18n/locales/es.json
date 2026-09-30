@@ -2,6 +2,7 @@
   "common": {
     "save": "Guardar",
     "saved": "Guardado correctamente",
+    "edit": "Editar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "confirm": "Confirmar",
@@ -560,7 +561,7 @@
     "emergencyCodesEnabled": "¡Códigos de Emergencia Activados!",
     "emergencyCodesEnabledDesc": "Tus 8 códigos de recuperación han sido cifrados y guardados en tu cuenta. Ahora podrás recuperar tu acceso en cualquier momento desde la pantalla de recuperación de contraseña.",
     "understoodAndClose": "Entendido y Cerrar",
-    "minSixChars": "Mínimo 6 caracteres",
+    "minTwelveChars": "Mínimo 12 caracteres",
     "copySecretKey": "Copiar clave secreta",
     "enterSixDigitCode": "Ingresa código de 6 dígitos",
     "sixDigitCode": "Código de 6 dígitos",
@@ -1700,7 +1701,8 @@
     "liveSyncingNow": "Sincronizando (última hora)",
     "liveNobodyOnline": "Nadie en la web ahora mismo.",
     "liveNothingSyncing": "Ningún episodio sincronizado en la última hora.",
-    "liveAnonymous": "+ {n} visitante sin cuenta | + {n} visitantes sin cuenta",
+    "liveAnonymous": "{n} visitante sin cuenta | {n} visitantes sin cuenta",
+    "liveAnonymousHint": "Navegando sin iniciar sesión",
     "liveEpisode": "T{season} E{episode}",
     "visitorsToday": "Visitantes hoy",
     "visitsRange": "7 días: {week} · 30 días: {month}"

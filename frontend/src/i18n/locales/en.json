@@ -2,6 +2,7 @@
   "common": {
     "save": "Save",
     "saved": "Successfully saved",
+    "edit": "Edit",
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
@@ -560,7 +561,7 @@
     "emergencyCodesEnabled": "Emergency codes enabled",
     "emergencyCodesEnabledDesc": "Your 8 recovery codes have been encrypted and saved to your account. You can now recover your access at any time.",
     "understoodAndClose": "Understood, close",
-    "minSixChars": "At least 6 characters",
+    "minTwelveChars": "At least 12 characters",
     "copySecretKey": "Copy secret key",
     "enterSixDigitCode": "Enter the 6-digit code",
     "sixDigitCode": "6-digit code",
@@ -1700,7 +1701,8 @@
     "liveSyncingNow": "Syncing (last hour)",
     "liveNobodyOnline": "Nobody on the site right now.",
     "liveNothingSyncing": "No episodes synced in the last hour.",
-    "liveAnonymous": "+ {n} visitor without an account | + {n} visitors without an account",
+    "liveAnonymous": "{n} visitor without an account | {n} visitors without an account",
+    "liveAnonymousHint": "Browsing without signing in",
     "liveEpisode": "S{season} E{episode}",
     "visitorsToday": "Visitors today",
     "visitsRange": "7 days: {week} · 30 days: {month}"

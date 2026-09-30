@@ -283,11 +283,11 @@ export default function SettingsPage() {
   };
 
   // Guardar Datos de Cuenta (Username / Email)
-  const handleSaveAccount = async (e: React.FormEvent) => {
+  const handleSaveAccount = async (e: React.FormEvent): Promise<boolean> => {
     e.preventDefault();
     if (!username.trim()) {
       showToast(t('settings.usernameCannotBeEmpty'), 'error');
-      return;
+      return false;
     }
 
     try {
@@ -301,8 +301,10 @@ export default function SettingsPage() {
       });
       showToast(t('settings.accountDataUpdated'), 'success');
       loadData();
+      return true;
     } catch (e: any) {
       showToast(e.message || t('settings.updateAccountError'), 'error');
+      return false;
     } finally {
       setSavingAccount(false);
     }

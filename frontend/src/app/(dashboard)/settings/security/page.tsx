@@ -330,19 +330,19 @@ export default function SecuritySettingsPage() {
     }
   };
 
-  const handleSavePassword = async (e: React.FormEvent) => {
+  const handleSavePassword = async (e: React.FormEvent): Promise<boolean> => {
     e.preventDefault();
     if (!currentPassword || !newPassword) {
       showToast(t('security.enterCurrentAndNew'), 'error');
-      return;
+      return false;
     }
     if (newPassword.length < 12) {
       showToast(t('auth.newPasswordMinLength'), 'error');
-      return;
+      return false;
     }
     if (newPassword !== confirmPassword) {
       showToast(t('auth.passwordsDoNotMatch'), 'error');
-      return;
+      return false;
     }
 
     try {
@@ -353,8 +353,10 @@ export default function SecuritySettingsPage() {
       setNewPassword('');
       setConfirmPassword('');
       router.replace('/login');
+      return true;
     } catch (e: any) {
       showToast(e.message || t('security.updatePasswordError'), 'error');
+      return false;
     } finally {
       setSavingPassword(false);
     }

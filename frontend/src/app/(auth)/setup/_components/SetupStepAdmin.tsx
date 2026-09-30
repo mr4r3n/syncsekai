@@ -59,7 +59,7 @@ export function SetupStepAdmin({
                       <input
                         type="password"
                         required
-                        placeholder={t('security.minSixChars')}
+                        placeholder={t('security.minTwelveChars')}
                         value={formData.adminPassword}
                         onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
                         className="glass-input text-xs"

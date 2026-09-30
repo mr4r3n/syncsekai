@@ -297,6 +297,16 @@
   --color-brand-primary: #01BCF3;
   --color-brand-hover: #00A7DA;
   
+  /* Glassmorphism System Tokens */
+  --glass-bg: rgba(43, 45, 49, 0.70);
+  --glass-bg-subtle: rgba(43, 45, 49, 0.45);
+
+  /* Solid Popovers and Dropdowns */
+  --popover-solid-bg: #2b2d31;
+  --popover-solid-header: #1e1f22;
+  --popover-solid-item-unread: #313338;
+  --popover-solid-item-hover: #35373c;
+  
   --btn-primary-bg: #01BCF3;
   /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */
   --btn-primary-text: #0A0A0A;
@@ -366,6 +376,16 @@
   
   --color-brand-primary: #01BCF3;
   --color-brand-hover: #00A7DA;
+  
+  /* Glassmorphism System Tokens */
+  --glass-bg: rgba(30, 31, 34, 0.70);
+  --glass-bg-subtle: rgba(30, 31, 34, 0.45);
+
+  /* Solid Popovers and Dropdowns */
+  --popover-solid-bg: #1e1f22;
+  --popover-solid-header: #141517;
+  --popover-solid-item-unread: #232428;
+  --popover-solid-item-hover: #2b2d31;
   
   --btn-primary-bg: #01BCF3;
   /* In white it was 2.21:1, the worst of the three themes. In dark, 9.5:1. */

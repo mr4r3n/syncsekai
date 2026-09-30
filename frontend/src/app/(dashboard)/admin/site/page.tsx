@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Loader2, Save, RotateCcw, Upload, Trash2 } from 'lucide-react';
+import { Globe, Loader2, Save, RotateCcw, Upload, Trash2, Pencil, X } from 'lucide-react';
 import { Topbar } from '@/components/Topbar';
 import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
@@ -41,6 +41,8 @@ export default function SiteSettingsPage() {
   const [uploadingIcon, setUploadingIcon] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const firstInputRef = useRef<HTMLInputElement>(null);
   // Touched only; untouched fields are not sent.
   const [changes, setChanges] = useState<Record<string, string>>({});
 
@@ -71,12 +73,23 @@ export default function SiteSettingsPage() {
 
   const changeCount = Object.keys(changes).length;
 
+  const handleStartEditing = () => {
+    setEditing(true);
+    setTimeout(() => firstInputRef.current?.focus(), 0);
+  };
+
+  const handleCancel = () => {
+    setChanges({});
+    setEditing(false);
+  };
+
   const save = async () => {
     try {
       setSaving(true);
       const res = await api.admin.updateSiteSettings(changes);
       showToast(`${t('siteSettings.saved')} (${res.updated.length})`, 'success');
       setChanges({});
+      setEditing(false);
       await load();
     } catch (e: any) {
       showToast(e.message, 'error');
@@ -134,18 +147,43 @@ export default function SiteSettingsPage() {
             </div>
             <p className="text-xs text-[var(--text-secondary)] mt-1">{t('siteSettings.subtitle')}</p>
           </div>
-          <button
-            type="button"
-            onClick={save}
-            disabled={changeCount === 0 || loading || saving}
-            className="btn-primary shrink-0 w-full sm:w-auto justify-center disabled:opacity-40 disabled:cursor-default"
-          >
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Save className="w-3.5 h-3.5" aria-hidden="true" />}
-            <span>
-              {t('siteSettings.save')}
-              {changeCount > 0 ? ` (${changeCount})` : ''}
-            </span>
-          </button>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
+            {editing ? (
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={loading || saving}
+                className="btn-secondary w-full sm:w-auto justify-center"
+              >
+                <X className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{t('common.cancel')}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleStartEditing}
+                disabled={loading}
+                className="btn-secondary w-full sm:w-auto justify-center"
+              >
+                <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{t('common.edit')}</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={save}
+              disabled={!editing || changeCount === 0 || loading || saving}
+              className="btn-primary w-full sm:w-auto justify-center disabled:opacity-40 disabled:cursor-default"
+            >
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Save className="w-3.5 h-3.5" aria-hidden="true" />}
+              <span>
+                {t('siteSettings.save')}
+                {changeCount > 0 ? ` (${changeCount})` : ''}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -158,136 +196,145 @@ export default function SiteSettingsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {GROUPS.map((group) => {
-              const inGroup = settings.filter((a) => FIELDS[a.key]?.group === group);
-              if (inGroup.length === 0) return null;
-              return (
-                <section key={group} className="glass-card p-5 sm:p-6 space-y-5">
-                  <div className="pb-3 border-b border-[var(--glass-border)]">
-                    <h2 className="text-sm font-bold font-heading">{t(`siteSettings.group.${group}`)}</h2>
-                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{t(`siteSettings.groupHint.${group}`)}</p>
-                  </div>
-
-                  {group === 'identidad' && (
-                    <div className="flex items-center gap-4">
-                      {/* Version query in URL forces browser cache bust on upload. */}
-                      <img
-                        src={`/logo.webp?v=${iconVersion || 'serie'}`}
-                        alt=""
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] object-cover shrink-0"
-                      />
-                      <div className="min-w-0 space-y-1.5">
-                        <p className="text-xs font-medium text-[var(--text-secondary)]">{t('siteSettings.icon')}</p>
-                        <p className="text-[11px] text-[var(--text-muted)]">{t('siteSettings.iconHint')}</p>
-                        <div className="flex items-center gap-2 pt-0.5">
-                          <label className="btn-secondary text-xs cursor-pointer">
-                            {uploadingIcon ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Upload className="w-3.5 h-3.5" aria-hidden="true" />}
-                            <span>{t('siteSettings.iconUpload')}</span>
-                            <input
-                              type="file"
-                              accept="image/png,image/jpeg,image/webp"
-                              className="sr-only"
-                              disabled={uploadingIcon}
-                              onChange={(e) => {
-                                uploadIcon(e.target.files?.[0]);
-                                e.target.value = '';
-                              }}
-                            />
-                          </label>
-                          {iconVersion && (
-                            <button type="button" onClick={resetIcon} className="btn-secondary text-xs text-[var(--status-danger)]">
-                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                              <span>{t('siteSettings.iconReset')}</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
+            <fieldset disabled={!editing} className="contents">
+              {GROUPS.map((group) => {
+                const inGroup = settings.filter((a) => FIELDS[a.key]?.group === group);
+                if (inGroup.length === 0) return null;
+                return (
+                  <section key={group} className="glass-card p-5 sm:p-6 space-y-5">
+                    <div className="pb-3 border-b border-[var(--glass-border)]">
+                      <h2 className="text-sm font-bold font-heading">{t(`siteSettings.group.${group}`)}</h2>
+                      <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{t(`siteSettings.groupHint.${group}`)}</p>
                     </div>
-                  )}
 
-                  {inGroup.map((a) => {
-                    const field = FIELDS[a.key];
-                    const valor = valueOf(a);
-                    const changed = a.key in changes;
-                    const touch = (v: string) => setChanges((prev) => ({ ...prev, [a.key]: v }));
-
-                    return (
-                      <div key={a.key} className="space-y-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <label htmlFor={`ajuste-${a.key}`} className="text-xs font-medium text-[var(--text-secondary)]">
-                            {t(`siteSettings.field.${a.key}`)}
-                          </label>
-                          {field.type !== 'switch' && valor && valor !== a.defaultValue && a.defaultValue && (
-                            <button
-                              type="button"
-                              onClick={() => touch('')}
-                              className="text-[10.5px] font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1 cursor-pointer"
-                            >
-                              <RotateCcw className="w-3 h-3" aria-hidden="true" />
-                              {t('siteSettings.useDefault')}
-                            </button>
-                          )}
-                        </div>
-
-                        {field.type === 'switch' ? (
-                          <label className="flex items-center gap-3 cursor-pointer select-none">
-                            <input
-                              id={`ajuste-${a.key}`}
-                              type="checkbox"
-                              checked={(valor || a.defaultValue) !== 'false'}
-                              onChange={(e) => touch(e.target.checked ? 'true' : 'false')}
-                              className="w-4 h-4 accent-[var(--accent-primary)]"
-                            />
-                            <span className="text-sm">
-                              {(valor || a.defaultValue) !== 'false'
-                                ? t('siteSettings.registrationOpen')
-                                : t('siteSettings.registrationClosed')}
-                            </span>
-                          </label>
-                        ) : field.type === 'textarea' ? (
-                          <textarea
-                            id={`ajuste-${a.key}`}
-                            rows={3}
-                            maxLength={a.maxLength}
-                            value={valor}
-                            placeholder={a.defaultValue}
-                            onChange={(e) => touch(e.target.value)}
-                            className="glass-input text-sm resize-y"
-                          />
-                        ) : (
-                          <input
-                            id={`ajuste-${a.key}`}
-                            type={field.type === 'email' ? 'email' : 'text'}
-                            maxLength={a.maxLength}
-                            value={valor}
-                            placeholder={a.defaultValue || t('siteSettings.empty')}
-                            onChange={(e) => touch(e.target.value)}
-                            className="glass-input text-sm"
-                          />
-                        )}
-
-                        <div className="flex items-center justify-between gap-2 text-[10.5px] font-mono text-[var(--text-muted)]">
-                          <span>
-                            {changed
-                              ? t('siteSettings.unsaved')
-                              : a.updatedAt && a.value
-                                ? t('siteSettings.changedOn', { date: date(a.updatedAt) })
-                                : t('siteSettings.usingDefault')}
-                          </span>
-                          {field.type !== 'switch' && (
-                            <span className={valor.length > a.maxLength * 0.9 ? 'text-[var(--status-warning)]' : ''}>
-                              {valor.length}/{a.maxLength}
-                            </span>
-                          )}
+                    {group === 'identidad' && (
+                      <div className="flex items-center gap-4">
+                        {/* Version query in URL forces browser cache bust on upload. */}
+                        <img
+                          src={`/logo.webp?v=${iconVersion || 'serie'}`}
+                          alt=""
+                          width={64}
+                          height={64}
+                          className="w-16 h-16 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] object-cover shrink-0"
+                        />
+                        <div className="min-w-0 space-y-1.5">
+                          <p className="text-xs font-medium text-[var(--text-secondary)]">{t('siteSettings.icon')}</p>
+                          <p className="text-[11px] text-[var(--text-muted)]">{t('siteSettings.iconHint')}</p>
+                          <div className="flex items-center gap-2 pt-0.5">
+                            <label className={`btn-secondary text-xs ${!editing ? 'opacity-40 pointer-events-none' : 'cursor-pointer'}`}>
+                              {uploadingIcon ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Upload className="w-3.5 h-3.5" aria-hidden="true" />}
+                              <span>{t('siteSettings.iconUpload')}</span>
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                className="sr-only"
+                                disabled={uploadingIcon}
+                                onChange={(e) => {
+                                  uploadIcon(e.target.files?.[0]);
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                            {iconVersion && (
+                              <button
+                                type="button"
+                                onClick={resetIcon}
+                                disabled={!editing}
+                                className="btn-secondary text-xs text-[var(--status-danger)] disabled:opacity-40 disabled:pointer-events-none"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                <span>{t('siteSettings.iconReset')}</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </section>
-              );
-            })}
+                    )}
+
+                    {inGroup.map((a) => {
+                      const field = FIELDS[a.key];
+                      const valor = valueOf(a);
+                      const changed = a.key in changes;
+                      const touch = (v: string) => setChanges((prev) => ({ ...prev, [a.key]: v }));
+
+                      return (
+                        <div key={a.key} className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <label htmlFor={`ajuste-${a.key}`} className="text-xs font-medium text-[var(--text-secondary)]">
+                              {t(`siteSettings.field.${a.key}`)}
+                            </label>
+                            {field.type !== 'switch' && valor && valor !== a.defaultValue && a.defaultValue && (
+                              <button
+                                type="button"
+                                onClick={() => touch('')}
+                                disabled={!editing}
+                                className="text-[10.5px] font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                              >
+                                <RotateCcw className="w-3 h-3" aria-hidden="true" />
+                                {t('siteSettings.useDefault')}
+                              </button>
+                            )}
+                          </div>
+
+                          {field.type === 'switch' ? (
+                            <label className={`flex items-center gap-3 select-none ${editing ? 'cursor-pointer' : 'cursor-default opacity-80'}`}>
+                              <input
+                                id={`ajuste-${a.key}`}
+                                type="checkbox"
+                                checked={(valor || a.defaultValue) !== 'false'}
+                                onChange={(e) => touch(e.target.checked ? 'true' : 'false')}
+                                className="w-4 h-4 accent-[var(--accent-primary)]"
+                              />
+                              <span className="text-sm">
+                                {(valor || a.defaultValue) !== 'false'
+                                  ? t('siteSettings.registrationOpen')
+                                  : t('siteSettings.registrationClosed')}
+                              </span>
+                            </label>
+                          ) : field.type === 'textarea' ? (
+                            <textarea
+                              id={`ajuste-${a.key}`}
+                              rows={3}
+                              maxLength={a.maxLength}
+                              value={valor}
+                              placeholder={a.defaultValue}
+                              onChange={(e) => touch(e.target.value)}
+                              className="glass-input text-sm resize-y"
+                            />
+                          ) : (
+                            <input
+                              ref={a.key === 'SITE_NAME' ? firstInputRef : undefined}
+                              id={`ajuste-${a.key}`}
+                              type={field.type === 'email' ? 'email' : 'text'}
+                              maxLength={a.maxLength}
+                              value={valor}
+                              placeholder={a.defaultValue || t('siteSettings.empty')}
+                              onChange={(e) => touch(e.target.value)}
+                              className="glass-input text-sm"
+                            />
+                          )}
+
+                          <div className="flex items-center justify-between gap-2 text-[10.5px] font-mono text-[var(--text-muted)]">
+                            <span>
+                              {changed
+                                ? t('siteSettings.unsaved')
+                                : a.updatedAt && a.value
+                                  ? t('siteSettings.changedOn', { date: date(a.updatedAt) })
+                                  : t('siteSettings.usingDefault')}
+                            </span>
+                            {field.type !== 'switch' && (
+                              <span className={valor.length > a.maxLength * 0.9 ? 'text-[var(--status-warning)]' : ''}>
+                                {valor.length}/{a.maxLength}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </section>
+                );
+              })}
+            </fieldset>
             <FooterLinksPanel />
           </div>
         )}

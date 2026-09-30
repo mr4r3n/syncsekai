@@ -32,8 +32,8 @@ function getNestedValue(obj: any, path: string): string | undefined {
 }
 
 /**
- * Default language is English, not inferred from browser: only
- * changes when selected by user via toggle.
+ * The language picked with the toggle wins; until then, the browser's
+ * language (any Spanish variant → Spanish, anything else → English).
  */
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en');
@@ -58,7 +58,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      document.documentElement.lang = 'en';
+      // No choice yet: follow the browser's first Spanish or English language (es-PE, es-419… → Spanish),
+      // without saving it.
+      const preferred = (navigator.languages?.length ? navigator.languages : [navigator.language])
+        .map((l) => l?.toLowerCase().match(/^(es|en)(-|$)/)?.[1])
+        .find(Boolean);
+      const browserLocale: Locale = preferred === 'es' ? 'es' : 'en';
+      setLocaleState(browserLocale);
+      document.documentElement.lang = browserLocale;
     } catch {
       // Without available storage, remains English, which is initial state.
     }

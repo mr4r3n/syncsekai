@@ -1,6 +1,6 @@
 'use client';
 
-import { Radio, RefreshCw, Monitor } from 'lucide-react';
+import { Radio, RefreshCw, Monitor, UserRound } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface OnlineUser {
@@ -79,15 +79,15 @@ export function LiveActivity({ activity, loading }: { activity?: LiveActivityDat
     </div>
   );
 
-  const row = (key: string, username: string, avatarUrl: string | null, detail: React.ReactNode, time: string) => (
-    <li key={key} className="flex items-center gap-3 rounded-[6px] px-2.5 py-2 bg-[var(--bg-app)]/40 text-xs min-w-0">
-      {avatar(username, avatarUrl)}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="font-semibold text-[var(--text-primary)] truncate">@{username}</span>
-          <span className="font-mono text-[10px] text-[var(--text-muted)] shrink-0">{time}</span>
+  const row = (key: string, pic: React.ReactNode, name: string, detail: React.ReactNode, time?: string) => (
+    <li key={key} className="flex items-center gap-3 rounded-[6px] px-3 py-2.5 bg-[var(--bg-app)]/40 text-xs min-w-0">
+      {pic}
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex items-baseline justify-between gap-2 leading-tight">
+          <span className="font-semibold text-[var(--text-primary)] truncate">{name}</span>
+          {time && <span className="font-mono text-[10px] text-[var(--text-muted)] shrink-0">{time}</span>}
         </div>
-        <div className="text-[11px] text-[var(--text-muted)] truncate">{detail}</div>
+        <div className="text-[11px] leading-tight text-[var(--text-muted)] truncate">{detail}</div>
       </div>
     </li>
   );
@@ -113,8 +113,8 @@ export function LiveActivity({ activity, loading }: { activity?: LiveActivityDat
             {online.map((u) =>
               row(
                 u.username,
-                u.username,
-                u.avatarUrl,
+                avatar(u.username, u.avatarUrl),
+                `@${u.username}`,
                 <span className="inline-flex items-center gap-1">
                   <Monitor className="w-3 h-3 shrink-0" aria-hidden="true" />
                   {u.device}
@@ -122,9 +122,15 @@ export function LiveActivity({ activity, loading }: { activity?: LiveActivityDat
                 ago(u.lastActiveAt),
               ),
             )}
-            {anonymous > 0 && (
-              <li className="col-span-full px-2.5 text-[11px] text-[var(--text-muted)]">{t('admin.liveAnonymous', { n: anonymous })}</li>
-            )}
+            {anonymous > 0 &&
+              row(
+                'anonymous',
+                <span className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)]">
+                  <UserRound className="w-3.5 h-3.5" aria-hidden="true" />
+                </span>,
+                t('admin.liveAnonymous', { n: anonymous }),
+                t('admin.liveAnonymousHint'),
+              )}
           </>,
           online.length + anonymous > 0,
         )}
@@ -138,8 +144,8 @@ export function LiveActivity({ activity, loading }: { activity?: LiveActivityDat
             {syncing.map((s) =>
               row(
                 s.username,
-                s.username,
-                s.avatarUrl,
+                avatar(s.username, s.avatarUrl),
+                `@${s.username}`,
                 <>
                   {s.title} · {t('admin.liveEpisode', { season: s.season, episode: s.episode })}
                 </>,

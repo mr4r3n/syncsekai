@@ -40,6 +40,15 @@ export interface PlexServerResource {
   }>;
 }
 
+/** Certificate hash in a plex.direct host name: the same server, whatever its IP. */
+export function plexDirectHash(url: string): string | null {
+  try {
+    return /\.([a-f0-9]{32})\.plex\.direct$/i.exec(new URL(url).hostname)?.[1].toLowerCase() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Plex connection: PIN, manual token, servers and libraries. */
 @Injectable()
 export class PlexService {
@@ -230,9 +239,55 @@ export class PlexService {
   }
 
   /**
-   * Lists the servers available on the user's Plex account.
+   * Where, and with which token, a user's Plex server answers today. Everything that
+   * talks to a user's server goes through here.
+   *
+   * The stored token of a PIN link is the account token: it opens the user's whole
+   * Plex account, so it never goes to a server, which may be someone else's machine
+   * shared with them. plex.tv gives the server's own access token instead, and its
+   * current addresses (the stored plex.direct address has the server's IP inside, and
+   * home IPs change). The server is the one whose plex.direct name carries the same
+   * certificate hash. Only https addresses (the token travels in a header), direct
+   * ones before the relay (which works with no open ports, only slower).
+   *
+   * - `{ url, token }`: use these.
+   * - `'stored-token'`: the stored token is not an account token (plex.tv refuses it, or
+   *   the URL was typed in by hand): it was given for that server, use it there.
+   * - `null`: nothing safe to use now (plex.tv down, server gone or offline).
+   */
+  async findServerAccess(
+    serverUrl: string,
+    encryptedToken: string,
+  ): Promise<{ url: string; token: string } | 'stored-token' | null> {
+    const hash = plexDirectHash(serverUrl);
+    if (!hash) return 'stored-token';
+    const resources = await this.loadResources(this.encryptionService.decrypt(encryptedToken));
+    if (resources === 'refused') return 'stored-token';
+    if (resources === 'unavailable') return null;
+    const server = resources.find((s) => s.connections.some((c) => plexDirectHash(c.uri) === hash));
+    if (!server?.accessToken) return null;
+    const candidates = server.connections
+      .filter((c) => c.uri?.startsWith('https://'))
+      .sort((a, b) => Number(a.relay) - Number(b.relay));
+    for (const c of candidates) {
+      // A relay that has not been used for a while takes several seconds to open its
+      // tunnel (measured: 3 s timed out, then 0.3 s per request once open).
+      const libraries = await this.fetchLibrariesFromPMS(c.uri, server.accessToken, c.relay ? 10_000 : 3000);
+      if (libraries.length > 0) return { url: c.uri, token: server.accessToken };
+    }
+    return null;
+  }
+
+  /**
+   * Lists the servers available on the user's Plex account ([] if plex.tv does not answer).
    */
   async getResources(token: string): Promise<PlexServerResource[]> {
+    const resources = await this.loadResources(token);
+    return Array.isArray(resources) ? resources : [];
+  }
+
+  /** The servers, or why there are none: plex.tv refuses the token, or does not answer. */
+  private async loadResources(token: string): Promise<PlexServerResource[] | 'refused' | 'unavailable'> {
     try {
       const res = await axios.get(
         'https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=1&includeIPv6=1',
@@ -251,7 +306,8 @@ export class PlexService {
           servers.push({
             name: r.name || 'Plex Media Server',
             clientIdentifier: r.clientIdentifier,
-            accessToken: r.accessToken || token,
+            // A shared server only ever gets its own token, never the account token.
+            accessToken: r.accessToken || (r.owned ? token : ''),
             owned: !!r.owned,
             connections: Array.isArray(r.connections)
               ? r.connections.map((c: any) => ({
@@ -270,15 +326,16 @@ export class PlexService {
 
       return servers;
     } catch (e: any) {
+      if (e.response?.status === 401) return 'refused';
       this.logger.warn(`Error querying resources on Plex.tv: ${e.message}`);
-      return [];
+      return 'unavailable';
     }
   }
 
   /**
    * Reads the real sections directly from a Plex Media Server (/library/sections).
    */
-  async fetchLibrariesFromPMS(serverUrl: string, token: string): Promise<PlexLibraryItem[]> {
+  async fetchLibrariesFromPMS(serverUrl: string, token: string, timeoutMs = 3000): Promise<PlexLibraryItem[]> {
     if (!serverUrl || !token) return [];
 
     let endpoint = serverUrl;
@@ -288,7 +345,7 @@ export class PlexService {
       endpoint = `${target.url}/library/sections`;
       const response = await axios.get(endpoint, {
         headers: this.getPlexHeaders(token),
-        timeout: 3000,
+        timeout: timeoutMs,
         maxRedirects: 2,
         maxContentLength: 2 * 1024 * 1024,
         httpAgent: target.httpAgent,
@@ -353,7 +410,8 @@ export class PlexService {
     const candidateServers = ownedServers.length > 0 ? ownedServers : servers;
 
     for (const server of candidateServers) {
-      const serverToken = server.accessToken || token;
+      const serverToken = server.accessToken;
+      if (!serverToken) continue;
       // Try connections in order (prefer direct https and local)
       const sortedConns = [...(server.connections || [])].sort((a, b) => {
         if (a.protocol === 'https' && b.protocol !== 'https') return -1;
@@ -490,8 +548,18 @@ export class PlexService {
     const token = this.encryptionService.decrypt(conn.encryptedAuthToken);
     let libraries: PlexLibraryItem[] = [];
 
+    // The same server first, at its current address with the token it takes (see
+    // findServerAccess); only then whatever server the account has.
     if (conn.serverUrl) {
-      libraries = await this.fetchLibrariesFromPMS(conn.serverUrl, token);
+      const access = await this.findServerAccess(conn.serverUrl, conn.encryptedAuthToken).catch(() => null);
+      if (access === 'stored-token') {
+        libraries = await this.fetchLibrariesFromPMS(conn.serverUrl, token);
+      } else if (access) {
+        libraries = await this.fetchLibrariesFromPMS(access.url, access.token);
+        if (access.url !== conn.serverUrl) {
+          await this.prisma.plexConnection.update({ where: { userId }, data: { serverUrl: access.url } });
+        }
+      }
     }
 
     if (libraries.length === 0) {
@@ -570,9 +638,14 @@ export class PlexService {
       throw new NotFoundException('Plex connection not found.');
     }
 
-    const token = this.encryptionService.decrypt(conn.encryptedAuthToken);
     const cleanUrl = await this.validateUserServerUrl(serverUrl);
-    const libraries = await this.fetchLibrariesFromPMS(cleanUrl, token);
+    const access = await this.findServerAccess(cleanUrl, conn.encryptedAuthToken).catch(() => null);
+    const libraries =
+      access === 'stored-token'
+        ? await this.fetchLibrariesFromPMS(cleanUrl, this.encryptionService.decrypt(conn.encryptedAuthToken))
+        : access
+          ? await this.fetchLibrariesFromPMS(cleanUrl, access.token)
+          : [];
 
     await this.prisma.plexConnection.update({
       where: { userId },

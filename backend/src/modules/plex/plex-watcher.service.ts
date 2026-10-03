@@ -3,12 +3,18 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 
 import axios from 'axios';
-import { PlexService } from './plex.service';
+import { PlexService, plexDirectHash } from './plex.service';
 import { PlexWebhookService } from './plex-webhook.service';
 import { recordActivity } from '../../common/logging/activity-log';
 
-/** host:port of a server URL: the same Plex reached through the same address is one server. */
+/**
+ * One Plex server, whatever address reaches it: the plex.direct certificate hash when
+ * there is one (the local, public and relay addresses of a server share it), host:port
+ * otherwise.
+ */
 export function serverOf(serverUrl: string): string {
+  const hash = plexDirectHash(serverUrl);
+  if (hash) return hash;
   try {
     return new URL(serverUrl).host;
   } catch {
@@ -34,6 +40,11 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
   private intervalRef: NodeJS.Timeout | null = null;
   private readonly sessionsMap = new Map<string, TrackedSession>();
   private isPolling = false;
+  // ponytail: per-connection state in memory; after a restart each connection looks its
+  // server up again on its first poll. A column if it ever needs to survive restarts.
+  private readonly failures = new Map<string, number>();
+  private readonly lastLookup = new Map<string, number>();
+  private readonly serverTokens = new Map<string, string>();
 
   constructor(
     private prisma: PrismaService,
@@ -93,12 +104,10 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
     const user = conn.user;
     if (!user) return;
 
-    let token = '';
-    try {
-      token = this.encryptionService.decrypt(conn.encryptedAuthToken);
-    } catch {
-      return;
-    }
+    // The token comes from findServerAccess before anything is sent: the stored one is
+    // the account token for PIN links, and a server shared with the user never gets it.
+    const token = this.serverTokens.get(conn.id) || (await this.lookUpServer(conn));
+    if (!token) return;
 
     try {
       const target = await this.plexService.validateUserServerTarget(conn.serverUrl);
@@ -114,6 +123,7 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
         httpsAgent: target.httpsAgent,
       });
 
+      this.failures.delete(conn.id);
       const rawSessions: any[] = res.data?.MediaContainer?.Metadata || [];
       const currentKeys = new Set<string>();
       // Plex numbers sessions per server (1, 2, 3…), so the key carries the server too. It is
@@ -285,7 +295,53 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
         }
       }
     } catch {
-      // PMS session query timeout or temporary network issue
+      // Timeout, network error or a token the server refuses.
+      this.noteFailure(conn.id);
     }
+  }
+
+  /** Three failed polls in a row: forget the token, so the next poll looks the server up again. */
+  private noteFailure(connId: string) {
+    const failures = (this.failures.get(connId) || 0) + 1;
+    if (failures < 3) {
+      this.failures.set(connId, failures);
+      return;
+    }
+    this.failures.delete(connId);
+    this.serverTokens.delete(connId);
+  }
+
+  /**
+   * Where the server is now and which token it takes (PlexService.findServerAccess), at
+   * most every 10 minutes per connection. A new address is saved; the token stays in memory.
+   */
+  private async lookUpServer(conn: any): Promise<string | undefined> {
+    if (Date.now() - (this.lastLookup.get(conn.id) || 0) < 10 * 60_000) return undefined;
+    this.lastLookup.set(conn.id, Date.now());
+
+    const access = await this.plexService.findServerAccess(conn.serverUrl, conn.encryptedAuthToken).catch(() => null);
+    if (!access) return undefined;
+    if (access === 'stored-token') {
+      try {
+        const stored = this.encryptionService.decrypt(conn.encryptedAuthToken);
+        this.serverTokens.set(conn.id, stored);
+        return stored;
+      } catch {
+        return undefined;
+      }
+    }
+    this.serverTokens.set(conn.id, access.token);
+    if (access.url !== conn.serverUrl) {
+      await this.prisma.plexConnection.update({ where: { id: conn.id }, data: { serverUrl: access.url } });
+      await recordActivity({
+        data: {
+          level: 'INFO',
+          service: 'PLEX_WATCHER',
+          message: `@${conn.user?.username}: the Plex server answers at a new address now (plex.tv); saved.`,
+        },
+      });
+      conn.serverUrl = access.url;
+    }
+    return access.token;
   }
 }

@@ -124,11 +124,13 @@ export function ConfirmModal({
           >
             {effectiveCancelText}
           </button>
+          {/* Layout shared by every variant: the warning and success ones had none, so the
+              loading spinner sat above the text and the text was bigger than Cancel's. */}
           <button
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={`cursor-pointer disabled:opacity-50 ${style.btnClass}`}
+            className={`inline-flex items-center justify-center gap-2 text-xs cursor-pointer disabled:opacity-50 ${style.btnClass}`}
           >
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             <span>{effectiveConfirmText}</span>

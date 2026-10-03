@@ -11,6 +11,8 @@ import { readStoredSetting } from '../../common/crypto/stored-setting';
 export class MalService {
   private readonly logger = new Logger(MalService.name);
   private readonly baseUrl = 'https://api.myanimelist.net/v2';
+  // ponytail: episode totals per anime in memory (0 = unknown, airing); lost on restart.
+  private readonly episodeTotals = new Map<number, number>();
 
   constructor(
     private prisma: PrismaService,
@@ -172,6 +174,14 @@ export class MalService {
 
   /**
    * Updates status and episode through the MyAnimeList REST API v2.
+   *
+   * "watching" with the last episode is sent as "completed": MyAnimeList keeps the
+   * status it is given, so finished shows stayed in Watching.
+   *
+   * ponytail: only the exact last episode counts. A number past the total means the
+   * numbering does not match the entry (absolute numbering, a split cour, a wrong
+   * mapping): "past the total" would complete a new season on its first episode, so
+   * those keep the old behaviour. Upgrade path: episode offsets per mapping.
    */
   async updateProgress(userId: string, animeId: number, numWatchedEpisodes?: number, status = 'watching', score?: number) {
     const conn = await this.prisma.animeConnection.findUnique({
@@ -183,6 +193,11 @@ export class MalService {
     }
 
     const token = this.encryptionService.decrypt(conn.encryptedAccessToken);
+
+    if (status === 'watching' && numWatchedEpisodes) {
+      const total = await this.episodeTotal(animeId, token);
+      if (total && numWatchedEpisodes === total) status = 'completed';
+    }
 
     const body: Record<string, string> = {
       status,
@@ -211,6 +226,23 @@ export class MalService {
     } catch (e: any) {
       this.logger.error(`Error updating MAL progress for anime ${animeId}`, e?.message);
       return { success: false, error: e?.message };
+    }
+  }
+
+  /** Number of episodes of an anime on MyAnimeList (0 while unknown). */
+  private async episodeTotal(animeId: number, token: string): Promise<number> {
+    const known = this.episodeTotals.get(animeId);
+    if (known) return known;
+    try {
+      const res = await axios.get(`${this.baseUrl}/anime/${animeId}?fields=num_episodes`, {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 6000,
+      });
+      const total = Number(res.data?.num_episodes) || 0;
+      if (total) this.episodeTotals.set(animeId, total);
+      return total;
+    } catch {
+      return 0;
     }
   }
 

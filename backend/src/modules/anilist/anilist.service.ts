@@ -292,6 +292,11 @@ export class AnilistService {
 
   /**
    * Updates an anime's progress or score on AniList through a GraphQL mutation.
+   *
+   * "Watching" with the last episode becomes "Completed": the sync always sends
+   * CURRENT, and AniList keeps whatever status it is given, so finished shows stayed
+   * in Watching. The answer carries the episode total, so only the last episode
+   * costs a second save. Only the exact last episode counts (see MalService.updateProgress).
    */
   async updateProgress(userId: string, mediaId: number, progress?: number, status?: string, score?: number) {
     const conn = await this.prisma.animeConnection.findUnique({
@@ -313,30 +318,40 @@ export class AnilistService {
           status
           score
           updatedAt
+          media {
+            episodes
+          }
         }
       }
     `;
 
-    try {
+    const save = async (saveStatus?: string) => {
       const response = await axios.post(
         this.graphqlEndpoint,
         {
           query: mutation,
-          variables: { mediaId, progress, status, score },
+          variables: { mediaId, progress, status: saveStatus, score },
         },
         {
           headers: this.getHeaders(token),
           timeout: 6000,
         },
       );
-
       if (response.data?.errors) {
         const errorMsg = response.data.errors[0]?.message || 'GraphQL mutation error';
         this.logger.warn(`AniList SaveMediaListEntry error: ${errorMsg}`);
-        return { success: false, error: errorMsg };
+        return { success: false as const, error: errorMsg };
       }
+      return { success: true as const, data: response.data?.data?.SaveMediaListEntry };
+    };
 
-      return { success: true, data: response.data?.data?.SaveMediaListEntry };
+    try {
+      const saved = await save(status);
+      const total = saved.success ? saved.data?.media?.episodes : undefined;
+      if (saved.success && status === 'CURRENT' && progress && total && progress === total) {
+        return save('COMPLETED');
+      }
+      return saved;
     } catch (e: any) {
       this.logger.error(`Error updating progress on AniList for media ${mediaId}`, e.message);
       return { success: false, error: e.message };

@@ -4,6 +4,21 @@ import { PrismaService } from '../../prisma/prisma.service';
 import * as crypto from 'crypto';
 import { getRequiredSecret } from '../../common/security/required-secret';
 
+/**
+ * A path on this site, or undefined. Resolving it is what catches "/\t/evil.example":
+ * browsers drop tabs and newlines from URLs and read it as "//evil.example".
+ */
+export function safeReturnPath(raw: unknown): string | undefined {
+  if (typeof raw !== 'string' || !raw.startsWith('/')) return undefined;
+  const base = 'https://return.invalid';
+  try {
+    const url = new URL(raw, base);
+    return url.origin === base ? url.pathname + url.search + url.hash : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Signed, single-use OAuth state, bound to the browser that started the flow. */
 @Injectable()
 export class OAuthStateService {
@@ -22,9 +37,7 @@ export class OAuthStateService {
     intent: 'login' | 'link';
   }): Promise<{ state: string; txSecret: string }> {
     const secret = getRequiredSecret(this.configService, 'OAUTH_STATE_SECRET');
-    const cleanReturnTo = (payload.returnTo && payload.returnTo.startsWith('/') && !payload.returnTo.startsWith('//') && !payload.returnTo.includes(':') && !payload.returnTo.includes('\\'))
-      ? payload.returnTo
-      : '/connections';
+    const cleanReturnTo = safeReturnPath(payload.returnTo) || '/connections';
     const nonce = crypto.randomBytes(32).toString('hex');
 
     /*
@@ -130,9 +143,7 @@ export class OAuthStateService {
         where: { key: stateKey, value: stateValue },
       });
       if (consumed.count !== 1) throw new Error('OAuth state already used');
-      const cleanReturnTo = (parsed.returnTo && parsed.returnTo.startsWith('/') && !parsed.returnTo.startsWith('//') && !parsed.returnTo.includes(':') && !parsed.returnTo.includes('\\'))
-        ? parsed.returnTo
-        : '/connections';
+      const cleanReturnTo = safeReturnPath(parsed.returnTo) || '/connections';
       return {
         returnTo: cleanReturnTo,
         userId: parsed.userId ? String(parsed.userId) : undefined,

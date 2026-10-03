@@ -293,7 +293,17 @@
     "emailConfirmed": "Correo confirmado.",
     "linkInvalidOrExpiredShort": "El enlace no es válido o ha expirado.",
     "signingIn": "Iniciando sesión en SyncSekai...",
-    "authError": "Error en autenticación:",
+    "oauthErrors": {
+      "ACCESS_DENIED": "Se canceló el inicio de sesión o el proveedor denegó el acceso.",
+      "GOOGLE_NOT_CONFIGURED": "El inicio de sesión con Google no está configurado en este sitio.",
+      "DISCORD_NOT_CONFIGURED": "El inicio de sesión con Discord no está configurado en este sitio.",
+      "IDENTITY_NOT_VERIFIED": "El proveedor no confirmó un correo verificado para tu cuenta.",
+      "ACCOUNT_DEACTIVATED": "Un administrador ha desactivado tu cuenta.",
+      "ACCOUNT_SUSPENDED": "Un administrador ha suspendido tu cuenta.",
+      "REGISTRATION_CLOSED": "El registro está cerrado en este sitio.",
+      "EMAIL_DOMAIN_NOT_ALLOWED": "El dominio de tu correo no está permitido o necesita la aprobación del administrador.",
+      "SOCIAL_AUTH_FAILED": "No se pudo iniciar sesión con el proveedor. Inténtalo de nuevo."
+    },
     "socialSessionInvalid": "No se pudo validar la sesión social.",
     "verifyingSession": "Verificando sesión…",
     "sessionExpiredRedirect": "Sesión expirada. Redirigiendo a inicio de sesión…",

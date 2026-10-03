@@ -12,6 +12,26 @@ import { setOAuthTxCookie, setSessionCookie, clearOAuthTxCookie, readCookie, dev
 import { requestIp } from '../../common/security/client-ip';
 import { readStoredSetting } from '../../common/crypto/stored-setting';
 
+/**
+ * The code sent to /auth/callback when a social sign-in fails. Only fixed codes travel
+ * in the URL: the page shows its own translated text, never text taken from the URL,
+ * which anyone can write in a link.
+ *
+ * ponytail: matched on the messages AuthService and RegistrationService throw; a new
+ * message falls back to the generic code (safe, just less precise).
+ */
+export function oauthErrorCode(err: unknown): string {
+  const message = err instanceof Error ? err.message : '';
+  const codes: Array<[RegExp, string]> = [
+    [/verifiable identity/i, 'IDENTITY_NOT_VERIFIED'],
+    [/deactivated/i, 'ACCOUNT_DEACTIVATED'],
+    [/suspended/i, 'ACCOUNT_SUSPENDED'],
+    [/registration is closed/i, 'REGISTRATION_CLOSED'],
+    [/emails are not allowed|requires manual approval/i, 'EMAIL_DOMAIN_NOT_ALLOWED'],
+  ];
+  return codes.find(([pattern]) => pattern.test(message))?.[1] || 'SOCIAL_AUTH_FAILED';
+}
+
 /** Sign-in and account linking with Google and Discord (OAuth). */
 @Controller('api/auth')
 export class SocialAuthController {
@@ -138,7 +158,7 @@ export class SocialAuthController {
     const currentUserId = verifiedState.userId;
 
     if (error || !code) {
-      return res.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent(error || 'ACCESS_DENIED')}&return_to=${encodeURIComponent(targetReturnTo)}`);
+      return res.redirect(`${frontendUrl}/auth/callback?error=ACCESS_DENIED&return_to=${encodeURIComponent(targetReturnTo)}`);
     }
 
     try {
@@ -185,9 +205,9 @@ export class SocialAuthController {
       );
 
       setSessionCookie(res, accessToken);
-      return res.redirect(`${frontendUrl}/auth/callback?username=${encodeURIComponent(user.username)}&return_to=${encodeURIComponent(targetReturnTo)}`);
+      return res.redirect(`${frontendUrl}/auth/callback?return_to=${encodeURIComponent(targetReturnTo)}`);
     } catch (err: any) {
-      return res.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent(err.message || 'GOOGLE_AUTH_FAILED')}&return_to=${encodeURIComponent(targetReturnTo)}`);
+      return res.redirect(`${frontendUrl}/auth/callback?error=${oauthErrorCode(err)}&return_to=${encodeURIComponent(targetReturnTo)}`);
     }
   }
 
@@ -242,7 +262,7 @@ export class SocialAuthController {
     const currentUserId = verifiedState.userId;
 
     if (error || !code) {
-      return res.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent(error || 'ACCESS_DENIED')}&return_to=${encodeURIComponent(targetReturnTo)}`);
+      return res.redirect(`${frontendUrl}/auth/callback?error=ACCESS_DENIED&return_to=${encodeURIComponent(targetReturnTo)}`);
     }
 
     try {
@@ -293,9 +313,9 @@ export class SocialAuthController {
       );
 
       setSessionCookie(res, accessToken);
-      return res.redirect(`${frontendUrl}/auth/callback?username=${encodeURIComponent(user.username)}&return_to=${encodeURIComponent(targetReturnTo)}`);
+      return res.redirect(`${frontendUrl}/auth/callback?return_to=${encodeURIComponent(targetReturnTo)}`);
     } catch (err: any) {
-      return res.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent(err.message || 'DISCORD_AUTH_FAILED')}&return_to=${encodeURIComponent(targetReturnTo)}`);
+      return res.redirect(`${frontendUrl}/auth/callback?error=${oauthErrorCode(err)}&return_to=${encodeURIComponent(targetReturnTo)}`);
     }
   }
 }

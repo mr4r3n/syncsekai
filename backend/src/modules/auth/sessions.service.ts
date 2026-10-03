@@ -52,11 +52,21 @@ export class SessionsService {
     return count;
   }
 
+  /**
+   * An administrator's session ends after this long without use; everyone else's
+   * lasts the 7 days of the token. A forgotten admin session is the one worth stealing.
+   */
+  static readonly ADMIN_IDLE_MS = 24 * 60 * 60 * 1000;
+
   // Active sessions and devices
-  async validateSessionToken(userId: string, sessionToken: string): Promise<boolean> {
+  async validateSessionToken(userId: string, sessionToken: string, maxIdleMs?: number): Promise<boolean> {
     if (!userId || !sessionToken) return false;
     const session = await this.prisma.session.findFirst({
-      where: { userId, sessionToken },
+      where: {
+        userId,
+        sessionToken,
+        ...(maxIdleMs ? { lastActiveAt: { gte: new Date(Date.now() - maxIdleMs) } } : {}),
+      },
     });
     return !!session;
   }

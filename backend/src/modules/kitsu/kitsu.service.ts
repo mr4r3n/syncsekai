@@ -305,6 +305,10 @@ export class KitsuService {
 
   /**
    * Updates scrobble progress in the Kitsu library.
+   *
+   * "current" with the last episode is saved as "completed": Kitsu keeps the status
+   * it is given, so finished shows stayed in Watching. Only the exact last episode
+   * counts (see MalService.updateProgress).
    */
   async updateProgress(
     userId: string,
@@ -331,9 +335,9 @@ export class KitsuService {
     const remoteUserId = conn.remoteUserId;
 
     try {
-      // 1. Check whether a library entry already exists for this anime
+      // 1. Check whether a library entry already exists for this anime (with its episode count)
       const checkRes = await axios.get(
-        `${this.baseUrl}/library-entries?filter[userId]=${remoteUserId}&filter[animeId]=${kitsuMediaId}`,
+        `${this.baseUrl}/library-entries?filter[userId]=${remoteUserId}&filter[animeId]=${kitsuMediaId}&include=anime&fields[anime]=episodeCount`,
         {
           headers: this.getHeaders(token),
           timeout: 8000,
@@ -341,6 +345,15 @@ export class KitsuService {
       );
 
       const existingEntry = checkRes.data?.data?.[0];
+      let episodeCount = Number(checkRes.data?.included?.[0]?.attributes?.episodeCount) || 0;
+      if (!existingEntry && status === 'current') {
+        const animeRes = await axios
+          .get(`${this.baseUrl}/anime/${kitsuMediaId}?fields[anime]=episodeCount`, { headers: this.getHeaders(token), timeout: 8000 })
+          .catch(() => null);
+        episodeCount = Number(animeRes?.data?.data?.attributes?.episodeCount) || 0;
+      }
+      const finalStatus = (progress: number) =>
+        status === 'current' && episodeCount && progress === episodeCount ? 'completed' : status;
 
       if (existingEntry) {
         // PATCH: update the existing entry
@@ -356,7 +369,7 @@ export class KitsuService {
             type: 'libraryEntries',
             attributes: {
               progress: newProgress,
-              status: status,
+              status: finalStatus(newProgress),
             },
           },
         };
@@ -379,7 +392,7 @@ export class KitsuService {
             type: 'libraryEntries',
             attributes: {
               progress: episodeNumber,
-              status: status,
+              status: finalStatus(episodeNumber),
             },
             relationships: {
               anime: {

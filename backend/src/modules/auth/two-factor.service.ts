@@ -11,8 +11,11 @@ import * as crypto from 'crypto';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import * as QRCode from 'qrcode';
 import { EncryptionService } from '../../common/crypto/encryption.service';
-import { emailTemplate } from '../../common/email/email-template';
+import { emailTemplate, escapeHtml } from '../../common/email/email-template';
 import { MailService } from './mail.service';
+
+/** Compared against when the account has no codes, so that case is not instant. */
+const NO_CODE_HASH = bcrypt.hashSync('no-backup-code-placeholder', 10);
 
 /** Two-factor authentication (TOTP and email) and backup codes. */
 @Injectable()
@@ -446,8 +449,14 @@ export class TwoFactorService {
       },
     });
 
+    // One answer whether the account does not exist, has no codes or the code is wrong:
+    // two different ones told who has an account with codes.
+    // ponytail: an unknown account costs one bcrypt and a real one up to eight, so timing
+    // still hints; acceptable at 5 attempts a minute per IP.
+    const invalid = new BadRequestException('Invalid account or emergency recovery code, or the code was already used.');
     if (!user || !user.backupCodes || user.backupCodes.length === 0) {
-      throw new BadRequestException('Invalid credentials or emergency recovery code.');
+      await bcrypt.compare(cleanCode, NO_CODE_HASH);
+      throw invalid;
     }
 
     // Check whether the code matches one of the stored hashes
@@ -461,7 +470,7 @@ export class TwoFactorService {
     }
 
     if (matchIndex === -1) {
-      throw new BadRequestException('The emergency recovery code is incorrect or has already been used.');
+      throw invalid;
     }
 
     // Burn the used code: remove it from the list
@@ -494,6 +503,24 @@ export class TwoFactorService {
         message: `User @${user.username} recovered their account with an emergency code. ${updatedBackupCodes.length} valid codes left.`,
       },
     });
+
+    // The owner must hear about it: whoever holds a code can change the password without
+    // knowing it. A failed email does not undo the recovery.
+    const frontendUrl = await this.mailService.getFrontendUrl();
+    await this.mailService.sendEmail(
+      user.email,
+      'SyncSekai — Your password was changed with an emergency code',
+      emailTemplate({
+        frontendUrl,
+        title: 'Your password was changed',
+        paragraphs: [
+          `Hi <strong>${escapeHtml(user.username)}</strong>, the password of your account was just changed with one of your emergency codes, and every session was signed out.`,
+          `You have ${updatedBackupCodes.length} emergency code(s) left.`,
+        ],
+        button: { text: 'Reset my password', url: `${frontendUrl}/forgot-password` },
+        note: 'If it was not you, reset your password now with the button and generate new emergency codes from Security.',
+      }),
+    );
 
     return {
       success: true,

@@ -62,6 +62,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const isValidSession = await this.sessionsService.validateSessionToken(
       user.id,
       payload.sessionToken,
+      user.role === 'ADMIN' ? SessionsService.ADMIN_IDLE_MS : undefined,
     );
     if (!isValidSession) {
       throw new UnauthorizedException('Your session has been revoked or closed.');

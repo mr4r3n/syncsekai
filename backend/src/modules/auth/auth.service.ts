@@ -21,6 +21,10 @@ import { MailService } from './mail.service';
 import { AccountLifecycleService } from './account-lifecycle.service';
 import { RegistrationService } from './registration.service';
 
+const INVALID_LOGIN = 'Invalid credentials. If you signed up with Google or Discord, use that button.';
+/** Compared against when there is no password, so every failed login costs the same time. */
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('no-account-timing-placeholder', 10);
+
 /** Sign-in with password or social provider, and lockout after failed attempts. */
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -36,6 +40,10 @@ export class AuthService implements OnModuleInit {
   private static readonly LOCKOUT_MS = 15 * 60 * 1000;
   private static readonly MAX_TRACKED_LOGINS = 5000;
   private readonly failedLogins = new Map<string, { count: number; lockedUntil: number }>();
+  // ponytail: last accepted TOTP time step per user, in memory like the lockout. A code
+  // is valid for its whole window, so without this the same code signs in twice. Lost on
+  // restart, which only reopens a 30-second window.
+  private readonly lastTotpStep = new Map<string, number>();
 
   constructor(
     private prisma: PrismaService,
@@ -119,19 +127,13 @@ export class AuthService implements OnModuleInit {
       },
     });
 
-    if (!user) {
+    // One answer, and one bcrypt comparison, whether the email is unknown, the account
+    // only signs in through Google/Discord or the password is wrong: anything else
+    // tells who has an account.
+    const isValid = await bcrypt.compare(dto.password, user?.passwordHash || DUMMY_PASSWORD_HASH);
+    if (!user || !user.passwordHash || !isValid) {
       this.registerFailedLogin(emailKey);
-      throw new UnauthorizedException('Invalid credentials.');
-    }
-
-    if (!user.passwordHash) {
-      throw new UnauthorizedException('This account is linked to an external OAuth provider. Sign in with the matching button.');
-    }
-
-    const isValid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!isValid) {
-      this.registerFailedLogin(emailKey);
-      throw new UnauthorizedException('Invalid credentials.');
+      throw new UnauthorizedException(INVALID_LOGIN);
     }
 
     if (!user.isActive) {
@@ -189,12 +191,17 @@ export class AuthService implements OnModuleInit {
       // Verify the submitted 2FA code
       if (user.twoFactorType === 'APP_TOTP') {
         const totpSecret = this.encryptionService.decrypt(user.twoFactorSecret || '');
-        const verifyRes = verifySync({ token: dto.twoFactorCode.trim(), secret: totpSecret });
+        const verifyRes = verifySync({
+          token: dto.twoFactorCode.trim(),
+          secret: totpSecret,
+          afterTimeStep: this.lastTotpStep.get(user.id),
+        });
         if (!verifyRes || !verifyRes.valid) {
           // A six-digit code falls to brute force without a per-account limit.
           this.registerFailedLogin(emailKey);
           throw new UnauthorizedException('Incorrect or expired 2FA code.');
         }
+        if ('timeStep' in verifyRes) this.lastTotpStep.set(user.id, verifyRes.timeStep);
       } else if (user.twoFactorType === 'EMAIL_OTP') {
         const otpMatches = user.emailOtpCode
           ? await bcrypt.compare(dto.twoFactorCode.trim(), user.emailOtpCode)

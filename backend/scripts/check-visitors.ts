@@ -5,7 +5,7 @@
  */
 import assert from 'node:assert/strict';
 import * as crypto from 'node:crypto';
-import { visitorKey } from '../src/modules/admin/visitors.service';
+import { visitorKey, oldestKeptVisitDay, VisitorsService } from '../src/modules/admin/visitors.service';
 
 const today = crypto.randomBytes(32);
 const tomorrow = crypto.randomBytes(32);
@@ -27,3 +27,13 @@ assert.notEqual(visitorKey(today, { ip: '203.0.113.7', userAgent: chrome, userId
 assert.notEqual(visitorKey(today, { ip: '203.0.113.7', userAgent: chrome }), visitorKey(tomorrow, { ip: '203.0.113.7', userAgent: chrome }));
 
 console.log('visitor keys: OK');
+
+// Retention: a year of visits is kept, older days are deleted (the privacy policy says so).
+assert.equal(oldestKeptVisitDay(new Date('2026-10-02T12:00:00Z')), '2025-10-02');
+let purgeWhere: any = null;
+const purger = new VisitorsService({ systemMetric: { deleteMany: async ({ where }: any) => { purgeWhere = where; return { count: 3 }; } } } as any, {} as any);
+purger.purgeOldVisits(new Date('2026-10-02T12:00:00Z')).then((count) => {
+  assert.equal(count, 3);
+  assert.deepEqual(purgeWhere, { metricKey: 'UNIQUE_IP_VISIT', dateKey: { lt: '2025-10-02' } }, 'only visits, only older than a year');
+  console.log('visit retention: OK');
+});

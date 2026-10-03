@@ -69,6 +69,7 @@ export function HistoryHeader({
               <button
                 type="button"
                 onClick={handleClearSearch}
+                aria-label={t('catalog.clearSearch')}
                 className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />

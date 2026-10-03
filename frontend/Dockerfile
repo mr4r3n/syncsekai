@@ -1,5 +1,5 @@
 # ==========================================
-# PlexSync Frontend - Multi-Stage Production Dockerfile (Next.js Standalone)
+# SyncSekai frontend - multi-stage production image (Next.js standalone)
 # ==========================================
 
 # 1. Dependencies Stage
@@ -20,8 +20,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_CPU_NUM=2
 ENV NEXT_BUILD_WORKERS=2
-# Tope bajo a propósito: el contenedor comparte 4 GB con otros servicios y con
-# 4096 el build crecía hasta que el kernel lo mataba (SIGKILL).
+# Low cap on purpose: the container shares 4 GB with other services, and with
+# 4096 the build grew until the kernel killed it (SIGKILL).
 ENV NODE_OPTIONS="--max-old-space-size=1536"
 
 RUN npm run build
@@ -38,7 +38,7 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copiar archivos públicos y standalone optimizado
+# Public files and the standalone server
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

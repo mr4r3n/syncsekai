@@ -52,7 +52,9 @@ export class MailService {
       if (pass && this.encryptionService) {
         try {
           pass = this.encryptionService.decrypt(pass);
-        } catch {}
+        } catch {
+          this.logger.error('SMTP_PASS cannot be decrypted (was ENCRYPTION_KEY changed?): set it again in System credentials.');
+        }
       }
       const from = map.get('SMTP_FROM') || process.env.SMTP_FROM || 'SyncSekai <noreply@syncsekai.com>';
 

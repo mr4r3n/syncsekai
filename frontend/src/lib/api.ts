@@ -19,6 +19,30 @@ export function getApiBase(): string {
 
 export function clearAuthToken() {}
 
+/**
+ * Best effort: tells the admin console that a page broke in this browser (see
+ * ClientErrorsController). Long path segments are links' tokens (/reset-password/…,
+ * /activate/…) and must not travel, so they become ":id". Never throws.
+ */
+export function reportClientError(error: Error) {
+  try {
+    const path = window.location.pathname.replace(/\/[A-Za-z0-9_-]{20,}/g, '/:id').slice(0, 200);
+    const where = String(error?.stack || '').split('\n').find((line) => line.trim().startsWith('at '));
+    fetch(`${getApiBase()}/api/client-errors`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        path,
+        message: String(error?.message || 'Unknown error').slice(0, 300),
+        ...(where ? { where: where.trim().slice(0, 300) } : {}),
+      }),
+    }).catch(() => {});
+  } catch {
+    // Reporting must never break the error page itself.
+  }
+}
+
 /** Catalog network: provides name and icon, without uploading anything. */
 export interface RedSocial {
   id: string;
@@ -370,8 +394,6 @@ export const api = {
       );
     },
     deleteAndRevert: (id: string) => request<any>(`/api/history/${id}`, { method: 'DELETE' }),
-    batchDeleteAndRevert: (ids: string[]) =>
-      request<any>('/api/history/batch-revert', { method: 'POST', body: JSON.stringify({ ids }) }),
     getHeatmap: () => request<any>('/api/history/stats/heatmap'),
     getSummary: () => request<any>('/api/history/stats/summary'),
   },
@@ -485,14 +507,17 @@ export const api = {
       request<{ success: boolean; message: string }>(`/api/admin/backups/${encodeURIComponent(filename)}`, {
         method: 'DELETE',
       }),
-    restoreBackup: (filename: string) =>
+    restoreBackup: (filename: string, currentPassword: string) =>
       request<{ success: boolean; message: string; restoredRecords: number; details: any }>(
         '/api/admin/backups/restore',
-        { method: 'POST', body: JSON.stringify({ filename }) },
+        { method: 'POST', body: JSON.stringify({ filename, currentPassword }) },
       ),
-    downloadBackup: async (filename: string): Promise<Blob> => {
+    downloadBackup: async (filename: string, currentPassword: string): Promise<Blob> => {
       const apiBase = getApiBase();
       const res = await fetch(`${apiBase}/api/admin/backups/${encodeURIComponent(filename)}/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword }),
         credentials: 'include',
       });
       if (!res.ok) {
@@ -507,8 +532,9 @@ export const api = {
       }
       return res.blob();
     },
-    uploadAndRestoreBackup: async (file: File) => {
+    uploadAndRestoreBackup: async (file: File, currentPassword: string) => {
       const formData = new FormData();
+      formData.append('currentPassword', currentPassword);
       formData.append('backupFile', file);
       const apiBase = getApiBase();
       const res = await fetch(`${apiBase}/api/admin/backups/upload-restore`, {

@@ -111,7 +111,7 @@ export class JellyfinController {
     if (typeof payload === 'string') {
       try {
         payload = JSON.parse(payload);
-      } catch (e) {
+      } catch {
         throw new BadRequestException('Invalid webhook payload.');
       }
     }

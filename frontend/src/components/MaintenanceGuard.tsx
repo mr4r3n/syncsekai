@@ -1,20 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
 export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     // If already on /maintenance, do not check or redirect
-    if (pathname.startsWith('/maintenance')) {
-      setChecked(true);
-      return;
-    }
+    if (pathname.startsWith('/maintenance')) return;
 
     // Administrative or internal routes that administrators can use to manage
     // Authentication routes must be excluded or maintenance becomes
@@ -44,8 +40,7 @@ export function MaintenanceGuard({ children }: { children: React.ReactNode }) {
           }
         }
       })
-      .catch(() => {})
-      .finally(() => setChecked(true));
+      .catch(() => {});
   }, [pathname]);
 
   return <>{children}</>;

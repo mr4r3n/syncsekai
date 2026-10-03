@@ -13,12 +13,9 @@ import {
   Sparkles,
   Save,
   Loader2,
-  CheckCircle2,
   Calculator,
   Play,
-  Clock,
   ShieldCheck,
-  Zap,
   Pencil,
   X,
 } from 'lucide-react';
@@ -164,7 +161,7 @@ export default function RulesSettingsPage() {
       });
       showToast(t('rules.rulesUpdated'), 'success');
       setEditing(false);
-    } catch (e: any) {
+    } catch {
       showToast(t('rules.somethingWentWrong'), 'error');
     } finally {
       setSavingPreferences(false);

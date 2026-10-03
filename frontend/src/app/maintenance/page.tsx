@@ -8,12 +8,9 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import {
   Cog,
-  Wrench,
   RefreshCw,
   Clock,
-  ArrowRight,
-  Shield,
-  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 
 import { useI18n } from '@/i18n/I18nProvider';

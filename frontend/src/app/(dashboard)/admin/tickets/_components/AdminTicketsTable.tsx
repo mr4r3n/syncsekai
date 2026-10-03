@@ -3,6 +3,7 @@ import { Loader2, CheckCircle2, User, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { AdminTicketItem } from './types';
 import { CATEGORY_LABELS, PRIORITY_STYLES, STATUS_STYLES } from './constants';
+import { useNow } from '@/lib/useNow';
 
 interface AdminTicketsTableProps {
   loading: boolean;
@@ -24,9 +25,10 @@ export function AdminTicketsTable({
   totalCount,
 }: AdminTicketsTableProps) {
   const { t } = useI18n();
+  const now = useNow();
 
   const formatTimeAgo = (dateStr: string) => {
-    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffMs = now - new Date(dateStr).getTime();
     const mins = Math.floor(diffMs / 60000);
     if (mins < 1) return t('topbar.momentAgo');
     if (mins < 60) return t('topbar.minutesAgo', { mins });

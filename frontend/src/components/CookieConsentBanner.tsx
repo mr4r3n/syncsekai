@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Cookie, Shield, Check, X, Sliders, ExternalLink } from 'lucide-react';
+import { Cookie, Shield, X, Sliders } from 'lucide-react';
 import { useModalA11y } from './useModalA11y';
 import { useI18n } from '@/i18n/I18nProvider';
 

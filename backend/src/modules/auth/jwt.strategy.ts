@@ -6,6 +6,7 @@ import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { SessionsService } from './sessions.service';
 import { getRequiredSecret } from '../../common/security/required-secret';
+import { readCookie } from './auth-cookies';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -17,17 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const jwtSecret = getRequiredSecret(configService, 'JWT_SECRET');
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => {
-          const rawCookie = request?.headers?.cookie;
-          if (!rawCookie) return null;
-          const cookie = rawCookie
-            .split(';')
-            .map((part) => part.trim())
-            .find((part) => part.startsWith('plexsync_session='));
-          return cookie
-            ? decodeURIComponent(cookie.slice('plexsync_session='.length))
-            : null;
-        },
+        (request: Request) => readCookie(request, 'plexsync_session') || null,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,

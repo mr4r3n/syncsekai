@@ -7,6 +7,15 @@ import { PlexService } from './plex.service';
 import { PlexWebhookService } from './plex-webhook.service';
 import { recordActivity } from '../../common/logging/activity-log';
 
+/** host:port of a server URL: the same Plex reached through the same address is one server. */
+export function serverOf(serverUrl: string): string {
+  try {
+    return new URL(serverUrl).host;
+  } catch {
+    return serverUrl;
+  }
+}
+
 interface TrackedSession {
   sessionKey: string;
   showTitle: string;
@@ -36,7 +45,7 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     this.logger.log('Starting PMS Live Session Watcher (active playback monitoring on Plex servers)...');
     // Poll every 5 seconds
-    this.intervalRef = setInterval(() => this.pollAllServers(), 5000);
+    this.intervalRef = setInterval(() => void this.pollAllServers(), 5000);
   }
 
   onModuleDestroy() {
@@ -67,9 +76,11 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
         },
       });
 
-      for (const conn of connections) {
-        if (!conn.serverUrl || !conn.encryptedAuthToken) continue;
-        await this.pollServerSessions(conn);
+      // ponytail: fixed batches of 5 servers at a time, so one that times out (4 s) holds
+      // its batch instead of the whole round. A queue with per-server backoff if there are many.
+      const pollable = connections.filter((conn) => conn.serverUrl && conn.encryptedAuthToken);
+      for (let i = 0; i < pollable.length; i += 5) {
+        await Promise.allSettled(pollable.slice(i, i + 5).map((conn) => this.pollServerSessions(conn)));
       }
     } catch (e: any) {
       this.logger.warn(`PMS polling cycle error: ${e.message}`);
@@ -105,9 +116,13 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
 
       const rawSessions: any[] = res.data?.MediaContainer?.Metadata || [];
       const currentKeys = new Set<string>();
+      // Plex numbers sessions per server (1, 2, 3…), so the key carries the server too. It is
+      // the server and not the connection on purpose: several accounts connected to the same
+      // Plex see the same sessions, and sharing the entry is what scrobbles each one once.
+      const server = serverOf(conn.serverUrl);
 
       for (const s of rawSessions) {
-        const sessionKey = String(s.sessionKey || s.ratingKey || `${s.grandparentTitle}_${s.index}`);
+        const sessionKey = `${server} ${s.sessionKey || s.ratingKey || `${s.grandparentTitle}_${s.index}`}`;
         currentKeys.add(sessionKey);
 
         const librarySectionTitle = s.librarySectionTitle || '';
@@ -265,11 +280,11 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
 
       // Clear finished sessions from memory
       for (const [key, session] of this.sessionsMap.entries()) {
-        if (!currentKeys.has(key) && Date.now() - session.lastUpdatedAt > 30000) {
+        if (key.startsWith(`${server} `) && !currentKeys.has(key) && Date.now() - session.lastUpdatedAt > 30000) {
           this.sessionsMap.delete(key);
         }
       }
-    } catch (e: any) {
+    } catch {
       // PMS session query timeout or temporary network issue
     }
   }

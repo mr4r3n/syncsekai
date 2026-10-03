@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X, Sparkles, Megaphone, ExternalLink, ArrowRight } from 'lucide-react';
+import { X, ExternalLink, ArrowRight } from 'lucide-react';
 import { api, getApiBase } from '@/lib/api';
 import { useSidebar } from '@/components/SidebarProvider';
 import { BannerParticleEngine } from './banner-effects/BannerParticleEngine';

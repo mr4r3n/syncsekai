@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useId } from 'react';
-import { AlertTriangle, Trash2, X, AlertCircle, Info, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertTriangle, Trash2, X, Info, CheckCircle2, Loader2 } from 'lucide-react';
 import { useModalA11y } from './useModalA11y';
 import { useI18n } from '@/i18n/I18nProvider';
 

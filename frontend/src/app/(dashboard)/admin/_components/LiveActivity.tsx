@@ -2,6 +2,7 @@
 
 import { Radio, RefreshCw, Monitor, UserRound } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useNow } from '@/lib/useNow';
 
 interface OnlineUser {
   username: string;
@@ -32,9 +33,10 @@ export interface LiveActivityData {
  */
 export function LiveActivity({ activity, loading }: { activity?: LiveActivityData; loading: boolean }) {
   const { t } = useI18n();
+  const now = useNow();
 
   const ago = (iso: string) => {
-    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+    const mins = Math.floor((now - new Date(iso).getTime()) / 60000);
     return mins < 1 ? t('topbar.momentAgo') : t('topbar.minutesAgo', { mins });
   };
 

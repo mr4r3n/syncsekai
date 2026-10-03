@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
-import { BookOpen, Radio, Menu, Bell, Check, Trash2, ExternalLink, AlertTriangle, Info, UserPlus, LifeBuoy, X, History, CheckCheck, Loader2, TreePine, Sparkles, Ghost, Flame, Heart } from 'lucide-react';
+import { BookOpen, Radio, Menu, Bell, Check, ExternalLink, AlertTriangle, Info, UserPlus, LifeBuoy, X, History, CheckCheck, Loader2 } from 'lucide-react';
 import { describeNotification } from '@/lib/notifications';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ import { useActiveThemeEffect } from '@/lib/useActiveThemeEffect';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useToast } from '@/components/ToastProvider';
 import { api } from '@/lib/api';
+import { useNow } from '@/lib/useNow';
 
 interface TopbarProps {
   rootLabel?: string;
@@ -29,7 +30,8 @@ export function Topbar({
 }: TopbarProps) {
   const router = useRouter();
   const { t } = useI18n();
-  const { showUndoToast, showToast } = useToast();
+  const now = useNow();
+  const { showToast } = useToast();
   // Default values cannot come from t(): evaluated in parameter
   // scope, before hook exists.
   const rootText = rootLabel ?? t('topbar.rootConfig');
@@ -85,7 +87,7 @@ export function Topbar({
         setNotifications(res.notifications || []);
         setUnreadCount(res.unreadCount || 0);
       } catch (e) {
-        console.warn('Error al cargar notificaciones:', e);
+        console.warn('Could not load notifications:', e);
       } finally {
         setLoading(false);
       }
@@ -101,7 +103,7 @@ export function Topbar({
       );
       setUnreadCount((prev: number) => Math.max(0, prev - 1));
     } catch (err) {
-      console.warn('Error al marcar notificación como leída:', err);
+      console.warn('Could not mark the notification as read:', err);
     }
   };
 
@@ -112,7 +114,7 @@ export function Topbar({
       setNotifications((prev: any[]) => prev.map((n: any) => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (err) {
-      console.warn('Error al marcar todas las notificaciones:', err);
+      console.warn('Could not mark all notifications as read:', err);
     } finally {
       setMarkingAll(false);
     }
@@ -124,13 +126,13 @@ export function Topbar({
     const aviso = notifications.find((n: any) => n.id === id);
     setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== id));
     if (aviso && !aviso.isRead) setUnreadCount((prev: number) => Math.max(0, prev - 1));
-    api.notifications.dismiss(id).catch((err) => console.warn('Error al quitar la notificación:', err));
+    api.notifications.dismiss(id).catch((err) => console.warn('Could not dismiss the notification:', err));
   };
 
   const handleDismissAll = async () => {
     setNotifications([]);
     setUnreadCount(0);
-    await api.notifications.dismissAll().catch((err) => console.warn('Error al vaciar la campana:', err));
+    await api.notifications.dismissAll().catch((err) => console.warn('Could not clear the bell:', err));
   };
 
   const handleAcceptSuggestion = async (n: any, mappingId: string, e: React.MouseEvent) => {
@@ -162,7 +164,7 @@ export function Topbar({
 
   const formatRelativeTime = (dateStr: string) => {
     try {
-      const diff = Date.now() - new Date(dateStr).getTime();
+      const diff = now - new Date(dateStr).getTime();
       const mins = Math.floor(diff / 60000);
       if (mins < 1) return t('topbar.momentAgo');
       if (mins < 60) return t('topbar.minutesAgo', { mins });

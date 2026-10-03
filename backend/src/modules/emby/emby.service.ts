@@ -6,7 +6,7 @@ import { ScrobblePipelineService, NormalizedScrobbleEvent } from '../plex/scrobb
 import * as os from 'os';
 import axios from 'axios';
 import {
-  validateOutboundTarget,
+  validateMediaServerTarget,
   type ValidatedNetworkTarget,
 } from '../../common/security/network-target';
 import { recordActivity } from '../../common/logging/activity-log';
@@ -55,27 +55,8 @@ export class EmbyService {
     return { 'X-Emby-Token': apiKey, Accept: 'application/json' };
   }
 
-  async validateUserServerTarget(serverUrl: string): Promise<ValidatedNetworkTarget> {
-    const rawPorts = this.configService.get<string>('EMBY_ALLOWED_PORTS');
-    const configuredPorts = rawPorts
-      ? rawPorts
-          .split(',')
-          .map((value) => Number(value.trim()))
-          .filter((value) => Number.isInteger(value) && value > 0 && value <= 65535)
-      : [];
-
-    const allowedPorts =
-      configuredPorts.length > 0
-        ? [...new Set(configuredPorts)]
-        : Array.from({ length: 65535 }, (_, i) => i + 1);
-
-    const allowPublic = this.configService.get<string>('EMBY_ALLOW_PUBLIC_URLS') !== 'false';
-
-    return validateOutboundTarget(serverUrl, {
-      allowPrivate: true,
-      allowPublic,
-      allowedPorts,
-    });
+  validateUserServerTarget(serverUrl: string): Promise<ValidatedNetworkTarget> {
+    return validateMediaServerTarget(serverUrl, 'EMBY');
   }
 
   async validateUserServerUrl(serverUrl: string): Promise<string> {
@@ -172,7 +153,7 @@ export class EmbyService {
     let info: { serverName?: string; version?: string };
     try {
       info = await this.fetchSystemInfo(cleanUrl, apiKey);
-    } catch (error: any) {
+    } catch {
       throw new BadRequestException('Could not connect to the Emby server. Check the URL and the API key.');
     }
 
@@ -205,7 +186,7 @@ export class EmbyService {
     let info: { serverName?: string };
     try {
       info = await this.fetchSystemInfo(cleanUrl, apiKey);
-    } catch (error: any) {
+    } catch {
       throw new BadRequestException('Could not connect to the Emby server. Check the URL and the API key.');
     }
 

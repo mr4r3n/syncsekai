@@ -16,15 +16,17 @@ import { UsersTable } from './_components/UsersTable';
 import { UsersCardGrid } from './_components/UsersCardGrid';
 import { UserActionSheet } from './_components/UserActionSheet';
 import { UserEditModal } from './_components/UserEditModal';
+import { useNow } from '@/lib/useNow';
 
 export default function UsersManagementPage() {
   const router = useRouter();
   const { isCollapsed } = useSidebar();
   const { showToast, showUndoToast } = useToast();
   const { t, locale } = useI18n();
+  const now = useNow();
   const registrationDate = (iso?: string) =>
     iso ? new Date(iso).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-  const isRecent = (iso?: string) => !!iso && Date.now() - new Date(iso).getTime() < 7 * 24 * 60 * 60 * 1000;
+  const isRecent = (iso?: string) => !!iso && now - new Date(iso).getTime() < 7 * 24 * 60 * 60 * 1000;
   const [usersList, setUsersList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -68,7 +70,6 @@ export default function UsersManagementPage() {
     return t('topbar.daysAgo', { days: Math.floor(hours / 24) });
   };
   const [activeUserMenuId, setActiveUserMenuId] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
 
   // Edit modal state
   const [editingUser, setEditingUser] = useState<any | null>(null);
@@ -97,7 +98,6 @@ export default function UsersManagementPage() {
   // Escape. Leaving it here mounted two focus traps on the same dialog.
 
   useEffect(() => {
-    setMounted(true);
     loadUsers();
   }, []);
 
@@ -233,24 +233,6 @@ export default function UsersManagementPage() {
       );
     } catch (err: any) {
       showToast('Error: ' + err.message, 'error');
-    }
-  };
-
-  // Alternar permiso individual (inline checkbox)
-  const handleTogglePermission = async (userId: string, permKey: string, currentValue: boolean) => {
-    try {
-      const updated = { [permKey]: !currentValue };
-      await api.admin.updateUserPermissions(userId, updated);
-      showToast(t('users.permissionUpdated', { perm: permKey }), 'success');
-      setUsersList((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? { ...u, permissions: { ...u.permissions, [permKey]: !currentValue } }
-            : u
-        )
-      );
-    } catch (err: any) {
-      showToast(`${t('users.updatePermissionError')} ` + err.message, 'error');
     }
   };
 

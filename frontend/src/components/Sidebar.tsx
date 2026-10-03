@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { api, getApiBase } from '@/lib/api';
+import { api } from '@/lib/api';
 import { useSidebar } from '@/components/SidebarProvider';
 import { useUnsavedChanges } from '@/components/UnsavedChangesProvider';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -237,6 +237,7 @@ export function Sidebar({
         {/* Close Button (Mobile) */}
         <button
           onClick={closeMobile}
+          aria-label={t('common.close')}
           className="md:hidden ml-auto p-1.5 rounded-[6px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />

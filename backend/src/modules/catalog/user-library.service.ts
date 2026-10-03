@@ -12,16 +12,12 @@ export class UserLibraryService {
    * Consolidated viewing statistics of the user (standalone tracker).
    */
   async getUserStats(userId: string) {
-    const [scrobbles, favoritesCount, mappings] = await Promise.all([
+    const [scrobbles, favoritesCount] = await Promise.all([
       this.prisma.scrobbleHistory.findMany({
         where: { userId },
         orderBy: { viewedAt: 'desc' },
       }),
       this.prisma.userFavorite.count({ where: { userId } }),
-      this.prisma.titleMapping.findMany({
-        where: { userId },
-        select: { plexTitle: true, anilistTitle: true },
-      }),
     ]);
 
     const totalEpisodes = scrobbles.length;

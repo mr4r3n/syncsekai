@@ -130,7 +130,7 @@ export function AccountDataCard({
           {/* User Token Info */}
           <div className="p-3.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] space-y-1">
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-[var(--text-muted)]">User Token Privado:</span>
+              <span className="text-[var(--text-muted)]">{t('settings.privateUserToken')}</span>
               <span className="text-[var(--text-primary)] font-bold">{userProfile?.userToken}</span>
             </div>
             <p className="text-[10.5px] text-[var(--text-muted)]">{t('settings.permanentSessionId')}</p>

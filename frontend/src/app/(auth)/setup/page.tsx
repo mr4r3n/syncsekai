@@ -78,7 +78,7 @@ export default function SetupPage() {
           setIsAlreadyInstalled(true);
         }
       } catch (err: any) {
-        console.warn('Error verificando estado de instalación:', err.message);
+        console.warn('Could not check the installation status:', err.message);
       } finally {
         setCheckingStatus(false);
       }
@@ -136,7 +136,7 @@ export default function SetupPage() {
 
     setSubmitting(true);
     try {
-      const res = await api.setup.initialize({
+      await api.setup.initialize({
         bootstrapToken: formData.bootstrapToken,
         appDomain: formData.appDomain.trim(),
         webhookPublicUrl: formData.webhookPublicUrl.trim(),

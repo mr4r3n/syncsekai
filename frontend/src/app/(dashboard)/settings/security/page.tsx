@@ -332,7 +332,7 @@ export default function SecuritySettingsPage() {
 
   const handleSavePassword = async (e: React.FormEvent): Promise<boolean> => {
     e.preventDefault();
-    if (!currentPassword || !newPassword) {
+    if ((userProfile?.hasPassword !== false && !currentPassword) || !newPassword) {
       showToast(t('security.enterCurrentAndNew'), 'error');
       return false;
     }
@@ -586,6 +586,7 @@ export default function SecuritySettingsPage() {
                 confirmPassword={confirmPassword}
                 setConfirmPassword={setConfirmPassword}
                 savingPassword={savingPassword}
+                hasPassword={userProfile?.hasPassword !== false}
                 t={t}
               />
 

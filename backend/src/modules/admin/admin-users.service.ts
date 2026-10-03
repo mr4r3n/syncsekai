@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { assertValidUsername } from '../../common/text/username';
 
 /** User management from the panel: listing, permissions and deletion. */
 @Injectable()
@@ -188,6 +189,20 @@ export class AdminUsersService {
 
     await this.ensureAdminRemains(actorId, user, payload);
 
+    // The body has no DTO: an unknown role or a taken name used to reach Prisma and come back as a 500.
+    if (payload.role !== undefined && !Object.values(Role).includes(payload.role)) {
+      throw new BadRequestException('Unknown role.');
+    }
+    if (payload.username !== undefined && payload.username.trim() !== user.username) {
+      assertValidUsername(payload.username.trim());
+      const nameTaken = await this.prisma.user.findFirst({
+        where: { username: { equals: payload.username.trim(), mode: 'insensitive' }, NOT: { id: userId } },
+      });
+      if (nameTaken) {
+        throw new BadRequestException('The username is already used by another account.');
+      }
+    }
+
     // Check email and username uniqueness if they are being edited
     if (payload.email && payload.email !== user.email) {
       const emailExists = await this.prisma.user.findUnique({
@@ -223,6 +238,12 @@ export class AdminUsersService {
         where: { id: userId },
         data: updateData,
       });
+    }
+
+    // A new password or a cleared 2FA is how an admin locks out whoever took over the
+    // account: their open sessions must end too, not only future sign-ins.
+    if (payload.newPassword || payload.reset2Fa) {
+      await this.prisma.session.deleteMany({ where: { userId } });
     }
 
     // Update UserSettings

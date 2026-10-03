@@ -298,8 +298,10 @@ export class AuthService implements OnModuleInit {
     }
 
     if (user) {
-      // Respect administrative deactivation and suspension; never force reactivation
-      if (!user.isActive) {
+      // An account that was never activated still has its activation token; one an
+      // administrator deactivated does not, and stays closed.
+      const pendingActivation = !user.isActive && Boolean(user.activationToken);
+      if (!user.isActive && !pendingActivation) {
         throw new UnauthorizedException('Your account has been deactivated by an administrator.');
       }
       if (user.settings?.isSuspended) {
@@ -308,6 +310,12 @@ export class AuthService implements OnModuleInit {
 
       // If the user already exists, link the social provider without touching username or avatar
       const updateData: any = {};
+      if (pendingActivation) {
+        // The provider just verified the email, which is what activation proves. The
+        // password goes: whoever registered the address without owning it must not keep
+        // a way in. The owner can set a new one from Security.
+        Object.assign(updateData, { isActive: true, activationToken: null, activationExpiresAt: null, passwordHash: null });
+      }
       if (data.provider === 'google' && user.googleId !== data.providerId) updateData.googleId = data.providerId;
       if (data.provider === 'discord' && user.discordId !== data.providerId) updateData.discordId = data.providerId;
       if (data.provider === 'github' && user.githubId !== data.providerId) updateData.githubId = data.providerId;

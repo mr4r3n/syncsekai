@@ -3,6 +3,7 @@ import { ConnectionsService } from './connections.service';
 import { WebhookSimulatorService } from './webhook-simulator.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { UpdateSettingsDto } from '../auth/dto/auth.dto';
 
 @Controller('api/connections')
 export class ConnectionsController {
@@ -27,17 +28,7 @@ export class ConnectionsController {
   @Put('settings')
   async updateSettings(
     @CurrentUser() user: any,
-    @Body()
-    data: {
-      completionPercentage?: number;
-      syncRatings?: boolean;
-      emailErrorAlerts?: boolean;
-      discordNotifications?: boolean;
-      webNotifications?: boolean;
-      autoApproveMappings?: boolean;
-      themePalette?: string;
-      themeMode?: string;
-    },
+    @Body() data: UpdateSettingsDto,
   ) {
     return this.connectionsService.updateSettings(user.id, data);
   }

@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { validateOutboundTarget, type ValidatedNetworkTarget } from '../../common/security/network-target';
+import { validateMediaServerTarget, type ValidatedNetworkTarget } from '../../common/security/network-target';
 
 export interface PlexPinResponse {
   id: number;
@@ -87,27 +87,8 @@ export class PlexService {
     return headers;
   }
 
-  async validateUserServerTarget(serverUrl: string): Promise<ValidatedNetworkTarget> {
-    const rawPorts = this.configService.get<string>('PLEX_ALLOWED_PORTS');
-    const configuredPorts = rawPorts
-      ? rawPorts
-          .split(',')
-          .map((value) => Number(value.trim()))
-          .filter((value) => Number.isInteger(value) && value > 0 && value <= 65535)
-      : [];
-
-    const allowedPorts =
-      configuredPorts.length > 0
-        ? [...new Set(configuredPorts)]
-        : Array.from({ length: 65535 }, (_, i) => i + 1);
-
-    const allowPublic = this.configService.get<string>('PLEX_ALLOW_PUBLIC_URLS') !== 'false';
-
-    return validateOutboundTarget(serverUrl, {
-      allowPrivate: true,
-      allowPublic,
-      allowedPorts,
-    });
+  validateUserServerTarget(serverUrl: string): Promise<ValidatedNetworkTarget> {
+    return validateMediaServerTarget(serverUrl, 'PLEX');
   }
 
   async validateUserServerUrl(serverUrl: string): Promise<string> {
@@ -435,7 +416,7 @@ export class PlexService {
         timeout: 4000,
       });
       plexUsername = userRes.data?.username || userRes.data?.email || plexUsername;
-    } catch (e) {
+    } catch {
       this.logger.warn('Plex.tv validation skipped for a direct token.');
     }
 

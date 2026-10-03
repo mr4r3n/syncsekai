@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as crypto from 'crypto';
 import { MetricsService } from './metrics.service';
@@ -70,6 +71,14 @@ export function visitorKey(salt: Buffer, visitor: { ip: string; userAgent?: stri
 
 const SALT_METRIC = 'VISITOR_SALT';
 
+/** Visits are kept a year, the longest range the panel charts; the privacy policy says so. */
+export const VISIT_RETENTION_DAYS = 365;
+
+/** First day (YYYY-MM-DD, the visits' dateKey) that is still kept on the given date. */
+export function oldestKeptVisitDay(now: Date): string {
+  return new Date(now.getTime() - VISIT_RETENTION_DAYS * 86_400_000).toISOString().split('T')[0];
+}
+
 /** Visit counter without IPs, with geolocation by country. */
 @Injectable()
 export class VisitorsService {
@@ -83,6 +92,15 @@ export class VisitorsService {
     private prisma: PrismaService,
     private metricsService: MetricsService,
   ) {}
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async purgeOldVisits(now = new Date()): Promise<number> {
+    const { count } = await this.prisma.systemMetric.deleteMany({
+      where: { metricKey: 'UNIQUE_IP_VISIT', dateKey: { lt: oldestKeptVisitDay(now) } },
+    });
+    if (count > 0) this.logger.log(`Visits: ${count} older than ${VISIT_RETENTION_DAYS} days deleted.`);
+    return count;
+  }
 
   private detectOS(ua?: string): string {
     if (!ua) return 'Unknown system';

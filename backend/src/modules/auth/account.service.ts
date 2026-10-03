@@ -15,6 +15,8 @@ import { EncryptionService } from '../../common/crypto/encryption.service';
 import { emailTemplate, escapeHtml } from '../../common/email/email-template';
 import { RegistrationService } from './registration.service';
 import { MailService } from './mail.service';
+import { hashToken } from './token-hash';
+import { assertValidUsername } from '../../common/text/username';
 
 /** Account profile and settings: data, email, password, webhook, linked accounts. */
 @Injectable()
@@ -41,6 +43,7 @@ export class AccountService {
 
     if (data.username && data.username.trim() !== user.username) {
       const trimmedName = data.username.trim();
+      assertValidUsername(trimmedName);
 
       // Check whether 30 days have passed since the last username change
       if (user.lastUsernameChange) {
@@ -342,7 +345,7 @@ export class AccountService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        passwordResetToken: resetToken,
+        passwordResetToken: hashToken(resetToken),
         passwordResetExpiresAt: expiresAt,
       },
     });
@@ -369,11 +372,9 @@ export class AccountService {
    * Resets the password with a token (reset password).
    */
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
-    const cleanToken = dto.token.trim();
-
     const user = await this.prisma.user.findFirst({
       where: {
-        passwordResetToken: cleanToken,
+        passwordResetToken: hashToken(dto.token),
       },
     });
 
@@ -396,7 +397,7 @@ export class AccountService {
       throw new BadRequestException('The new password must contain at least 12 characters.');
     }
 
-    const passwordHash = await bcrypt.hash(dto.newPassword, 10);
+    const passwordHash = await bcrypt.hash(dto.newPassword, 12);
 
     // Update the password and clear the recovery token
     await this.prisma.user.update({
@@ -408,12 +409,10 @@ export class AccountService {
       },
     });
 
-    // Revoke every previous session
-    try {
-      await this.prisma.session.deleteMany({
-        where: { userId: user.id },
-      });
-    } catch {}
+    // Revoke every previous session (a failure must surface: the old sessions would stay valid)
+    await this.prisma.session.deleteMany({
+      where: { userId: user.id },
+    });
 
     // Email a notification of the change
     const confirmationHtml = emailTemplate({

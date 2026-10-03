@@ -34,7 +34,6 @@ interface HistoryPaceProps {
   latestDate: string;
   setActivePreset: (preset: 'month' | 'last30' | 'all' | 'custom') => void;
   activePreset: 'month' | 'last30' | 'all' | 'custom';
-  setDateWarning: (warning: string | null) => void;
   hoveredDay: HeatmapDay | null;
   setHoveredDay: (day: HeatmapDay | null) => void;
   heatmapData: HeatmapResponse | null;
@@ -61,7 +60,6 @@ export function HistoryPace({
   latestDate,
   setActivePreset,
   activePreset,
-  setDateWarning,
   hoveredDay,
   setHoveredDay,
   heatmapData,
@@ -202,7 +200,6 @@ export function HistoryPace({
                       onSelect={(val) => {
                         setStartDate(val);
                         setActivePreset('custom');
-                        setDateWarning(null);
                       }}
                       onClose={() => setOpenPicker(null)}
                     />
@@ -244,7 +241,6 @@ export function HistoryPace({
                       onSelect={(val) => {
                         setEndDate(val);
                         setActivePreset('custom');
-                        setDateWarning(null);
                       }}
                       onClose={() => setOpenPicker(null)}
                     />
@@ -261,7 +257,6 @@ export function HistoryPace({
                     setStartDate(today.slice(0, 8) + '01');
                     setEndDate(today);
                     setActivePreset('month');
-                    setDateWarning(null);
                     setOpenPicker(null);
                   }}
                   className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -281,7 +276,6 @@ export function HistoryPace({
                     setStartDate(d30);
                     setEndDate(latestDate);
                     setActivePreset('last30');
-                    setDateWarning(null);
                     setOpenPicker(null);
                   }}
                   className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
@@ -300,7 +294,6 @@ export function HistoryPace({
                     setStartDate(earliestDate);
                     setEndDate(latestDate);
                     setActivePreset('all');
-                    setDateWarning(null);
                     setOpenPicker(null);
                   }}
                   className={`px-3 py-1.5 rounded-[6px] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${

@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
-import { useToast } from './ToastProvider';
 import { useI18n } from '@/i18n/I18nProvider';
 
 export function ThemeToggle() {
   const { t } = useI18n();
-  const { showToast } = useToast();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
 
   const syncThemeState = () => {
     if (typeof window === 'undefined') return;
@@ -18,11 +15,9 @@ export function ThemeToggle() {
     
     if (savedSelectedTheme === 'claro') {
       setTheme('light');
-      setSelectedThemeId('claro');
       document.documentElement.setAttribute('data-theme', 'light');
     } else {
       setTheme(savedTheme);
-      setSelectedThemeId(savedSelectedTheme);
       // This branch updated React state but not DOM. Since the server
       // always outputs data-theme="dark", reloading page reverted to dark
       // even if button showed "light" and preference was saved.
@@ -52,10 +47,8 @@ export function ThemeToggle() {
     localStorage.setItem('plexsync_theme', next);
     if (next === 'light') {
       localStorage.setItem('plexsync_selected_theme', 'claro');
-      setSelectedThemeId('claro');
     } else {
       localStorage.setItem('plexsync_selected_theme', 'sync');
-      setSelectedThemeId('sync');
     }
     document.documentElement.setAttribute('data-theme', next);
     window.dispatchEvent(new Event('plexsync_theme_changed'));

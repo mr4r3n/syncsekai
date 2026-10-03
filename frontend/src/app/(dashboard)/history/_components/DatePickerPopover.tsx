@@ -23,7 +23,6 @@ function DatePickerPopover({
   maxDate,
   onSelect,
   onClose,
-  title,
   isLightMode,
   availableMonths = [],
 }: DatePickerProps) {

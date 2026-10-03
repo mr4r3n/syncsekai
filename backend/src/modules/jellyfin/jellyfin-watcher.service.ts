@@ -40,7 +40,7 @@ export class JellyfinWatcherService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     this.logger.log('Starting Jellyfin Live Session Watcher (webhook fallback, polling /Sessions every 5s)...');
-    this.intervalRef = setInterval(() => this.pollAllServers(), 5000);
+    this.intervalRef = setInterval(() => void this.pollAllServers(), 5000);
   }
 
   onModuleDestroy() {
@@ -68,9 +68,11 @@ export class JellyfinWatcherService implements OnModuleInit, OnModuleDestroy {
         },
       });
 
-      for (const conn of connections) {
-        if (!conn.serverUrl || !conn.encryptedApiKey) continue;
-        await this.pollServerSessions(conn);
+      // ponytail: fixed batches of 5 servers at a time, so one that times out (4 s) holds
+      // its batch instead of the whole round. A queue with per-server backoff if there are many.
+      const pollable = connections.filter((conn) => conn.serverUrl && conn.encryptedApiKey);
+      for (let i = 0; i < pollable.length; i += 5) {
+        await Promise.allSettled(pollable.slice(i, i + 5).map((conn) => this.pollServerSessions(conn)));
       }
     } catch (e: any) {
       this.logger.warn(`Jellyfin polling cycle error: ${e.message}`);
@@ -292,7 +294,7 @@ export class JellyfinWatcherService implements OnModuleInit, OnModuleDestroy {
           this.sessionsMap.delete(key);
         }
       }
-    } catch (e: any) {
+    } catch {
       // Timeout or temporary network problem querying /Sessions
     }
   }

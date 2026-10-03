@@ -15,11 +15,9 @@ import {
   EyeOff,
   Loader2,
   ShieldCheck,
-  Smartphone,
   ArrowLeft,
   KeyRound,
   Shield,
-  CheckCircle2,
   Tv,
   Layers,
   Sparkles,
@@ -31,7 +29,6 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const { t } = useI18n();
 
-  const [mounted, setMounted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,8 +40,6 @@ export default function LoginPage() {
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const error = params.get('error');

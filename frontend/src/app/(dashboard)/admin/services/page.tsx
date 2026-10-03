@@ -115,7 +115,6 @@ export default function AdminServicesPage() {
 
   const stats = data?.stats || {};
   const serviceDist = data?.serviceDistribution || {};
-  const libraryDist = data?.libraryDistribution || [];
 
   return (
     <div

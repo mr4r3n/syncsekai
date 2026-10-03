@@ -78,12 +78,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     ]);
   }, []);
 
-  // Periodic tick while any countdown is on screen.
-  const [, setTic] = useState(0);
+  // Clock for the countdowns, ticking only while one is on screen.
+  const [now, setNow] = useState(() => Date.now());
   const hasCountdown = toasts.some((t) => t.undo);
   useEffect(() => {
     if (!hasCountdown) return;
-    const i = setInterval(() => setTic((n) => n + 1), 250);
+    const i = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(i);
   }, [hasCountdown]);
 
@@ -95,7 +95,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         aria-label={t('common.systemNotifications')}
         aria-live="polite"
         aria-atomic="true"
-        className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"
+        className="fixed bottom-5 right-5 left-5 sm:left-auto sm:w-full sm:max-w-sm z-50 flex flex-col gap-2 pointer-events-none"
       >
         {toasts.map((toast) => (
           <div
@@ -111,12 +111,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 : 'border-[var(--border-strong)]'
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            {/* min-w-0: a long file name in the message used to push the button out of the toast. */}
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
               {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden="true" />}
               {toast.type === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" aria-hidden="true" />}
               {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" aria-hidden="true" />}
               {toast.type === 'info' && <Info className="w-4 h-4 text-sky-400 shrink-0" aria-hidden="true" />}
-              <span className="leading-snug">{toast.message}</span>
+              <span className="leading-snug min-w-0 [overflow-wrap:anywhere]">{toast.message}</span>
             </div>
             {toast.undo ? (
               <button
@@ -128,11 +129,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <span
                   aria-hidden="true"
                   className="absolute inset-y-0 left-0 bg-[var(--status-warning-bg)] transition-[width] duration-200 ease-linear"
-                  style={{ width: `${Math.max(0, Math.min(100, ((toast.undo.expires - Date.now()) / (toast.undo.seconds * 1000)) * 100))}%` }}
+                  style={{ width: `${Math.max(0, Math.min(100, ((toast.undo.expires - now) / (toast.undo.seconds * 1000)) * 100))}%` }}
                 />
                 <Undo2 className="w-3.5 h-3.5 relative" aria-hidden="true" />
                 <span className="relative tabular-nums">
-                  {t('common.undo')} ({Math.max(0, Math.ceil((toast.undo.expires - Date.now()) / 1000))}s)
+                  {t('common.undo')} ({Math.max(0, Math.min(toast.undo.seconds, Math.ceil((toast.undo.expires - now) / 1000)))}s)
                 </span>
               </button>
             ) : (

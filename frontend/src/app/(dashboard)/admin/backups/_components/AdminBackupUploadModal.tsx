@@ -10,6 +10,9 @@ interface AdminBackupUploadModalProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   uploading: boolean;
   handleUploadAndRestore: () => Promise<void>;
+  /** Password input: restoring overwrites every account, so it is asked again. */
+  passwordField: React.ReactNode;
+  passwordReady: boolean;
 }
 
 export function AdminBackupUploadModal({
@@ -20,6 +23,8 @@ export function AdminBackupUploadModal({
   fileInputRef,
   uploading,
   handleUploadAndRestore,
+  passwordField,
+  passwordReady,
 }: AdminBackupUploadModalProps) {
   const { t } = useI18n();
 
@@ -69,6 +74,8 @@ export function AdminBackupUploadModal({
           </div>
         </div>
 
+        {passwordField}
+
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
           <button
             type="button"
@@ -82,7 +89,7 @@ export function AdminBackupUploadModal({
           <button
             type="button"
             onClick={handleUploadAndRestore}
-            disabled={uploading || !uploadFile}
+            disabled={uploading || !uploadFile || !passwordReady}
             className="px-4 py-2 rounded-[6px] text-xs font-bold bg-blue-500 text-white hover:bg-blue-600 shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
             {uploading ? (

@@ -11,10 +11,8 @@ import { ActivityHeatmap } from '@/components/ActivityHeatmap';
 import { GenreOverview } from '@/components/GenreOverview';
 import { LiveActivity } from './_components/LiveActivity';
 import {
-  LayoutDashboard,
   Users,
   CheckCircle2,
-  Zap,
   TrendingUp,
   BarChart3,
   Tv,
@@ -37,6 +35,27 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { useRouter } from 'next/navigation';
+
+// Outside the page: defined inside, React built a new component on every render and remounted it.
+function ChartTooltip({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] p-3 rounded-[6px] shadow-[var(--glass-shadow-lg)] backdrop-blur-xl space-y-1.5 font-mono text-xs text-[var(--text-primary)]">
+        <p className="text-[var(--text-secondary)] font-bold border-b border-[var(--glass-border)] pb-1">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <div key={index} className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-[var(--text-secondary)]">{entry.name}:</span>
+            </div>
+            <span className="font-bold text-[var(--text-primary)]">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
 
 export default function AdminOverviewPage() {
   const router = useRouter();
@@ -106,26 +125,6 @@ export default function AdminOverviewPage() {
     '7d': t('admin.lastSevenDays'),
     '30d': t('admin.lastThirtyDays'),
     '1y': t('admin.lastTwelveMonths'),
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-[var(--glass-bg)] border border-[var(--glass-border)] p-3 rounded-[6px] shadow-[var(--glass-shadow-lg)] backdrop-blur-xl space-y-1.5 font-mono text-xs text-[var(--text-primary)]">
-          <p className="text-[var(--text-secondary)] font-bold border-b border-[var(--glass-border)] pb-1">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                <span className="text-[var(--text-secondary)]">{entry.name}:</span>
-              </div>
-              <span className="font-bold text-[var(--text-primary)]">{entry.value}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
   };
 
   return (
@@ -346,9 +345,9 @@ export default function AdminOverviewPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
                       <XAxis dataKey="label" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip content={<ChartTooltip />} />
                       <Area type="monotone" dataKey="scrobbles" name="Scrobbles" stroke="#38bdf8" strokeWidth={2} fillOpacity={1} fill="url(#scrobbleGrad)" />
-                      <Area type="monotone" dataKey="uniqueIps" name="Visitas IPs" stroke="#c084fc" strokeWidth={2} fillOpacity={1} fill="url(#ipGrad)" />
+                      <Area type="monotone" dataKey="uniqueIps" name={t('admin.uniqueIpVisits')} stroke="#c084fc" strokeWidth={2} fillOpacity={1} fill="url(#ipGrad)" />
                       <Area type="monotone" dataKey="mappings" name="Mappings" stroke="#34d399" strokeWidth={2} fillOpacity={1} fill="url(#mappingGrad)" />
                     </AreaChart>
                   ) : (
@@ -356,9 +355,9 @@ export default function AdminOverviewPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
                       <XAxis dataKey="label" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip content={<ChartTooltip />} />
                       <Bar dataKey="scrobbles" name="Scrobbles" fill="#38bdf8" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                      <Bar dataKey="uniqueIps" name="Visitas IPs" fill="#c084fc" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                      <Bar dataKey="uniqueIps" name={t('admin.uniqueIpVisits')} fill="#c084fc" radius={[4, 4, 0, 0]} maxBarSize={32} />
                       <Bar dataKey="mappings" name="Mappings" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={32} />
                     </BarChart>
                   )}

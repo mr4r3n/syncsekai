@@ -7,7 +7,6 @@ import {
   CheckSquare,
   Square,
   MinusSquare,
-  Loader2,
   Link2,
   Trash2,
 } from 'lucide-react';
@@ -33,7 +32,6 @@ interface HistoryListProps {
   search: string;
   handleClearSearch: () => void;
   handleToggleSelect: (id: string) => void;
-  deletingId: string | null;
   setActiveHistorySheetItem: (item: any) => void;
   resolveCoverUrl: (cover: string | null) => string | null;
   linked: LinkedTrackers;
@@ -64,7 +62,6 @@ export function HistoryList({
   search,
   handleClearSearch,
   handleToggleSelect,
-  deletingId,
   setActiveHistorySheetItem,
   resolveCoverUrl,
   linked,
@@ -313,16 +310,12 @@ export function HistoryList({
                         <button
                           type="button"
                           onClick={() => handleDeleteAndRevert(item)}
-                          disabled={isBatchProcessing || deletingId === item.id}
+                          disabled={isBatchProcessing}
                           className="w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--status-danger-bg)] hover:border-[var(--status-danger)]/40 text-[var(--text-muted)] hover:text-[var(--status-danger)] flex items-center justify-center transition-colors cursor-pointer shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
                           title={t('history.revertScrobble')}
                           aria-label={t('history.revertScrobble')}
                         >
-                          {deletingId === item.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" aria-hidden="true" />
-                          )}
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </div>
                     }

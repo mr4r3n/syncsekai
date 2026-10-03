@@ -19,6 +19,8 @@ interface PasswordCardProps {
   confirmPassword: string;
   setConfirmPassword: (value: string) => void;
   savingPassword: boolean;
+  /** Accounts created with Google or Discord have none yet: no current password to ask for. */
+  hasPassword: boolean;
   t: (key: string, values?: any) => string;
 }
 
@@ -31,6 +33,7 @@ export function PasswordCard({
   confirmPassword,
   setConfirmPassword,
   savingPassword,
+  hasPassword,
   t,
 }: PasswordCardProps) {
   const [editing, setEditing] = useState(false);
@@ -74,21 +77,23 @@ export function PasswordCard({
 
         <form onSubmit={onSubmit} className="space-y-4 pt-1">
           <fieldset disabled={!editing} className="contents">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5" /> {t('security.currentPassword')}
-              </label>
-              <input
-                ref={currentPasswordRef}
-                type="password"
-                suppressHydrationWarning
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="glass-input"
-              />
-            </div>
+            {hasPassword && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5" /> {t('security.currentPassword')}
+                </label>
+                <input
+                  ref={currentPasswordRef}
+                  type="password"
+                  suppressHydrationWarning
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="glass-input"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -141,7 +146,7 @@ export function PasswordCard({
             )}
             <button
               type="submit"
-              disabled={!editing || savingPassword || !currentPassword || !newPassword}
+              disabled={!editing || savingPassword || (hasPassword && !currentPassword) || !newPassword}
               className="btn-primary w-full sm:w-auto px-4 py-2 text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {savingPassword ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}

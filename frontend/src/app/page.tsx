@@ -16,7 +16,6 @@ import {
   Activity,
   Cpu,
   Clock,
-  Eye,
   Globe,
   Sparkles,
   BellRing,
@@ -72,9 +71,7 @@ const HOME_SERVICES = [
 export default function LandingPage() {
   const router = useRouter();
   const { t, locale } = useI18n();
-  const [hasSession, setHasSession] = useState(false);
   const [stats, setStats] = useState<PublicStats | null>(null);
-  const [loadingStats, setLoadingStats] = useState(true);
   const theme = useDocumentTheme();
 
   useEffect(() => {
@@ -84,11 +81,10 @@ export default function LandingPage() {
       .me()
       .then((me) => {
         if (me && (me.id || me.user?.id || me.username)) {
-          setHasSession(true);
           router.replace('/connections');
         }
       })
-      .catch(() => setHasSession(false));
+      .catch(() => {});
 
     api.setup
       .getPublicStats()
@@ -105,8 +101,7 @@ export default function LandingPage() {
          * Now cards display a dash.
          */
         setStats(null);
-      })
-      .finally(() => setLoadingStats(false));
+      });
   }, []);
 
   const handleOpenCookieSettings = () => {

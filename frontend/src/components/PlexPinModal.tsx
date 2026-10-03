@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useToast } from './ToastProvider';
 import { useModalA11y } from './useModalA11y';
-import { X, ExternalLink, Loader2, ShieldCheck, Server, CheckCircle2, RefreshCw } from 'lucide-react';
+import { X, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface PlexPinModalProps {
@@ -53,7 +53,7 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
             onSuccess();
             onClose();
           }
-        } catch (err) {
+        } catch {
           // continue polling until approved or closed
         }
       }, 2500);
@@ -106,7 +106,7 @@ export function PlexPinModal({ isOpen, onClose, onSuccess }: PlexPinModalProps) 
       } else {
         throw new Error('Plex API error');
       }
-    } catch (err: any) {
+    } catch {
       // Seamless fallback to backend in case of local network block / adblock
       try {
         const data = await api.plex.requestPin();

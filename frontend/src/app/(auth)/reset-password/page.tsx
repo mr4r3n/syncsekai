@@ -17,8 +17,7 @@ import {
   KeyRound,
   ShieldCheck,
   ArrowRight,
-  ArrowLeft,
-  AlertCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 function ResetPasswordForm() {

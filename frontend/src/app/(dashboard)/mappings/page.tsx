@@ -182,7 +182,7 @@ export default function MappingsPage() {
       await api.mappings.approve(id);
       showToast(t('mappings.mappingApproved'), 'success');
       loadUserAndMappings();
-    } catch (e) {
+    } catch {
       setMappings((prev) =>
         prev.map((m) => (m.id === id ? { ...m, isApproved: true, confidenceScore: 1.0 } : m)),
       );
@@ -327,7 +327,6 @@ export default function MappingsPage() {
     }
   };
 
-  const isAdmin = currentUser?.role === 'ADMIN';
 
   // Exportar Mapeos en Formato JSON
   const handleExportMappings = () => {

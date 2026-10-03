@@ -1,4 +1,4 @@
-export function detectDeviceInfo(userAgent?: string, ipAddress?: string): {
+export function detectDeviceInfo(userAgent?: string): {
   deviceName: string;
   deviceType: string;
   browser: string;

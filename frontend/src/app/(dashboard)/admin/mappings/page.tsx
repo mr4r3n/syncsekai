@@ -230,10 +230,10 @@ export default function AdminMappingsPage() {
     if (!query || query.trim().length === 0) return;
     setIsSearchingRemote(true);
     try {
-      const results = await api.mappings.searchRemote(query.trim());
+      const results = await api.mappings.searchRemote(query.trim(), season);
       setRemoteResults(results || []);
     } catch (e: any) {
-      console.warn('Error buscando en AniList:', e.message);
+      console.warn('Remote title search failed:', e.message);
     } finally {
       setIsSearchingRemote(false);
     }

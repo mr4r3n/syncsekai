@@ -1,9 +1,10 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { ConfigService } from '@nestjs/config';
 import { AnimeProvider } from '@prisma/client';
 import axios from 'axios';
+import { readStoredSetting } from '../../common/crypto/stored-setting';
 
 @Injectable()
 export class KitsuService {
@@ -34,23 +35,8 @@ export class KitsuService {
     return headers;
   }
 
-  private async getConfigValue(key: string): Promise<string> {
-    try {
-      const setting = await this.prisma.systemSetting.findUnique({
-        where: { key },
-      });
-      if (setting && setting.value) {
-        if (setting.isSecret) {
-          try {
-            return this.encryptionService.decrypt(setting.value);
-          } catch {
-            return setting.value;
-          }
-        }
-        return setting.value;
-      }
-    } catch {}
-    return this.configService.get<string>(key) || process.env[key] || '';
+  private getConfigValue(key: string): Promise<string> {
+    return readStoredSetting(this.prisma, this.encryptionService, key);
   }
 
   /**
@@ -202,7 +188,7 @@ export class KitsuService {
     const encryptedRefreshToken = refreshToken ? this.encryptionService.encrypt(refreshToken) : null;
     const tokenExpiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000) : null;
 
-    const connection = await this.prisma.animeConnection.upsert({
+    await this.prisma.animeConnection.upsert({
       where: {
         userId_provider: {
           userId,

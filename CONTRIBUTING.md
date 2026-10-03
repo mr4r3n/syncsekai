@@ -23,20 +23,19 @@ a series, absolute numbering, and two shows that share a name.
 You need Node 20+, Docker and pnpm or npm.
 
 ```bash
-# A database and a Redis for development
-docker compose up -d postgres redis
+# A database for development
+docker compose up -d postgres
 
 # Backend
 cd backend
 cp ../.env.production.example .env      # fill in the secrets
 npm install
-npx prisma db push
+npx prisma migrate deploy
 npm run start:dev                       # port 4000
 
 # Frontend, in another terminal
 cd frontend
 npm install
-echo "NEXT_PUBLIC_API_URL=SECRETO-ROTADO-Y-RETIRADO" > .env.local
 npm run dev                             # port 3000
 ```
 
@@ -56,8 +55,9 @@ emptied. Any other host has to be acknowledged with `SEED_TARGET_OK=1`.
 
 ### Schema changes
 
-This project uses `prisma db push`, not migrations. If you change `schema.prisma`, push it and
-say so in the pull request.
+Schema changes are Prisma migrations. After editing `schema.prisma`, run
+`npx prisma migrate dev --name what-changed` and commit the new folder in `prisma/migrations`.
+The backend applies pending migrations when it starts.
 
 ## Before you open a pull request
 

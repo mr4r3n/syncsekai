@@ -155,11 +155,11 @@ export class SiteSettingsService {
    * it, which leaves it as is. Without that difference there would be no way to
    * disable a provider from here.
    */
-  async updateSystemCredentials(
-    adminId: string,
-    currentPassword: string,
-    changes: Record<string, string>,
-  ) {
+  /**
+   * The admin's password again, for actions a stolen session must not be enough for:
+   * rotating system credentials, downloading or restoring a backup.
+   */
+  async confirmAdminPassword(adminId: string, currentPassword: string) {
     const admin = await this.prisma.user.findUnique({ where: { id: adminId } });
     if (!admin?.passwordHash) {
       throw new ForbiddenException(
@@ -169,6 +169,14 @@ export class SiteSettingsService {
     if (!currentPassword || !(await bcrypt.compare(currentPassword, admin.passwordHash))) {
       throw new ForbiddenException('The password is not correct.');
     }
+  }
+
+  async updateSystemCredentials(
+    adminId: string,
+    currentPassword: string,
+    changes: Record<string, string>,
+  ) {
+    await this.confirmAdminPassword(adminId, currentPassword);
 
     const entries = Object.entries(changes || {});
     if (entries.length === 0) {

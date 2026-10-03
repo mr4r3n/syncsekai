@@ -32,6 +32,7 @@ import {
   ResetPasswordDto,
   VerifyBackupCodesDto,
   RecoverWithBackupCodeDto,
+  UpdateSettingsDto,
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -84,7 +85,7 @@ export class AuthController {
     const result = await this.authService.login(dto, clientIp, userAgent, deviceIdFrom(req, res));
     if (result.accessToken) {
       setSessionCookie(res, result.accessToken);
-      const { accessToken: _accessToken, ...safeResult } = result;
+      const { accessToken, ...safeResult } = result;
       return safeResult;
     }
     return result;
@@ -257,7 +258,7 @@ export class AuthController {
   @Post('settings')
   async updateSettings(
     @CurrentUser() user: any,
-    @Body() body: any,
+    @Body() body: UpdateSettingsDto,
   ) {
     return this.accountService.updateSettings(user.id, body);
   }

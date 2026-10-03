@@ -1,10 +1,11 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { ConfigService } from '@nestjs/config';
 import { AnimeProvider } from '@prisma/client';
 import axios from 'axios';
 import * as crypto from 'crypto';
+import { readStoredSetting } from '../../common/crypto/stored-setting';
 
 @Injectable()
 export class AnilistService {
@@ -35,23 +36,8 @@ export class AnilistService {
     return headers;
   }
 
-  private async getConfigValue(key: string): Promise<string> {
-    try {
-      const setting = await this.prisma.systemSetting.findUnique({
-        where: { key },
-      });
-      if (setting && setting.value) {
-        if (setting.isSecret) {
-          try {
-            return this.encryptionService.decrypt(setting.value);
-          } catch {
-            return setting.value;
-          }
-        }
-        return setting.value;
-      }
-    } catch {}
-    return this.configService.get<string>(key) || process.env[key] || '';
+  private getConfigValue(key: string): Promise<string> {
+    return readStoredSetting(this.prisma, this.encryptionService, key);
   }
 
   /**
@@ -673,7 +659,7 @@ export class AnilistService {
       });
 
       return { isConnected: true, latencyMs };
-    } catch (e) {
+    } catch {
       return { isConnected: true, latencyMs: 30 };
     }
   }

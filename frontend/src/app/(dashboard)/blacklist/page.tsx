@@ -7,17 +7,14 @@ import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
 import { useI18n } from '@/i18n/I18nProvider';
 import {
-  ShieldBan,
   Trash2,
   Plus,
   Search,
   Check,
   Sparkles,
-  AlertTriangle,
   Loader2,
   Tags,
   Info,
-  Filter,
   ShieldCheck,
   Save,
 } from 'lucide-react';
@@ -81,7 +78,7 @@ export default function BlacklistPage() {
       if (genresRes.status === 'fulfilled' && genresRes.value?.blockedGenres) {
         setBlockedGenres(genresRes.value.blockedGenres);
       }
-    } catch (e: any) {
+    } catch {
       showToast(t('blacklist.loadExclusionError'), 'error');
     } finally {
       setLoading(false);
@@ -119,7 +116,7 @@ export default function BlacklistPage() {
         try {
           await api.blacklist.remove(id);
           showToast(t('blacklist.unblocked', { title }), 'info');
-        } catch (e: any) {
+        } catch {
           setBlacklist((prev) => (entry ? [...prev, entry] : prev));
           showToast(t('blacklist.unblockError'), 'error');
         }
@@ -138,7 +135,7 @@ export default function BlacklistPage() {
       setSavingGenres(true);
       await api.blacklist.updateBlockedGenres(blockedGenres);
       showToast(t('blacklist.genreFilterUpdated'), 'success');
-    } catch (e: any) {
+    } catch {
       showToast(t('blacklist.saveGenresError'), 'error');
     } finally {
       setSavingGenres(false);

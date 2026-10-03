@@ -2,13 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Topbar } from '@/components/Topbar';
 import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
 import {
-  LifeBuoy,
   ArrowLeft,
   Send,
   Loader2,
@@ -21,8 +19,6 @@ import {
   User,
   RotateCcw,
   Paperclip,
-  Image as ImageIcon,
-  Trash2,
   Maximize2,
   ExternalLink,
   X,

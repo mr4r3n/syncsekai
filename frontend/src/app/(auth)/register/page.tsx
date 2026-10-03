@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { api, getApiBase } from '@/lib/api';
 import { useToast } from '@/components/ToastProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -20,19 +19,15 @@ import {
   ArrowLeft,
   Sparkles,
   Shield,
-  Zap,
-  Tv,
   Layers,
   LockKeyhole,
   AlertCircle,
 } from 'lucide-react';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { showToast } = useToast();
   const { t } = useI18n();
 
-  const [mounted, setMounted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -48,8 +43,6 @@ export default function RegisterPage() {
   const [registeredSuccess, setRegisteredSuccess] = useState<any>(null);
 
   useEffect(() => {
-    setMounted(true);
-
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const error = params.get('error');

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { useToast } from './ToastProvider';
 import { useModalA11y } from './useModalA11y';
-import { X, ExternalLink, ShieldCheck, Loader2, CheckCircle2, ChevronDown, ChevronUp, KeyRound, Zap } from 'lucide-react';
+import { X, ExternalLink, ShieldCheck, Loader2, ChevronDown, ChevronUp, KeyRound, Zap } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface AniListModalProps {
@@ -23,7 +23,6 @@ export function AniListModal({ isOpen, onClose, onSuccess }: AniListModalProps) 
   // Manual token state
   const [token, setToken] = useState('');
   const [loadingToken, setLoadingToken] = useState(false);
-  const [verifiedUser, setVerifiedUser] = useState<any | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -46,7 +45,7 @@ export function AniListModal({ isOpen, onClose, onSuccess }: AniListModalProps) 
           'https://anilist.co/api/v2/oauth/authorize?client_id=48583&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fconnections%2Fcallback%2Fanilist&response_type=code',
         );
       }
-    } catch (e) {
+    } catch {
       setOauthUrl(
         'https://anilist.co/api/v2/oauth/authorize?client_id=48583&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fconnections%2Fcallback%2Fanilist&response_type=code',
       );
@@ -66,15 +65,12 @@ export function AniListModal({ isOpen, onClose, onSuccess }: AniListModalProps) 
     e.preventDefault();
     if (!token.trim()) return;
     setLoadingToken(true);
-    setVerifiedUser(null);
     try {
       const res = await api.anilist.connectToken(token.trim());
-      setVerifiedUser(res);
       showToast(t('modalAnilist.linkSuccess', { username: res.remoteUsername || t('common.user') }), 'success');
       setTimeout(() => {
         onSuccess();
         onClose();
-        setVerifiedUser(null);
         setToken('');
       }, 1200);
     } catch (err: any) {

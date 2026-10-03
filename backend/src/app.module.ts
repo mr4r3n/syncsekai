@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ClientIpThrottlerGuard } from './common/security/client-ip';
+import { ClientErrorsController } from './common/logging/client-errors.controller';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PlexModule } from './modules/plex/plex.module';
@@ -55,6 +56,7 @@ import { GeoVisitorMiddleware } from './common/middleware/geo-visitor.middleware
     BlacklistModule,
     AdminModule,
   ],
+  controllers: [ClientErrorsController],
   providers: [
     {
       provide: APP_GUARD,

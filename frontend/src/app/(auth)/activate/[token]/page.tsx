@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/ToastProvider';
 import { CheckCircle2, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
@@ -11,7 +11,6 @@ import { useI18n } from '@/i18n/I18nProvider';
 export default function ActivateAccountPage() {
   const { t } = useI18n();
   const params = useParams();
-  const router = useRouter();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);

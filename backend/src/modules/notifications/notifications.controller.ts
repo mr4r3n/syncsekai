@@ -13,7 +13,7 @@ export class NotificationsController {
     @CurrentUser('id') userId: string,
     @Query('limit') limit?: string,
   ) {
-    const limitNum = limit ? Math.max(1, Math.min(100, parseInt(limit, 10))) : 30;
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit || '30', 10) || 30));
     return this.notificationsService.getUserNotifications(userId, limitNum);
   }
 

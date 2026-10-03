@@ -13,7 +13,6 @@ import {
   RefreshCw,
   Globe,
   Users,
-  Shield,
   Activity,
   Trash2,
   Navigation,

@@ -31,7 +31,6 @@ import { AvatarsService } from '../auth/avatars.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
-import { isClientAllowedForAdmin } from '../../common/security/network-target';
 
 @Controller('api/admin')
 @UseGuards(JwtAuthGuard)
@@ -49,68 +48,57 @@ export class AdminController {
     private avatarsService: AvatarsService,
   ) {}
 
-  private checkAdmin(user: any, req?: any) {
+  private checkAdmin(user: any) {
     if (user.role !== Role.ADMIN) {
       throw new ForbiddenException('Access restricted to administrators.');
-    }
-    if (req) {
-      const netCheck = isClientAllowedForAdmin(req);
-      if (!netCheck.allowed) {
-        throw new ForbiddenException(netCheck.reason || 'Access restricted to the private internal network.');
-      }
     }
   }
 
   /*
    * System credentials: rotation from the panel.
-   *
-   * `checkAdmin(user, req)` also applies the network restriction that already
-   * exists for the rest of the panel.
    */
   @Get('site-settings')
-  async getSiteSettings(@CurrentUser() user: any, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async getSiteSettings(@CurrentUser() user: any) {
+    this.checkAdmin(user);
     return this.siteSettingsService.getSiteSettings();
   }
 
   @Put('site-settings')
   async updateSiteSettings(
     @CurrentUser() user: any,
-    @Req() req: any,
     @Body() body: { changes?: Record<string, string> },
   ) {
-    this.checkAdmin(user, req);
+    this.checkAdmin(user);
     return this.siteSettingsService.updateSiteSettings(user.id, body?.changes || {});
   }
 
   @Post('site-settings/icon')
   @UseInterceptors(FileInterceptor('icon', { limits: { fileSize: 10 * 1024 * 1024 } }))
   async uploadSiteIcon(@CurrentUser() user: any, @UploadedFile() file: Express.Multer.File, @Req() req: any) {
-    this.checkAdmin(user, req);
+    this.checkAdmin(user);
     const uploaded = file || req.file;
     if (!uploaded) throw new BadRequestException('Attach a valid image file.');
     return this.siteSettingsService.uploadSiteIcon(user.id, uploaded.buffer);
   }
 
   @Delete('site-settings/icon')
-  async deleteSiteIcon(@CurrentUser() user: any, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async deleteSiteIcon(@CurrentUser() user: any) {
+    this.checkAdmin(user);
     return this.siteSettingsService.deleteSiteIcon(user.id);
   }
 
   @Get('credentials')
-  async getCredentials(@CurrentUser() user: any, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async getCredentials(@CurrentUser() user: any) {
+    this.checkAdmin(user);
     return this.siteSettingsService.getSystemCredentials();
   }
 
   @Put('credentials')
   async updateCredentials(
     @CurrentUser() user: any,
-    @Req() req: any,
     @Body() body: { currentPassword?: string; changes?: Record<string, string> },
   ) {
-    this.checkAdmin(user, req);
+    this.checkAdmin(user);
     return this.siteSettingsService.updateSystemCredentials(
       user.id,
       body?.currentPassword || '',
@@ -121,7 +109,6 @@ export class AdminController {
   @Get('dashboard')
   async getDashboard(
     @CurrentUser() user: any,
-    @Req() req: any,
     @Query('timeframe') timeframe?: string,
   ) {
     this.checkAdmin(user);
@@ -246,13 +233,16 @@ export class AdminController {
     return this.backupService.createBackup(type || 'DATABASE', 'MANUAL');
   }
 
-  @Get('backups/:filename/download')
+  // POST, not GET: the password travels in the body, never in a URL.
+  @Post('backups/:filename/download')
   async downloadBackup(
     @CurrentUser() user: any,
     @Param('filename') filename: string,
+    @Body('currentPassword') currentPassword: string,
     @Res() res: any,
   ) {
     this.checkAdmin(user);
+    await this.siteSettingsService.confirmAdminPassword(user.id, currentPassword);
     const filePath = this.backupService.getBackupFilePath(filename);
     return res.download(filePath, filename);
   }
@@ -270,8 +260,10 @@ export class AdminController {
   async restoreBackup(
     @CurrentUser() user: any,
     @Body('filename') filename: string,
+    @Body('currentPassword') currentPassword: string,
   ) {
     this.checkAdmin(user);
+    await this.siteSettingsService.confirmAdminPassword(user.id, currentPassword);
     if (!filename) {
       throw new BadRequestException('The backup file name is required.');
     }
@@ -285,8 +277,10 @@ export class AdminController {
   async uploadAndRestoreBackup(
     @CurrentUser() user: any,
     @UploadedFile() file: Express.Multer.File,
+    @Body('currentPassword') currentPassword: string,
   ) {
     this.checkAdmin(user);
+    await this.siteSettingsService.confirmAdminPassword(user.id, currentPassword);
     if (!file || !file.buffer) {
       throw new BadRequestException('No backup file was attached.');
     }
@@ -340,8 +334,8 @@ export class AdminController {
   }
 
   @Get('preset-avatars')
-  async getPresetAvatars(@CurrentUser() user: any, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async getPresetAvatars(@CurrentUser() user: any) {
+    this.checkAdmin(user);
     return { avatars: await this.avatarsService.listDefaultAvatars() };
   }
 
@@ -352,7 +346,7 @@ export class AdminController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: any,
   ) {
-    this.checkAdmin(user, req);
+    this.checkAdmin(user);
     const uploaded = file || req.file;
     if (!uploaded) {
       throw new BadRequestException('Attach a valid image file.');
@@ -364,28 +358,27 @@ export class AdminController {
   async removePresetAvatar(
     @CurrentUser() user: any,
     @Body() body: { avatar?: string },
-    @Req() req: any,
   ) {
-    this.checkAdmin(user, req);
+    this.checkAdmin(user);
     return { avatars: await this.avatarsService.removeDefaultAvatar(body?.avatar) };
   }
 
   // FOOTER LINKS (social networks and recommended sites)
   @Get('site-links/providers')
-  async getSiteLinkProviders(@CurrentUser() user: any, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async getSiteLinkProviders(@CurrentUser() user: any) {
+    this.checkAdmin(user);
     return { providers: this.siteLinksService.listSocialNetworks() };
   }
 
   @Get('site-links')
-  async getSiteLinks(@CurrentUser() user: any, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async getSiteLinks(@CurrentUser() user: any) {
+    this.checkAdmin(user);
     return { links: await this.siteLinksService.listLinks() };
   }
 
   @Post('site-links')
-  async createSiteLink(@CurrentUser() user: any, @Body() body: any, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async createSiteLink(@CurrentUser() user: any, @Body() body: any) {
+    this.checkAdmin(user);
     return { links: await this.siteLinksService.createLink(body) };
   }
 
@@ -394,15 +387,14 @@ export class AdminController {
     @CurrentUser() user: any,
     @Param('id') id: string,
     @Body() body: any,
-    @Req() req: any,
   ) {
-    this.checkAdmin(user, req);
+    this.checkAdmin(user);
     return { links: await this.siteLinksService.updateLink(id, body) };
   }
 
   @Delete('site-links/:id')
-  async deleteSiteLink(@CurrentUser() user: any, @Param('id') id: string, @Req() req: any) {
-    this.checkAdmin(user, req);
+  async deleteSiteLink(@CurrentUser() user: any, @Param('id') id: string) {
+    this.checkAdmin(user);
     return { links: await this.siteLinksService.deleteLink(id) };
   }
 
@@ -414,7 +406,7 @@ export class AdminController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: any,
   ) {
-    this.checkAdmin(user, req);
+    this.checkAdmin(user);
     const uploaded = file || req.file;
     if (!uploaded) {
       throw new BadRequestException('Attach a valid image file.');

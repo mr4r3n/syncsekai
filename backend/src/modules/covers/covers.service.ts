@@ -189,6 +189,12 @@ export class CoversService {
           responseType: 'arraybuffer',
           timeout: 10000,
           maxRedirects: 2,
+          // A redirect must stay on an allowed CDN, or the allowlist above is moot.
+          beforeRedirect: (options: Record<string, any>) => {
+            if (!this.isAllowedCoverUrl(`${options.protocol}//${options.hostname}${options.path || ''}`)) {
+              throw new Error('Cover redirect outside the allowed CDNs.');
+            }
+          },
           maxContentLength: 5 * 1024 * 1024,
           maxBodyLength: 5 * 1024 * 1024,
           headers: {
@@ -520,7 +526,7 @@ export class CoversService {
         if (coverUrl) {
           return await this.downloadAndSaveCover(safeKey, coverUrl, titleKey || undefined);
         }
-      } catch (e: any) {
+      } catch {
         // Ignore the network error and continue
       }
     }
@@ -560,7 +566,7 @@ export class CoversService {
           const secondary = media?.id ? `al_${media.id}` : undefined;
           return await this.downloadAndSaveCover(titleKey!, coverUrl, secondary);
         }
-      } catch (e: any) {
+      } catch {
         // Ignore the network error and try Kitsu
       }
 

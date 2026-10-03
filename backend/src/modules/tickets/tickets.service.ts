@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
@@ -22,6 +23,29 @@ export class TicketsService {
     if (!fs.existsSync(this.uploadDir)) {
       fs.mkdirSync(this.uploadDir, { recursive: true });
     }
+  }
+
+  /**
+   * Attachments are uploaded before the ticket or reply that carries them exists, so
+   * one that is never sent stays on disk with nothing pointing at it. Once a day,
+   * those older than a day go.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_4AM)
+  async purgeOrphanAttachments(): Promise<number> {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const attachments = await this.prisma.ticketAttachment.findMany({ select: { fileUrl: true } });
+    const inUse = new Set(attachments.map((a) => path.basename(a.fileUrl)));
+    let removed = 0;
+    for (const name of fs.readdirSync(this.uploadDir)) {
+      if (!name.startsWith('ticket_') || inUse.has(name)) continue;
+      const file = path.join(this.uploadDir, name);
+      if (fs.statSync(file).mtimeMs < cutoff) {
+        fs.unlinkSync(file);
+        removed++;
+      }
+    }
+    if (removed > 0) this.logger.log(`Removed ${removed} ticket attachments that were never sent.`);
+    return removed;
   }
 
   /**

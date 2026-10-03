@@ -121,6 +121,7 @@ export function AdminTicketDrawer({
             <button
               type="button"
               onClick={handleAttemptCloseDrawer}
+              aria-label={t('common.close')}
               className="p-2 rounded-[6px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />

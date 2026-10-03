@@ -3,7 +3,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AnilistService } from '../anilist/anilist.service';
 import { KitsuService } from '../kitsu/kitsu.service';
 import { anilistCoverUrl } from '../covers/covers.service';
-import axios from 'axios';
 import { MappingSource } from '@prisma/client';
 import { decodeHtmlEntities } from '../../common/text/decode-html-entities';
 

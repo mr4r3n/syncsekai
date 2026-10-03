@@ -499,9 +499,10 @@ export class BackupService {
       const currentMinute = now.getMinutes();
       const [targetHour, targetMinute] = schedule.time.split(':').map((v) => parseInt(v, 10) || 0);
 
-      // Skip unless this is the target hour's slot (15-minute window)
+      // Run on the first 15-minute tick at or after the scheduled time. The minute used to be
+      // ignored: a backup set for 03:30 ran between 03:00 and 03:15.
       if (schedule.frequency !== 'HOURLY') {
-        if (currentHour !== targetHour || currentMinute > 15) {
+        if (currentHour !== targetHour || currentMinute < targetMinute || currentMinute >= targetMinute + 15) {
           return;
         }
       }

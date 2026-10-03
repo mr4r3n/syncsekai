@@ -78,6 +78,7 @@ export function MalModal({ isOpen, onClose, onSuccess }: MalModalProps) {
           </div>
           <button
             onClick={onClose}
+            aria-label={t('common.close')}
             className="p-1 rounded-[4px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />

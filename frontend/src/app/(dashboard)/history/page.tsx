@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { api, getApiBase } from '@/lib/api';
 import { Topbar } from '@/components/Topbar';
 import type { LinkedTrackers } from '@/components/SyncStatus';
@@ -49,7 +49,6 @@ export default function HistoryPage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Status Filter: All, Successes, Errors
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'SUCCESS' | 'ERROR'>('ALL');
@@ -120,7 +119,6 @@ export default function HistoryPage() {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [dateWarning, setDateWarning] = useState<string | null>(null);
   const [openPicker, setOpenPicker] = useState<'start' | 'end' | null>(null);
   const [activePreset, setActivePreset] = useState<'month' | 'last30' | 'all' | 'custom'>('month');
   const [hoveredDay, setHoveredDay] = useState<HeatmapDay | null>(null);
@@ -135,7 +133,7 @@ export default function HistoryPage() {
         setEndDate(res.latestRecordDate);
       }
     } catch (e: any) {
-      console.warn('Error cargando heatmap real:', e.message);
+      console.warn('Could not load the heatmap:', e.message);
     }
   }, []);
 
@@ -163,34 +161,25 @@ export default function HistoryPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Load initial pagination state from URL or localStorage
+  // The page lives in the URL (?page=), so a reload or a shared link keeps it. It used to be
+  // read back from the URL or localStorage but never written, so it was always lost.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const urlPage = params.get('page');
-    if (urlPage) {
-      const p = parseInt(urlPage, 10);
-      if (!isNaN(p) && p > 0) setPage(p);
-    } else {
-      const savedPage = localStorage.getItem('plexsync_history_page');
-      if (savedPage) {
-        const p = parseInt(savedPage, 10);
-        if (!isNaN(p) && p > 0) setPage(p);
-      }
-    }
+    const p = parseInt(new URLSearchParams(window.location.search).get('page') || '', 10);
+    if (p > 0) setPage(p);
   }, []);
 
   const changePage = (newPage: number) => {
     setPage(newPage);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('plexsync_history_page', String(newPage));
-      const url = new URL(window.location.href);
-      url.searchParams.set('page', String(newPage));
-      window.history.replaceState({}, '', url.toString());
-    }
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', String(newPage));
+    window.history.replaceState({}, '', url.toString());
   };
 
+  // Only the latest request may apply its answer: on load, the page-1 request and the one for
+  // ?page= race, and a late page-1 answer used to set the page back to 1.
+  const latestRequest = useRef(0);
   const loadHistory = useCallback(async (targetPage = page, targetLimit = limit, targetSearch = search) => {
+    const request = ++latestRequest.current;
     try {
       setLoading(true);
       const res = await api.history.get({
@@ -198,6 +187,7 @@ export default function HistoryPage() {
         limit: targetLimit,
         search: targetSearch,
       });
+      if (request !== latestRequest.current) return;
 
       if (Array.isArray(res)) {
         setHistory(res);
@@ -212,9 +202,9 @@ export default function HistoryPage() {
       }
       setSelectedIds([]);
     } catch (e: any) {
-      showToast(`${t('history.loadHistoryError')} ` + e.message, 'error');
+      if (request === latestRequest.current) showToast(`${t('history.loadHistoryError')} ` + e.message, 'error');
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   }, [page, limit, search, showToast]);
 
@@ -231,25 +221,25 @@ export default function HistoryPage() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1);
+    changePage(1);
     setSearch(searchInput.trim());
   };
 
   const handleClearSearch = () => {
     setSearchInput('');
     setSearch('');
-    setPage(1);
+    changePage(1);
   };
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages || newPage === page) return;
-    setPage(newPage);
+    changePage(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleLimitChange = (newLimit: number) => {
     setLimit(newLimit);
-    setPage(1);
+    changePage(1);
   };
 
   const handleJumpSubmit = (e: React.FormEvent) => {
@@ -343,7 +333,7 @@ export default function HistoryPage() {
             successfulCount++;
             setHistory((prev) => prev.filter((h) => h.id !== id));
           } catch (err: any) {
-            console.warn(`Error al revertir ID ${id}:`, err.message);
+            console.warn(`Could not revert ${id}:`, err.message);
           }
 
           if (i < idsToProcess.length - 1) {
@@ -458,7 +448,6 @@ export default function HistoryPage() {
               search={search}
               handleClearSearch={handleClearSearch}
               handleToggleSelect={handleToggleSelect}
-              deletingId={deletingId}
               setActiveHistorySheetItem={setActiveHistorySheetItem}
               resolveCoverUrl={resolveCoverUrl}
               linked={linked}
@@ -492,7 +481,6 @@ export default function HistoryPage() {
               latestDate={latestDate}
               setActivePreset={setActivePreset}
               activePreset={activePreset}
-              setDateWarning={setDateWarning}
               hoveredDay={hoveredDay}
               setHoveredDay={setHoveredDay}
               heatmapData={heatmapData}

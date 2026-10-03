@@ -121,7 +121,14 @@ export function WorldVisitorsMap({ locations = [], countries = [] }: WorldVisito
     return () => {
       cancelled = true;
       resize.disconnect();
-      map?.destroy();
+      // ponytail: jsVectorMap 1.7.0 bug on touch screens: it registers one handler for
+      // touchstart and touchmove, so destroy() looks up an entry it already deleted and
+      // throws, which took the whole page to the error screen on phones. What it skips
+      // is listener cleanup on a container that is thrown away below; drop the try once
+      // a release fixes EventHandler.off.
+      try {
+        map?.destroy();
+      } catch {}
       // destroy() leaves the drawing in place: without this, the map rebuilt when the data
       // arrives lands under the first, empty one and the page shows no countries.
       container.replaceChildren();

@@ -8,6 +8,9 @@ interface AdminBackupRestoreModalProps {
   restoreTarget: any;
   restoring: boolean;
   handleRestore: () => Promise<void>;
+  /** Password input: restoring overwrites every account, so it is asked again. */
+  passwordField: React.ReactNode;
+  passwordReady: boolean;
 }
 
 export function AdminBackupRestoreModal({
@@ -16,6 +19,8 @@ export function AdminBackupRestoreModal({
   restoreTarget,
   restoring,
   handleRestore,
+  passwordField,
+  passwordReady,
 }: AdminBackupRestoreModalProps) {
   const { t } = useI18n();
 
@@ -41,6 +46,8 @@ export function AdminBackupRestoreModal({
           <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('backups.confirmRestoreDetail')}</p>
         </div>
 
+        {passwordField}
+
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border-subtle)]">
           <button
             type="button"
@@ -51,7 +58,7 @@ export function AdminBackupRestoreModal({
           <button
             type="button"
             onClick={handleRestore}
-            disabled={restoring}
+            disabled={restoring || !passwordReady}
             className="px-4 py-2 rounded-[6px] text-xs font-bold bg-amber-500 text-black hover:bg-amber-400 shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
             {restoring ? (

@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
@@ -62,7 +62,7 @@ async function bootstrap() {
       }
 
       logger.warn(`CORS blocked for unauthorized origin: ${origin}`);
-      return callback(new Error('CORS: origin not allowed by the security policy.'), false);
+      return callback(new ForbiddenException('CORS: origin not allowed by the security policy.'), false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -85,4 +85,7 @@ async function bootstrap() {
   logger.log(`  Connections: http://localhost:${port}/api/connections/hub`);
   logger.log(`=========================================`);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

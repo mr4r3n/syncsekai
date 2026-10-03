@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Query, ForbiddenException } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, ForbiddenException } from '@nestjs/common';
 import { MalService } from './mal.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';

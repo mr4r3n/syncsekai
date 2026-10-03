@@ -340,36 +340,6 @@ export class HistoryService {
     };
   }
 
-  async batchDeleteAndRevert(userId: string, ids: string[]) {
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return { success: true, processedCount: 0, results: [] };
-    }
-
-    const results: any[] = [];
-
-    for (let i = 0; i < ids.length; i++) {
-      const id = ids[i];
-      try {
-        const res = await this.deleteAndRevert(userId, id);
-        results.push({ id, success: true, message: res.message });
-      } catch (e: any) {
-        results.push({ id, success: false, error: e.message });
-      }
-
-      if (i < ids.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 650));
-      }
-    }
-
-    const successfulCount = results.filter((r) => r.success).length;
-    return {
-      success: true,
-      processedCount: results.length,
-      successfulCount,
-      results,
-    };
-  }
-
   /**
    * Real summary of an account's history.
    *

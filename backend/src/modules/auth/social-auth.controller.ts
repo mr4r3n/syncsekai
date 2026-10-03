@@ -10,6 +10,7 @@ import { EncryptionService } from '../../common/crypto/encryption.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { setOAuthTxCookie, setSessionCookie, clearOAuthTxCookie, readCookie, deviceIdFrom } from './auth-cookies';
 import { requestIp } from '../../common/security/client-ip';
+import { readStoredSetting } from '../../common/crypto/stored-setting';
 
 /** Sign-in and account linking with Google and Discord (OAuth). */
 @Controller('api/auth')
@@ -23,23 +24,8 @@ export class SocialAuthController {
     private encryptionService: EncryptionService,
   ) {}
 
-  private async getConfigValue(key: string): Promise<string> {
-    try {
-      const setting = await this.prisma.systemSetting.findUnique({
-        where: { key },
-      });
-      if (setting && setting.value) {
-        if (setting.isSecret) {
-          try {
-            return this.encryptionService.decrypt(setting.value);
-          } catch {
-            return setting.value;
-          }
-        }
-        return setting.value;
-      }
-    } catch {}
-    return this.configService.get<string>(key) || process.env[key] || '';
+  private getConfigValue(key: string): Promise<string> {
+    return readStoredSetting(this.prisma, this.encryptionService, key);
   }
 
   // Social linking endpoints

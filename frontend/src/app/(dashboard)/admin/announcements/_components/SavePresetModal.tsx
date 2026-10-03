@@ -60,6 +60,7 @@ export function SavePresetModal({
               <button
                 type="button"
                 onClick={handleAttemptCloseSavePresetModal}
+                aria-label={t('common.close')}
                 className="p-1.5 rounded-[4px] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />

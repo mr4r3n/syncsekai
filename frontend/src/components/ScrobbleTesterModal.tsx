@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { api } from '@/lib/api';
 import { useToast } from './ToastProvider';
 import { useModalA11y } from './useModalA11y';
-import { X, Play, Loader2, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { X, Play, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 interface ScrobbleTesterModalProps {

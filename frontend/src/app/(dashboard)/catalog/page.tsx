@@ -22,9 +22,7 @@ export default function CatalogPage() {
   const [selectedAnime, setSelectedAnime] = useState<any | null>(null);
   
   // User Personal Stats & Favorites (Autonomous Tracker)
-  const [userStats, setUserStats] = useState<any>(null);
   const [favoritesList, setFavoritesList] = useState<string[]>([]);
-  const [showStatsBar, setShowStatsBar] = useState(true);
   
   // Tracker Selector & Pagination and Filters (32 items = 4 full rows x 8 columns on desktop)
   const [selectedTracker, setSelectedTracker] = useState<'ANILIST' | 'MAL' | 'KITSU' | 'LOCAL'>('ANILIST');
@@ -49,11 +47,7 @@ export default function CatalogPage() {
   // Load user stats and favorites
   const loadUserStats = async () => {
     try {
-      const [stats, favs] = await Promise.all([
-        api.catalog.getUserStats(),
-        api.catalog.getFavorites(),
-      ]);
-      setUserStats(stats);
+      const favs = await api.catalog.getFavorites();
       if (Array.isArray(favs)) {
         setFavoritesList(favs.map((f: any) => String(f.animeId)));
       }
@@ -245,8 +239,6 @@ export default function CatalogPage() {
   const isAnilistActive = !!catalogResponse?.providers?.anilist?.isConnected;
   const isMalActive = !!catalogResponse?.providers?.mal?.isConnected;
   const isKitsuActive = !!catalogResponse?.providers?.kitsu?.isConnected;
-  const connectedTrackersCount = [isAnilistActive, isMalActive, isKitsuActive].filter(Boolean).length;
-  const hasMultipleTrackers = connectedTrackersCount > 1;
 
   const pagination = catalogResponse?.pagination || {
     currentPage: 1,

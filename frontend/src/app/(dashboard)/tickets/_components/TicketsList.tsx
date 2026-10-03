@@ -17,6 +17,7 @@ import {
   PRIORITY_STYLES,
   CATEGORY_LABELS,
 } from './constants';
+import { useNow } from '@/lib/useNow';
 
 interface TicketsListProps {
   loading: boolean;
@@ -44,9 +45,10 @@ export function TicketsList({
   setPage,
 }: TicketsListProps) {
   const { t } = useI18n();
+  const now = useNow();
 
   const formatTimeAgo = (dateStr: string) => {
-    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffMs = now - new Date(dateStr).getTime();
     const mins = Math.floor(diffMs / 60000);
     if (mins < 1) return t('topbar.momentAgo');
     if (mins < 60) return t('topbar.minutesAgo', { mins });

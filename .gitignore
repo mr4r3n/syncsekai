@@ -45,6 +45,8 @@ backend/uploads/temp/
 *.zip
 *.sql
 migration/*.sql
+# Prisma migrations are code, not dumps
+!backend/prisma/migrations/**/migration.sql
 # Con "backups/" a secas tambien quedaba fuera el codigo de la pantalla de
 # copias -frontend/src/app/(dashboard)/admin/backups-, que es una carpeta que se
 # llama igual. Anclado a la raiz solo tapa lo que genera la aplicacion.

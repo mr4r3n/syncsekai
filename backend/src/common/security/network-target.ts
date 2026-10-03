@@ -8,6 +8,8 @@ export interface NetworkTargetPolicy {
   allowPrivate: boolean;
   allowPublic: boolean;
   allowedPorts: number[];
+  /** Private addresses accepted when allowPrivate is false: exact IPs, or prefixes ending in a dot. */
+  privateAllowlist?: string[];
 }
 
 export interface ValidatedNetworkTarget {
@@ -160,7 +162,7 @@ export function classifyIp(address: string): IpClassification {
 
 export async function validateNetworkHost(
   hostname: string,
-  policy: Pick<NetworkTargetPolicy, 'allowPrivate' | 'allowPublic'>,
+  policy: Pick<NetworkTargetPolicy, 'allowPrivate' | 'allowPublic' | 'privateAllowlist'>,
 ): Promise<string[]> {
   const cleanHost = hostname.trim().replace(/^\[|\]$/g, '');
   if (!cleanHost || cleanHost.toLowerCase() === 'localhost') {
@@ -178,7 +180,7 @@ export async function validateNetworkHost(
     if (type.loopback || type.linkLocal || type.unspecified || type.multicast || type.reserved) {
       throw new BadRequestException('The target resolves to a reserved network that is not allowed.');
     }
-    if (type.privateAddress && !policy.allowPrivate) {
+    if (type.privateAddress && !policy.allowPrivate && !inPrivateAllowlist(address, policy.privateAllowlist)) {
       throw new BadRequestException('Private network targets are not allowed.');
     }
     if (!type.privateAddress && !policy.allowPublic) {
@@ -186,6 +188,34 @@ export async function validateNetworkHost(
     }
   }
   return addresses;
+}
+
+function inPrivateAllowlist(address: string, allowlist: string[] = []): boolean {
+  const ip = address.replace(/^::ffff:/i, '');
+  return allowlist.some((entry) => (entry.endsWith('.') ? ip.startsWith(entry) : ip === entry));
+}
+
+/**
+ * Media server URLs come from any registered user, so the backend must not follow
+ * them into the internal network. Public servers are accepted on any port (Plex
+ * remote access uses custom ones); private addresses only if MEDIA_PRIVATE_ALLOWLIST
+ * lists them (the operator's own servers). {KIND}_ALLOWED_PORTS and
+ * {KIND}_ALLOW_PUBLIC_URLS=false narrow it further.
+ */
+export function validateMediaServerTarget(
+  serverUrl: string,
+  kind: 'PLEX' | 'JELLYFIN' | 'EMBY',
+): Promise<ValidatedNetworkTarget> {
+  const list = (value?: string) => (value || '').split(',').map((v) => v.trim()).filter(Boolean);
+  const ports = list(process.env[`${kind}_ALLOWED_PORTS`])
+    .map(Number)
+    .filter((port) => Number.isInteger(port) && port > 0 && port <= 65535);
+  return validateOutboundTarget(serverUrl, {
+    allowPrivate: false,
+    privateAllowlist: list(process.env.MEDIA_PRIVATE_ALLOWLIST),
+    allowPublic: process.env[`${kind}_ALLOW_PUBLIC_URLS`] !== 'false',
+    allowedPorts: ports.length > 0 ? [...new Set(ports)] : Array.from({ length: 65535 }, (_, i) => i + 1),
+  });
 }
 
 export async function validateOutboundUrl(
@@ -240,51 +270,5 @@ export async function validateOutboundTarget(
     addresses,
     httpAgent: new HttpAgent({ lookup: pinnedLookup }),
     httpsAgent: new HttpsAgent({ lookup: pinnedLookup, rejectUnauthorized: !onlyPrivateTargets }),
-  };
-}
-
-export function isClientAllowedForAdmin(req: any): { allowed: boolean; reason?: string } {
-  const isRestrictionEnabled = process.env.ADMIN_RESTRICT_PRIVATE_NETWORK === 'true';
-  if (!isRestrictionEnabled) {
-    return { allowed: true };
-  }
-
-  // The IP check is advisory, not a security boundary: the backend is only
-  // reachable through the Next rewrite, so its real peer is always the
-  // frontend container and the first X-Forwarded-For value is set by the
-  // client. The Host check is reliable behind a reverse proxy that routes by
-  // name. A real boundary is enforced at the proxy, by origin.
-  const forwarded = req?.headers?.['x-forwarded-for'];
-  const rawIp = (typeof forwarded === 'string' ? forwarded.split(',')[0] : req?.ip || req?.socket?.remoteAddress || '127.0.0.1')
-    .replace(/^::ffff:/, '')
-    .trim();
-
-  // The port is not part of the authorized host's identity.
-  const hostname = String(req?.headers?.host || '').toLowerCase().split(':')[0].trim();
-  // ADMIN_ALLOWED_HOSTS: host names (exact match) or IP prefixes ending in a
-  // dot. Private and loopback addresses always pass.
-  const allowedHostsEnv = process.env.ADMIN_ALLOWED_HOSTS || 'localhost,127.0.0.1';
-  const allowedHosts = allowedHostsEnv.split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
-
-  // Exact match, not substring: "evil-localhost.com" must not pass.
-  // Entries ending in a dot ("10.0.") are IP prefixes and are only
-  // accepted if the host really is an IP address.
-  const isHostAllowed = allowedHosts.some((entry) =>
-    entry.endsWith('.')
-      ? isIP(hostname) !== 0 && hostname.startsWith(entry)
-      : hostname === entry,
-  );
-  if (isHostAllowed) {
-    return { allowed: true };
-  }
-
-  const { loopback, linkLocal, privateAddress } = classifyIp(rawIp);
-  if (loopback || linkLocal || privateAddress) {
-    return { allowed: true };
-  }
-
-  return {
-    allowed: false,
-    reason: 'Admin access is restricted to the private internal network or an authorized management subdomain.',
   };
 }

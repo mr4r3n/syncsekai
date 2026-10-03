@@ -42,9 +42,9 @@ export function clearOAuthTxCookie(res: Response) {
 /**
  * Reads a cookie from the raw header.
  *
- * The project does not use cookie-parser: the JWT strategy already splits the
- * header by hand (jwt.strategy.ts), so this does the same instead of adding a
- * dependency to read one value.
+ * The project does not use cookie-parser: reading one or two values by hand is
+ * smaller than the dependency. A value that is not valid percent-encoding reads
+ * as empty (no session), not as an exception that ends in a 500.
  */
 export function readCookie(req: any, name: string): string {
   const header: string = req?.headers?.cookie || '';
@@ -52,7 +52,12 @@ export function readCookie(req: any, name: string): string {
     .split(';')
     .map((p: string) => p.trim())
     .find((p: string) => p.startsWith(`${name}=`));
-  return chunk ? decodeURIComponent(chunk.slice(name.length + 1)) : '';
+  if (!chunk) return '';
+  try {
+    return decodeURIComponent(chunk.slice(name.length + 1));
+  } catch {
+    return '';
+  }
 }
 
 export function clearSessionCookie(res: Response) {

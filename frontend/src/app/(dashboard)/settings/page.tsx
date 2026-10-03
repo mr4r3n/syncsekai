@@ -19,6 +19,7 @@ import { AccountStatusCard } from './_components/AccountStatusCard';
 import { AccountDataCard } from './_components/AccountDataCard';
 import { ThemeSwatchesCard } from './_components/ThemeSwatchesCard';
 import { ViewingStatsSection } from './_components/ViewingStatsSection';
+import { useNow } from '@/lib/useNow';
 
 export type { ThemeSwatch };
 export { normalizePalette, THEME_SWATCHES };
@@ -28,6 +29,7 @@ export default function SettingsPage() {
   const { isCollapsed } = useSidebar();
   const { showToast } = useToast();
   const { t } = useI18n();
+  const now = useNow();
   const { setDirty, registerSaveHandler } = useUnsavedChanges();
 
   const [loading, setLoading] = useState(true);
@@ -36,8 +38,6 @@ export default function SettingsPage() {
 
   // Tema & Apariencia (Swatches)
   const [selectedThemeId, setSelectedThemeId] = useState<string>('sync');
-  const [themePalette, setThemePalette] = useState<string>('sync');
-  const [themeMode, setThemeMode] = useState<'dark' | 'light'>('dark');
 
   // Perfil & Datos de Cuenta
   const [username, setUsername] = useState('');
@@ -127,8 +127,6 @@ export default function SettingsPage() {
       }
 
       setSelectedThemeId(themeId);
-      setThemePalette(currentPalette);
-      setThemeMode(currentMode);
       document.documentElement.setAttribute('data-palette', currentPalette);
       document.documentElement.setAttribute('data-theme', currentMode);
 
@@ -136,7 +134,7 @@ export default function SettingsPage() {
       try {
         const stats = await api.catalog.getUserStats();
         setUserStats(stats);
-      } catch (err) {
+      } catch {
         // Silent if no data yet
       }
     } catch (e: any) {
@@ -155,8 +153,6 @@ export default function SettingsPage() {
       const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
       const autoMode: 'dark' | 'light' = prefersDark ? 'dark' : 'light';
       const autoPalette = 'sync';
-      setThemeMode(autoMode);
-      setThemePalette(autoPalette);
       localStorage.setItem('plexsync_theme', autoMode);
       localStorage.setItem('plexsync_palette', autoPalette);
       document.documentElement.setAttribute('data-theme', autoMode);
@@ -171,8 +167,6 @@ export default function SettingsPage() {
     const newPalette = swatch.palette || 'sync';
     const newMode = swatch.mode || 'dark';
 
-    setThemePalette(newPalette);
-    setThemeMode(newMode);
     localStorage.setItem('plexsync_palette', newPalette);
     localStorage.setItem('plexsync_theme', newMode);
     document.documentElement.setAttribute('data-palette', newPalette);
@@ -340,7 +334,7 @@ export default function SettingsPage() {
     if (!userProfile?.lastUsernameChange) return null;
     const last = new Date(userProfile.lastUsernameChange).getTime();
     const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-    const remainingMs = last + thirtyDaysMs - Date.now();
+    const remainingMs = last + thirtyDaysMs - now;
     if (remainingMs <= 0) return null;
     return Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
   };

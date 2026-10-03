@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Full guide to syncing Plex, Jellyfin and Emby Media Servers with AniList, MyAnimeList and Kitsu: webhook setup, automatic title mapping and real-time scrobbling.',
   keywords: [
-    'SyncSekai Documentación',
+    'SyncSekai documentation',
     'Plex AniList',
     'Jellyfin AniList',
     'Emby AniList',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     'Webhook Jellyfin Anime',
     'Emby Anime Sync',
     'Scrobbler Anime',
-    'Guía SyncSekai',
+    'SyncSekai setup guide',
   ],
   robots: {
     index: true,

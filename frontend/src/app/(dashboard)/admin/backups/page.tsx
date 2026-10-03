@@ -8,6 +8,7 @@ import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useModalA11y } from '@/components/useModalA11y';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import { AdminBackupsPageHeader } from './_components/AdminBackupsPageHeader';
 import { AdminBackupsMigrationBanner } from './_components/AdminBackupsMigrationBanner';
 import { AdminBackupsStats } from './_components/AdminBackupsStats';
@@ -133,12 +134,34 @@ export default function AdminBackupsPage() {
   // File is fetched entirely before offering: on large backups seconds pass
   // without signal, so button spins meanwhile.
   const [downloading, setDownloading] = useState<string | null>(null);
+  // Downloading or restoring a backup asks for the password again (like system
+  // credentials): a backup holds every account, a stolen session must not be enough.
+  const [downloadTarget, setDownloadTarget] = useState<string | null>(null);
+  const [adminPassword, setAdminPassword] = useState('');
+  const passwordField = (
+    <input
+      type="password"
+      autoComplete="current-password"
+      suppressHydrationWarning
+      value={adminPassword}
+      onChange={(e) => setAdminPassword(e.target.value)}
+      placeholder={t('credentials.yourPassword')}
+      aria-label={t('credentials.yourPassword')}
+      className="glass-input text-xs w-full"
+    />
+  );
   const handleDownload = (filename: string) => {
-    if (downloading) return;
+    if (!downloading) setDownloadTarget(filename);
+  };
+  const confirmDownload = () => {
+    const filename = downloadTarget;
+    if (!filename || downloading) return;
     setDownloading(filename);
     api.admin
-      .downloadBackup(filename)
+      .downloadBackup(filename, adminPassword)
       .then((blob) => {
+        setDownloadTarget(null);
+        setAdminPassword('');
         const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -159,9 +182,10 @@ export default function AdminBackupsPage() {
     if (!restoreTarget) return;
     try {
       setRestoring(true);
-      const res = await api.admin.restoreBackup(restoreTarget.filename);
+      const res = await api.admin.restoreBackup(restoreTarget.filename, adminPassword);
       showToast(t('backups.restoreSuccessRecords', { count: res.restoredRecords }), 'success');
       setRestoreTarget(null);
+      setAdminPassword('');
       await loadBackupsData();
     } catch (err: any) {
       showToast(`${t('backups.restoreError')} ` + err.message, 'error');
@@ -177,9 +201,10 @@ export default function AdminBackupsPage() {
     }
     try {
       setUploading(true);
-      const res = await api.admin.uploadAndRestoreBackup(uploadFile);
+      const res = await api.admin.uploadAndRestoreBackup(uploadFile, adminPassword);
       showToast(t('backups.uploadRestoreSuccessRecords', { count: res.restoredRecords }), 'success');
       setShowUploadModal(false);
+      setAdminPassword('');
       setUploadFile(null);
       await loadBackupsData();
     } catch (err: any) {
@@ -301,10 +326,15 @@ export default function AdminBackupsPage() {
       {restoreTarget && (
         <AdminBackupRestoreModal
           restoreProps={restoreProps}
-          setRestoreTarget={setRestoreTarget}
+          setRestoreTarget={(value) => {
+            setRestoreTarget(value);
+            if (!value) setAdminPassword('');
+          }}
           restoreTarget={restoreTarget}
           restoring={restoring}
           handleRestore={handleRestore}
+          passwordField={passwordField}
+          passwordReady={adminPassword.length > 0}
         />
       )}
 
@@ -314,14 +344,36 @@ export default function AdminBackupsPage() {
       {showUploadModal && (
         <AdminBackupUploadModal
           uploadProps={uploadProps}
-          setShowUploadModal={setShowUploadModal}
+          setShowUploadModal={(value) => {
+            setShowUploadModal(value);
+            if (!value) setAdminPassword('');
+          }}
           setUploadFile={setUploadFile}
           uploadFile={uploadFile}
           fileInputRef={fileInputRef}
           uploading={uploading}
           handleUploadAndRestore={handleUploadAndRestore}
+          passwordField={passwordField}
+          passwordReady={adminPassword.length > 0}
         />
       )}
+
+      <ConfirmModal
+        isOpen={Boolean(downloadTarget)}
+        title={t('backups.downloadBackup')}
+        description={t('backups.passwordToDownload')}
+        confirmText={t('backups.downloadBackup')}
+        cancelText={t('common.cancel')}
+        variant="warning"
+        loading={Boolean(downloading)}
+        onConfirm={confirmDownload}
+        onClose={() => {
+          setDownloadTarget(null);
+          setAdminPassword('');
+        }}
+      >
+        {passwordField}
+      </ConfirmModal>
 
       {/* ========================================================= */}
       {/* MODAL: CONFIRM DELETION                                   */}

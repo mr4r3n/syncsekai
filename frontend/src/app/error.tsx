@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/I18nProvider';
+import { reportClientError } from '@/lib/api';
 import {
   AlertTriangle,
   RotateCcw,
@@ -11,7 +12,6 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  Activity,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -33,6 +33,7 @@ export default function ErrorPage({
     setMounted(true);
     // Loguear error internamente
     console.error('SyncSekai Uncaught Route Error:', error);
+    reportClientError(error);
 
     const currentTheme = (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
     setTheme(currentTheme);
@@ -86,18 +87,15 @@ export default function ErrorPage({
       {/* CONTENIDO PRINCIPAL */}
       <main className="w-full max-w-xl mx-auto px-4 py-8 flex flex-col items-center text-center z-10 my-auto">
         <div className="glass-card p-7 sm:p-10 w-full space-y-6 shadow-2xl relative border-rose-500/20">
-          {/* Badge and 500 Code */}
+          {/* Badge and icon: no status code, most of these are errors in the browser, not the server */}
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[6px] text-xs font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 select-none">
               <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-              <span>{t('errors.serverErrorCode')}</span>
+              <span>{t('errors.unexpectedBadge')}</span>
             </div>
 
-            <div className="relative flex items-center justify-center">
-              <span className="font-heading font-black text-7xl sm:text-8xl tracking-tighter text-[var(--text-primary)] opacity-90 select-none">
-                500
-              </span>
-              <AlertTriangle className="w-12 h-12 text-rose-400 absolute -bottom-1 -right-2 sm:right-6 opacity-80 animate-pulse" />
+            <div className="flex items-center justify-center">
+              <AlertTriangle className="w-14 h-14 text-rose-400 opacity-80" aria-hidden="true" />
             </div>
           </div>
 
@@ -125,13 +123,6 @@ export default function ErrorPage({
               <span>{t('errors.toDashboard')}</span>
             </Link>
 
-            <Link
-              href="/admin/services"
-              className="btn-secondary w-full sm:w-auto text-xs flex items-center justify-center gap-2"
-            >
-              <Activity className="w-3.5 h-3.5 text-sky-400" />
-              <span>{t('errors.diagnostics')}</span>
-            </Link>
           </div>
 
           {/* Collapsible Technical Details */}

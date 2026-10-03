@@ -86,7 +86,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
 
   // Intercept browser back/forward button
   useEffect(() => {
-    const handlePopState = (e: PopStateEvent) => {
+    const handlePopState = () => {
       if (isDirtyRef.current) {
         window.history.pushState(null, '', window.location.href);
         setIsModalOpen(true);
@@ -146,7 +146,7 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
         router.push(nav.url);
       }
     } catch (err) {
-      console.error('Error al guardar cambios antes de navegar:', err);
+      console.error('Could not save changes before leaving:', err);
     } finally {
       setIsSaving(false);
     }

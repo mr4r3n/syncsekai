@@ -18,7 +18,7 @@ export class SessionsService {
    */
   async createSession(userId: string, clientIp: string, userAgent: string, deviceId: string | null, defaultAgent: string) {
     const sessionToken = `ses_live_${randomBytes(24).toString('hex')}`;
-    const deviceInfo = detectDeviceInfo(userAgent, clientIp);
+    const deviceInfo = detectDeviceInfo(userAgent);
     if (deviceId) {
       await this.prisma.session.deleteMany({ where: { userId, deviceId } }).catch(() => undefined);
     }
@@ -79,7 +79,7 @@ export class SessionsService {
 
     // If no sessions are stored yet, record the current one
     if (sessions.length === 0 && currentSessionToken) {
-      const deviceInfo = detectDeviceInfo(userAgent, clientIp);
+      const deviceInfo = detectDeviceInfo(userAgent);
       const fallbackSession = await this.prisma.session.create({
         data: {
           userId,
@@ -141,11 +141,10 @@ export class SessionsService {
   }
 
   async revokeSessionByToken(userId: string, sessionToken: string) {
-    try {
-      await this.prisma.session.deleteMany({
-        where: { userId, sessionToken },
-      });
-    } catch {}
+    // No silent catch: "signed out" while the session stays valid would be worse than an error.
+    await this.prisma.session.deleteMany({
+      where: { userId, sessionToken },
+    });
     return { message: 'Signed out.' };
   }
 }

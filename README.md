@@ -89,7 +89,7 @@ Most of this repository is about that problem, not about HTTP.
 
 ## Stack
 
-- **Backend** — NestJS 11, Prisma, PostgreSQL 16, Redis 7 (BullMQ for the sync queue)
+- **Backend** — NestJS 11, Prisma (versioned migrations), PostgreSQL 16
 - **Frontend** — Next.js 16 (App Router), React, TypeScript, Tailwind v4
 - **Deployment** — Docker Compose
 
@@ -103,8 +103,12 @@ cd syncsekai
 cp .env.production.example .env
 ```
 
-Open `.env` and fill in the required secrets. The backend **refuses to start** if any of
-them is missing, too short, or left at a known default — that is deliberate, and
+Open `.env` and fill in the required secrets. If your media server is on your local network,
+put its IP in `MEDIA_PRIVATE_ALLOWLIST`: other private addresses are refused, so that no user can
+point the backend at the rest of your network.
+
+The backend **refuses to start** if any of
+the secrets is missing, too short, or left at a known default — that is deliberate, and
 [`required-secret.ts`](backend/src/common/security/required-secret.ts) is where it happens.
 
 ```bash
@@ -124,7 +128,8 @@ To link trackers you need your own OAuth applications:
 | MyAnimeList | API → Create ID (PKCE) |
 | Kitsu | Uses password grant; no application needed |
 
-Put the client IDs and secrets in `.env`. They never leave your instance.
+Enter the client IDs and secrets in **Administration → System credentials**. They are stored
+encrypted in your database and never leave your instance.
 
 ## Security and your data
 

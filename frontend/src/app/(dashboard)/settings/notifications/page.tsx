@@ -14,10 +14,7 @@ import {
   Save,
   Loader2,
   ShieldCheck,
-  Send,
-  Radio,
-  Check,
-  CheckCircle2,
+  Send
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { NotificationHistory } from '@/components/NotificationHistory';
@@ -127,7 +124,7 @@ export default function NotificationsSettingsPage() {
         discordNotifications,
       });
       showToast(t('notifications.preferencesSaved'), 'success');
-    } catch (e: any) {
+    } catch {
       showToast(t('notifications.savePreferencesError'), 'error');
     } finally {
       setSavingNotifications(false);

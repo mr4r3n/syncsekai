@@ -11,14 +11,10 @@ import {
   Terminal,
   RefreshCw,
   Search,
-  Filter,
   ShieldCheck,
   ShieldAlert,
   Plus,
-  Trash2,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
+  Trash2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CustomSelect } from '@/components/CustomSelect';
@@ -29,7 +25,6 @@ export default function AdminLogsPage() {
   const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
   const [data, setData] = useState<any>(null);
-  const [systemHealth, setSystemHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -56,13 +51,9 @@ export default function AdminLogsPage() {
         return;
       }
 
-      const [dashRes, healthRes] = await Promise.allSettled([
-        api.admin.getDashboard(),
-        api.admin.getSystemHealth(),
-      ]);
+      const [dashRes] = await Promise.allSettled([api.admin.getDashboard()]);
 
       if (dashRes.status === 'fulfilled') setData(dashRes.value);
-      if (healthRes.status === 'fulfilled') setSystemHealth(healthRes.value);
     } catch (e) {
       console.error(e);
     } finally {

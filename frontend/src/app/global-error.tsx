@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { I18nProvider, useI18n } from '@/i18n/I18nProvider';
+import { reportClientError } from '@/lib/api';
 
 export default function GlobalError({
   error,
@@ -13,6 +14,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error('SyncSekai Global Root Error:', error);
+    reportClientError(error);
   }, [error]);
 
   // This boundary replaces root layout, so it falls outside I18nProvider

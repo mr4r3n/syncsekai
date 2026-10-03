@@ -481,12 +481,10 @@ export class TwoFactorService {
       },
     });
 
-    // Revoke every open session
-    try {
-      await this.prisma.session.deleteMany({
-        where: { userId: user.id },
-      });
-    } catch {}
+    // Revoke every open session (a failure must surface: they would stay valid)
+    await this.prisma.session.deleteMany({
+      where: { userId: user.id },
+    });
 
     // Audit log entry
     await this.prisma.auditLog.create({

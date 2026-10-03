@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Body, Param, UseGuards, Query, Req, Logger, UseInterceptors, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Put, Body, Param, UseGuards, Req, Logger, UseInterceptors, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 
@@ -142,7 +142,7 @@ export class PlexController {
     if (typeof body?.payload === 'string') {
       try {
         payload = JSON.parse(body.payload);
-      } catch (e) {
+      } catch {
         throw new BadRequestException('Invalid webhook payload.');
       }
     }

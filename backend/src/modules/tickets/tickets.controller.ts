@@ -12,6 +12,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import * as fs from 'fs';
 import { TicketsService } from './tickets.service';
@@ -50,6 +51,7 @@ export class TicketsController {
 
   @Post('upload-attachment')
   @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 10 * 1024 * 1024, files: 1 },

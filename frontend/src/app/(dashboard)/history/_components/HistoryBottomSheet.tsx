@@ -87,13 +87,18 @@ export function HistoryBottomSheet({
                   },
                 ]
               : []),
-            {
-              label: t('history.revertScrobbleAction'),
-              sublabel: t('history.subtractEpisodeDesc'),
-              icon: RotateCcw,
-              variant: 'danger',
-              onClick: () => handleDeleteAndRevert(activeHistorySheetItem),
-            },
+            // Not while its sync is queued: it would reach the trackers again right after (the backend refuses it too).
+            ...([activeHistorySheetItem.anilistStatus, activeHistorySheetItem.malStatus, activeHistorySheetItem.kitsuStatus].includes('SYNCING')
+              ? []
+              : [
+                  {
+                    label: t('history.revertScrobbleAction'),
+                    sublabel: t('history.subtractEpisodeDesc'),
+                    icon: RotateCcw,
+                    variant: 'danger' as const,
+                    onClick: () => handleDeleteAndRevert(activeHistorySheetItem),
+                  },
+                ]),
             ...(activeHistorySheetItem.anilistMediaId
               ? [
                   {

@@ -3,7 +3,8 @@ import { GitMerge, Search, Film, Globe, CheckCircle2, AlertCircle, Check, Edit3,
 import { ListRow, ListRows } from '@/components/ListRow';
 
 interface MappingsListSectionProps {
-  filteredMappings: any[];
+  /** Rows that match the filters, across every page. */
+  total: number;
   paginatedMappings: any[];
   searchFilter: string;
   handleSearchFilterChange: (val: string) => void;
@@ -18,7 +19,7 @@ interface MappingsListSectionProps {
 }
 
 export function MappingsListSection({
-  filteredMappings,
+  total,
   paginatedMappings,
   searchFilter,
   handleSearchFilterChange,
@@ -39,7 +40,7 @@ export function MappingsListSection({
           <GitMerge className="w-4 h-4 text-amber-400" />
           <h2 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('mappings.activeAssociations')}</h2>
           <span className="text-xs text-[var(--text-muted)] font-mono">
-            ({t('mappings.countLabel', { n: filteredMappings.length })})
+            ({t('mappings.countLabel', { n: total })})
           </span>
         </div>
 
@@ -64,7 +65,7 @@ export function MappingsListSection({
       <div className="divide-y divide-[var(--glass-border)]">
         {loading ? (
           <div className="py-16 text-center text-xs font-mono text-[var(--text-muted)]">{t('mappings.loadingCatalogue')}</div>
-        ) : filteredMappings.length === 0 ? (
+        ) : total === 0 ? (
           <div className="py-16 text-center text-xs font-mono text-[var(--text-muted)]">{t('mappings.noMappingsForFilter')}</div>
         ) : (
           <ListRows label={t('mappings.title')}>

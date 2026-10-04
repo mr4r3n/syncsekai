@@ -3,7 +3,8 @@ import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-r
 import { CustomSelect } from '@/components/CustomSelect';
 
 interface MappingsPaginationProps {
-  filteredMappings: any[];
+  /** Rows that match the filters, across every page. */
+  total: number;
   page: number;
   limit: number;
   totalPages: number;
@@ -16,7 +17,7 @@ interface MappingsPaginationProps {
 }
 
 export function MappingsPagination({
-  filteredMappings,
+  total,
   page,
   limit,
   totalPages,
@@ -32,7 +33,7 @@ export function MappingsPagination({
       {/* Limit Selector & Count */}
       <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-muted)] flex-wrap">
         <span>
-          {t('mappings.showingRange', { from: (page - 1) * limit + 1, to: Math.min(page * limit, filteredMappings.length), total: filteredMappings.length })}
+          {t('mappings.showingRange', { from: (page - 1) * limit + 1, to: Math.min(page * limit, total), total })}
         </span>
 
         <div className="flex items-center gap-1.5 ml-0 md:ml-2">

@@ -20,10 +20,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { SiteSettingsService } from './site-settings.service';
 import { MetricsService } from './metrics.service';
-import { AdminUsersService } from './admin-users.service';
+import { AdminUsersService, parseUsersQuery } from './admin-users.service';
 import { SystemHealthService } from './system-health.service';
 import { VisitorsService } from './visitors.service';
-import { AdminMediaService } from './admin-media.service';
+import { AdminMediaService, parseMediaQuery } from './admin-media.service';
 import { SiteLinksService } from './site-links.service';
 import { BackupService } from './backup.service';
 import { BackupRestoreService } from './backup-restore.service';
@@ -156,9 +156,9 @@ export class AdminController {
   }
 
   @Get('users')
-  async getUsers(@CurrentUser() user: any) {
+  async getUsers(@CurrentUser() user: any, @Query() query: Record<string, string | undefined>) {
     this.checkAdmin(user);
-    return this.adminUsersService.getUsersList();
+    return this.adminUsersService.getUsersPage(parseUsersQuery(query));
   }
 
   @Patch('users/:id/permissions')
@@ -304,9 +304,9 @@ export class AdminController {
   }
 
   @Get('media')
-  async getMedia(@CurrentUser() user: any) {
+  async getMedia(@CurrentUser() user: any, @Query() query: Record<string, string | undefined>) {
     this.checkAdmin(user);
-    return this.adminMediaService.getMediaList();
+    return this.adminMediaService.getMediaPage(parseMediaQuery(query));
   }
 
   @Delete('media/:filename')

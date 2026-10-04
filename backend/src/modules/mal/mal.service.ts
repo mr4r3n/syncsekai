@@ -6,6 +6,7 @@ import { AnimeProvider } from '@prisma/client';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import { readStoredSetting } from '../../common/crypto/stored-setting';
+import { apiLatency } from '../../common/http/tracker-gate';
 
 @Injectable()
 export class MalService {
@@ -258,10 +259,8 @@ export class MalService {
       return { isConnected: false, latencyMs: 0 };
     }
 
-    const start = Date.now();
     try {
-      await axios.get(`${this.baseUrl}/anime?q=naruto&limit=1`, { timeout: 3000 });
-      const latencyMs = Date.now() - start;
+      const latencyMs = await apiLatency('mal', () => axios.get(`${this.baseUrl}/anime?q=naruto&limit=1`, { timeout: 3000 }));
 
       await this.prisma.animeConnection.update({
         where: { id: conn.id },

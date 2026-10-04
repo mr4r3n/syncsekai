@@ -7,7 +7,8 @@ import { getAvatarSrc } from './utils';
 interface UsersCardGridProps {
   view: 'lista' | 'tarjetas';
   loading: boolean;
-  filteredUsers: any[];
+  /** Users that match the filters, across every page. */
+  total: number;
   pageUsers: any[];
   totalPages: number;
   currentPage: number;
@@ -26,7 +27,7 @@ interface UsersCardGridProps {
 export function UsersCardGrid({
   view,
   loading,
-  filteredUsers,
+  total,
   pageUsers,
   totalPages,
   currentPage,
@@ -57,7 +58,7 @@ export function UsersCardGrid({
           pills—was already in their title attribute. */}
       {loading ? (
         <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card lg:col-span-full">{t('users.loadingUsers')}</div>
-      ) : filteredUsers.length === 0 ? (
+      ) : total === 0 ? (
         <div className="p-8 text-center text-[var(--text-muted)] font-mono text-xs glass-card lg:col-span-full">{t('users.noUsersFound')}</div>
       ) : (
         pageUsers.map((u) => {

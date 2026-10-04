@@ -5,6 +5,7 @@ import { detectImageType } from '../../common/security/image-file';
 import * as crypto from 'crypto';
 import axios from 'axios';
 import sharp from 'sharp';
+import { withTrackerPriority } from '../../common/http/tracker-gate';
 
 /**
  * The cover URL of an AniList anime. The title always goes along: it is what
@@ -253,7 +254,12 @@ export class CoversService {
     return downloadPromise;
   }
 
-  async fetchAndCacheOnDemand(key: string, titleHint?: string): Promise<string | null> {
+  /** Background work for the trackers' queue: after 5 s the image falls back to the default cover. */
+  fetchAndCacheOnDemand(key: string, titleHint?: string): Promise<string | null> {
+    return withTrackerPriority('background', () => this.lookUpCover(key, titleHint), 5_000);
+  }
+
+  private async lookUpCover(key: string, titleHint?: string): Promise<string | null> {
     const cleaned = this.canonicalKey(key);
     const existing = this.getFilePath(cleaned);
     if (existing) return existing;
@@ -479,7 +485,20 @@ export class CoversService {
     return null;
   }
 
-  async getOrFetchCover(showTitle: string, anilistId?: number | null): Promise<string | null> {
+  /** Background work for the trackers' queue (see fetchAndCacheOnDemand). */
+  getOrFetchCover(showTitle: string, anilistId?: number | null): Promise<string | null> {
+    return withTrackerPriority('background', () => this.findCover(showTitle, anilistId), 5_000);
+  }
+
+  /** The cover already on disk for a title (or AniList id), without asking anyone. */
+  localCoverFor(showTitle: string, anilistId?: number | null): string | null {
+    const cleanTitle = (showTitle || '').toLowerCase().trim();
+    if (!cleanTitle && !anilistId) return null;
+    const titleKey = cleanTitle ? this.getTitleKey(cleanTitle) : null;
+    return (anilistId ? this.getLocalCoverUrl(`al_${anilistId}`) : null) || (titleKey ? this.getLocalCoverUrl(titleKey) : null);
+  }
+
+  private async findCover(showTitle: string, anilistId?: number | null): Promise<string | null> {
     const cleanTitle = (showTitle || '').toLowerCase().trim();
     if (!cleanTitle && !anilistId) return null;
 
@@ -487,13 +506,8 @@ export class CoversService {
     const safeKey = anilistId ? `al_${anilistId}` : titleKey!;
 
     // 1. If it already exists on local disk, return it right away
-    const local = this.getLocalCoverUrl(safeKey);
+    const local = this.localCoverFor(showTitle, anilistId);
     if (local) return local;
-
-    if (titleKey) {
-      const localTitle = this.getLocalCoverUrl(titleKey);
-      if (localTitle) return localTitle;
-    }
 
     // 2. With an anilistId, look it up on AniList GraphQL by id
     if (anilistId) {

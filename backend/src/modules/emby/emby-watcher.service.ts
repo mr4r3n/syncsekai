@@ -4,6 +4,8 @@ import { EncryptionService } from '../../common/crypto/encryption.service';
 import { EmbyService } from './emby.service';
 import axios from 'axios';
 import { recordActivity } from '../../common/logging/activity-log';
+import { PollSchedule, PollResult, runPool, POLL_CONCURRENCY, CONNECTIONS_TTL_MS } from '../../common/watch/poll-schedule';
+import { CachedValue } from '../../common/cached-value';
 
 interface TrackedEmbySession {
   sessionKey: string;
@@ -31,6 +33,9 @@ export class EmbyWatcherService implements OnModuleInit, OnModuleDestroy {
   private intervalRef: NodeJS.Timeout | null = null;
   private readonly sessionsMap = new Map<string, TrackedEmbySession>();
   private isPolling = false;
+  // Who is polled when (common/watch/poll-schedule.ts) and the connections, read every 30 s.
+  private readonly schedule = new PollSchedule();
+  private readonly connections = new CachedValue<any[]>(CONNECTIONS_TTL_MS);
 
   constructor(
     private prisma: PrismaService,
@@ -55,25 +60,14 @@ export class EmbyWatcherService implements OnModuleInit, OnModuleDestroy {
     this.isPolling = true;
 
     try {
-      const connections = await this.prisma.embyConnection.findMany({
-        where: {
-          isConnected: true,
-          encryptedApiKey: { not: null },
-          serverUrl: { not: null },
-        },
-        include: {
-          user: {
-            include: { settings: true, blacklist: true },
-          },
-        },
-      });
-
-      // ponytail: fixed batches of 5 servers at a time, so one that times out (4 s) holds
-      // its batch instead of the whole round. A queue with per-server backoff if there are many.
-      const pollable = connections.filter((conn) => conn.serverUrl && conn.encryptedApiKey);
-      for (let i = 0; i < pollable.length; i += 5) {
-        await Promise.allSettled(pollable.slice(i, i + 5).map((conn) => this.pollServerSessions(conn)));
-      }
+      const connections = await this.connections.get(() =>
+        this.prisma.embyConnection.findMany({
+          where: { isConnected: true, encryptedApiKey: { not: null }, serverUrl: { not: null } },
+          include: { user: { include: { settings: true, blacklist: true } } },
+        }),
+      );
+      const due = connections.filter((conn) => conn.serverUrl && conn.encryptedApiKey && this.schedule.due(conn.id));
+      await runPool(due, POLL_CONCURRENCY, async (conn) => this.schedule.record(conn.id, await this.pollServerSessions(conn)));
     } catch (e: any) {
       this.logger.warn(`Emby polling cycle error: ${e.message}`);
     } finally {
@@ -81,15 +75,15 @@ export class EmbyWatcherService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async pollServerSessions(conn: any) {
+  private async pollServerSessions(conn: any): Promise<PollResult> {
     const user = conn.user;
-    if (!user) return;
+    if (!user) return 'idle';
 
     let apiKey = '';
     try {
       apiKey = this.encryptionService.decrypt(conn.encryptedApiKey);
     } catch {
-      return;
+      return 'failed';
     }
 
     try {
@@ -274,18 +268,19 @@ export class EmbyWatcherService implements OnModuleInit, OnModuleDestroy {
             RunTimeTicks: runtimeTicks,
           };
 
-          try {
-            const scrobbleRes = await this.embyService.handleWebhook(
-              effectiveUser.webhookToken,
-              scrobblePayload,
-              'EMBY_SESSIONS_WATCHER',
-            );
-            if (!(scrobbleRes as any)?.ignored) {
-              tracked.scrobbled = true;
-            }
-          } catch (err: any) {
-            this.logger.error(`Watcher error while reporting the scrobble: ${err.message}`);
-          }
+          // Not awaited: syncing to the trackers can wait its turn with their rate limits, and
+          // this round must keep polling every other server meanwhile. Marked now so the next
+          // round does not send it again; an ignored or failed event is tried again later.
+          tracked.scrobbled = true;
+          void this.embyService
+            .handleWebhook(effectiveUser.webhookToken, scrobblePayload, 'EMBY_SESSIONS_WATCHER')
+            .then((scrobbleRes) => {
+              if ((scrobbleRes as any)?.ignored) tracked.scrobbled = false;
+            })
+            .catch((err) => {
+              tracked.scrobbled = false;
+              this.logger.error(`Watcher error while reporting the scrobble: ${err.message}`);
+            });
         }
       }
 
@@ -295,8 +290,10 @@ export class EmbyWatcherService implements OnModuleInit, OnModuleDestroy {
           this.sessionsMap.delete(key);
         }
       }
+      return rawSessions.some((s) => s?.NowPlayingItem) ? 'playing' : 'idle';
     } catch {
       // Timeout or temporary network problem querying /Sessions
+      return 'failed';
     }
   }
 }

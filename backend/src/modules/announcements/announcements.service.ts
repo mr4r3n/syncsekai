@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import sharp from 'sharp';
 import { ANNOUNCEMENT_PRESETS } from './announcement-presets';
+import { CachedValue } from '../../common/cached-value';
 
 export interface BannerPreset {
   id: string;
@@ -49,6 +50,9 @@ export class AnnouncementsService {
 
   public readonly PRESETS = ANNOUNCEMENT_PRESETS;
 
+  // ponytail: the record every tab asks for every 15 s, kept 5 s; the changes made here clear it.
+  private readonly activeRecord = new CachedValue<Awaited<ReturnType<AnnouncementsService['getAnnouncementRecord']>>>(5_000);
+
   async getAnnouncementRecord() {
     let announcement = await this.prisma.systemAnnouncement.findFirst({
       orderBy: { createdAt: 'desc' },
@@ -87,7 +91,7 @@ export class AnnouncementsService {
   }
 
   async getActiveAnnouncement(user?: { role?: string; id?: string }) {
-    const record = await this.getAnnouncementRecord();
+    const record = await this.activeRecord.get(() => this.getAnnouncementRecord());
     if (!record || !record.isActive) {
       return null;
     }
@@ -251,6 +255,7 @@ export class AnnouncementsService {
         dismissExpiryDays: dto.dismissExpiryDays || record.dismissExpiryDays,
       },
     });
+    this.activeRecord.clear();
 
     return {
       success: true,
@@ -267,6 +272,7 @@ export class AnnouncementsService {
       where: { id: record.id },
       data: { isActive: nextState },
     });
+    this.activeRecord.clear();
 
     return {
       success: true,
@@ -328,6 +334,7 @@ export class AnnouncementsService {
         isClosable: preset.isClosable,
       },
     });
+    this.activeRecord.clear();
 
     return {
       success: true,

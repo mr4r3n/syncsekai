@@ -31,7 +31,10 @@ export default function AdminMediaPage() {
    */
   const [loadError, setLoadError] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // One page from the server; `total` counts what matches the filters, the totals below the whole library.
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const latestRequest = useRef(0);
   const [totalFiles, setTotalFiles] = useState(0);
   const [totalSizeFormatted, setTotalSizeFormatted] = useState('0 KB');
   const [totalLinked, setTotalLinked] = useState(0);
@@ -39,6 +42,7 @@ export default function AdminMediaPage() {
 
   // Filters, Search, Sorting & Pagination
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'LINKED' | 'ORPHAN'>('ALL');
   const [sortBy, setSortBy] = useState<string>('RECENT');
@@ -88,12 +92,32 @@ export default function AdminMediaPage() {
   }, []);
 
   useEffect(() => {
-    loadMedia();
+    api.auth
+      .me()
+      .catch(() => null)
+      .then((meRes) => {
+        const meUser = meRes?.user || meRes;
+        if (!meUser || meUser.role !== 'ADMIN') {
+          showToast(t('admin.adminRequired'), 'error');
+          router.push('/catalog');
+        }
+      });
     api.admin
       .presetAvatars()
       .then((res) => setPresetAvatars(res.avatars || []))
       .catch(() => setPresetAvatars([]));
   }, []);
+
+  // The search reaches the server a moment after the last keystroke, not on every one.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    loadMedia();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, categoryFilter, statusFilter, sortBy, debouncedSearch]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -132,20 +156,27 @@ export default function AdminMediaPage() {
     }
   };
 
+  /** The page on screen, filtered and sorted by the server. An older answer arriving late is ignored. */
   const loadMedia = async () => {
+    const request = ++latestRequest.current;
     try {
-      setLoading(true);
       setLoadError(false);
-      const meRes = await api.auth.me().catch(() => null);
-      const meUser = meRes?.user || meRes;
-      if (!meUser || meUser.role !== 'ADMIN') {
-        showToast(t('admin.adminRequired'), 'error');
-        router.push('/catalog');
+      const res = await api.admin.getMedia({
+        page,
+        limit: itemsPerPage,
+        search: debouncedSearch,
+        category: categoryFilter,
+        status: statusFilter,
+        sort: sortBy,
+      });
+      if (request !== latestRequest.current) return;
+      // Past the last page (files deleted, a narrower filter): go to the last one that has rows.
+      if (res.media.length === 0 && page > 1 && res.total > 0) {
+        changePage(Math.ceil(res.total / itemsPerPage));
         return;
       }
-
-      const res = await api.admin.getMedia();
       setMediaList(res.media || []);
+      setTotal(res.total || 0);
       setTotalFiles(res.totalFiles || 0);
       setTotalSizeFormatted(res.totalSizeFormatted || '0 KB');
       setTotalLinked(res.totalLinked || 0);
@@ -154,13 +185,13 @@ export default function AdminMediaPage() {
       if (selectedItem && res.media) {
         const found = res.media.find((m: MediaItem) => m.filename === selectedItem.filename);
         if (found) setSelectedItem(found);
-        else setSelectedItem(null);
       }
     } catch (err: any) {
+      if (request !== latestRequest.current) return;
       setLoadError(true);
       showToast(`${t('admin.loadMediaError')} ` + err.message, 'error');
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   };
 
@@ -221,6 +252,7 @@ export default function AdminMediaPage() {
     setItemToDelete(null);
     if (selectedItem?.filename === file.filename) setSelectedItem(null);
     setMediaList((prev) => prev.filter((m) => m.filename !== file.filename));
+    setTotal((n) => Math.max(0, n - 1));
     showUndoToast(t('common.deletingItem', { name: file.filename }), {
       onUndo: () => loadMedia(),
       onExpire: async () => {
@@ -276,66 +308,9 @@ export default function AdminMediaPage() {
   };
 
 
-  // Universal Filtering and Multi-criteria Sorting
-  const filteredMedia = mediaList
-    .filter((item) => {
-      const matchesCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
-      const matchesStatus =
-        statusFilter === 'ALL' ||
-        (statusFilter === 'LINKED' && !item.isOrphan) ||
-        (statusFilter === 'ORPHAN' && item.isOrphan);
-
-      if (!matchesCategory || !matchesStatus) return false;
-
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase().trim();
-      return (
-        item.filename.toLowerCase().includes(q) ||
-        (item.titleEnglish && item.titleEnglish.toLowerCase().includes(q)) ||
-        (item.titleRomaji && item.titleRomaji.toLowerCase().includes(q)) ||
-        (item.plexTitles && item.plexTitles.some((t) => t.toLowerCase().includes(q))) ||
-        (item.anilistId && String(item.anilistId).includes(q)) ||
-        (item.malId && String(item.malId).includes(q))
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === 'RECENT') {
-        return new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime();
-      }
-      if (sortBy === 'OLDEST') {
-        return new Date(a.modifiedAt).getTime() - new Date(b.modifiedAt).getTime();
-      }
-      if (sortBy === 'TITLE_EN_ASC') {
-        const nameA = a.titleEnglish || a.titleRomaji || a.filename;
-        const nameB = b.titleEnglish || b.titleRomaji || b.filename;
-        return nameA.localeCompare(nameB);
-      }
-      if (sortBy === 'TITLE_EN_DESC') {
-        const nameA = a.titleEnglish || a.titleRomaji || a.filename;
-        const nameB = b.titleEnglish || b.titleRomaji || b.filename;
-        return nameB.localeCompare(nameA);
-      }
-      if (sortBy === 'TITLE_ROMAJI_ASC') {
-        const nameA = a.titleRomaji || a.titleEnglish || a.filename;
-        const nameB = b.titleRomaji || b.titleEnglish || b.filename;
-        return nameA.localeCompare(nameB);
-      }
-      if (sortBy === 'TITLE_ROMAJI_DESC') {
-        const nameA = a.titleRomaji || a.titleEnglish || a.filename;
-        const nameB = b.titleRomaji || b.titleEnglish || b.filename;
-        return nameB.localeCompare(nameA);
-      }
-      if (sortBy === 'SIZE_DESC') {
-        return b.sizeBytes - a.sizeBytes;
-      }
-      if (sortBy === 'SIZE_ASC') {
-        return a.sizeBytes - b.sizeBytes;
-      }
-      return 0;
-    });
-
-  const totalPages = Math.max(1, Math.ceil(filteredMedia.length / itemsPerPage));
-  const paginatedMedia = filteredMedia.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  // Filters, sort and pages are applied by the server (admin-media.service.ts, getMediaPage).
+  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
+  const paginatedMedia = mediaList;
 
   return (
     <div
@@ -352,7 +327,7 @@ export default function AdminMediaPage() {
         totalOrphans={totalOrphans}
         setPurgeOrphansModalOpen={setPurgeOrphansModalOpen}
         setPurgeModalOpen={setPurgeModalOpen}
-        mediaList={mediaList}
+        totalFiles={totalFiles}
         t={t}
       />
 
@@ -391,7 +366,7 @@ export default function AdminMediaPage() {
             sortBy={sortBy}
             setSortBy={setSortBy}
             sortOptions={sortOptions}
-            filteredMedia={filteredMedia}
+            total={total}
             t={t}
           />
 
@@ -399,7 +374,7 @@ export default function AdminMediaPage() {
             loading={loading}
             loadError={loadError}
             loadMedia={loadMedia}
-            filteredMedia={filteredMedia}
+            total={total}
             paginatedMedia={paginatedMedia}
             selectedItem={selectedItem}
             setSelectedItem={setSelectedItem}

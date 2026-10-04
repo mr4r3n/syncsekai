@@ -21,6 +21,21 @@ assert.equal(found.items.length, 1);
 assert.match(JSON.stringify(found.items[0]), /Frieren/);
 assert.equal(answer(table, '/api/catalog/user?page=1&limit=32&search=zzzz').items.length, 0);
 
+// Mappings: one page per tab, as the page asks for it; searching filters the recorded tab;
+// the whole list stays for the export.
+const mappingsTab = (status, extra = '') => answer(table, `/api/mappings?page=1&limit=25&status=${status}${extra}`);
+const everyMapping = answer(table, '/api/mappings');
+assert.ok(Array.isArray(everyMapping) && everyMapping.length > 0, 'export: the whole list');
+assert.equal(mappingsTab('ALL').total, everyMapping.length);
+assert.ok(mappingsTab('APPROVED').items.every((m) => m.isApproved));
+assert.ok(mappingsTab('PENDING').items.every((m) => !m.isApproved));
+assert.equal(mappingsTab('ALL', '&limit=10').items.length, mappingsTab('ALL').items.length, 'another page size: the recorded page');
+const word = everyMapping[0].plexTitle.split(' ')[0];
+const searched = mappingsTab('ALL', `&search=${encodeURIComponent(word)}`);
+assert.ok(searched.items.length > 0 && searched.items.every((m) => JSON.stringify(m).toLowerCase().includes(word.toLowerCase())));
+assert.equal(searched.total, searched.items.length);
+assert.equal(searched.counts.all, everyMapping.length, 'the tab counts stay those of the whole list');
+
 // No announcement is recorded: it would be the local instance's.
 assert.equal(answer(table, '/api/announcements/active'), null);
 

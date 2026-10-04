@@ -6,7 +6,8 @@ import { getAvatarSrc } from './utils';
 interface UserActionSheetProps {
   activeUserMenuId: string | null;
   setActiveUserMenuId: (id: string | null) => void;
-  filteredUsers: any[];
+  /** The users on screen: the sheet opens from one of their rows. */
+  pageUsers: any[];
   handleOpenEdit: (u: any) => void;
   handleToggleRole: (userId: string, currentRole: string) => void;
   handleToggleBlock: (userId: string, currentSuspended: boolean, username: string) => void;
@@ -17,7 +18,7 @@ interface UserActionSheetProps {
 export function UserActionSheet({
   activeUserMenuId,
   setActiveUserMenuId,
-  filteredUsers,
+  pageUsers,
   handleOpenEdit,
   handleToggleRole,
   handleToggleBlock,
@@ -28,7 +29,7 @@ export function UserActionSheet({
   return (
     <>
       {(() => {
-        const selectedUser = filteredUsers.find((u: any) => u.id === activeUserMenuId);
+        const selectedUser = pageUsers.find((u: any) => u.id === activeUserMenuId);
         if (!selectedUser) return null;
         const isSuspended = selectedUser.permissions?.isSuspended;
         const avatarSrc = getAvatarSrc(selectedUser.avatarUrl);

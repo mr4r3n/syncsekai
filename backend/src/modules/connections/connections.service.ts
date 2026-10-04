@@ -42,40 +42,22 @@ export class ConnectionsService {
 
     if (!user) throw new NotFoundException('User not found.');
 
-    let webhookInfo = { webhookUrl: `http://localhost:4000/api/plex/webhook/${user.webhookToken}`, webhookToken: user.webhookToken };
-    try {
-      webhookInfo = await this.plexWebhookService.getWebhookInfo(userId);
-    } catch (e: any) {
-      this.logger.warn(`Could not get the Plex webhook info: ${e.message}`);
-    }
+    const webhookInfoOf = (label: string, path: string, info: () => Promise<{ webhookUrl: string; webhookToken: string }>) =>
+      info().catch((e: any) => {
+        this.logger.warn(`Could not get the ${label} webhook info: ${e.message}`);
+        return { webhookUrl: `http://localhost:4000/api/${path}/webhook/${user.webhookToken}`, webhookToken: user.webhookToken };
+      });
 
-    let jellyfinWebhookInfo = { webhookUrl: `http://localhost:4000/api/jellyfin/webhook/${user.webhookToken}`, webhookToken: user.webhookToken };
-    try {
-      jellyfinWebhookInfo = await this.jellyfinService.getWebhookInfo(userId);
-    } catch (e: any) {
-      this.logger.warn(`Could not get the Jellyfin webhook info: ${e.message}`);
-    }
-
-    let embyWebhookInfo = { webhookUrl: `http://localhost:4000/api/emby/webhook/${user.webhookToken}`, webhookToken: user.webhookToken };
-    try {
-      embyWebhookInfo = await this.embyService.getWebhookInfo(userId);
-    } catch (e: any) {
-      this.logger.warn(`Could not get the Emby webhook info: ${e.message}`);
-    }
-
-    // Real libraries queried from the Plex server (cached), not derived
-    // from the stored selection.
-    const libraries = user.plexConnection?.isConnected
-      ? await this.plexService.getLibrariesCached(userId)
-      : [];
-
-    const jellyfinLibraries = user.jellyfinConnection?.isConnected
-      ? await this.jellyfinService.getLibrariesCached(userId)
-      : [];
-
-    const embyLibraries = user.embyConnection?.isConnected
-      ? await this.embyService.getLibrariesCached(userId)
-      : [];
+    // None depends on another, and this panel is asked on every page: all at once.
+    // The libraries are the real ones queried from each server (cached), not derived from the stored selection.
+    const [webhookInfo, jellyfinWebhookInfo, embyWebhookInfo, libraries, jellyfinLibraries, embyLibraries] = await Promise.all([
+      webhookInfoOf('Plex', 'plex', () => this.plexWebhookService.getWebhookInfo(userId)),
+      webhookInfoOf('Jellyfin', 'jellyfin', () => this.jellyfinService.getWebhookInfo(userId)),
+      webhookInfoOf('Emby', 'emby', () => this.embyService.getWebhookInfo(userId)),
+      user.plexConnection?.isConnected ? this.plexService.getLibrariesCached(userId) : [],
+      user.jellyfinConnection?.isConnected ? this.jellyfinService.getLibrariesCached(userId) : [],
+      user.embyConnection?.isConnected ? this.embyService.getLibrariesCached(userId) : [],
+    ]);
 
     const anilistConn = user.animeConnections.find((c) => c.provider === AnimeProvider.ANILIST);
     const malConn = user.animeConnections.find((c) => c.provider === AnimeProvider.MAL);

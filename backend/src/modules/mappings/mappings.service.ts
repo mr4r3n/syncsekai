@@ -3,8 +3,35 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AnilistService } from '../anilist/anilist.service';
 import { KitsuService } from '../kitsu/kitsu.service';
 import { anilistCoverUrl } from '../covers/covers.service';
-import { MappingSource } from '@prisma/client';
+import { MappingSource, Prisma } from '@prisma/client';
 import { decodeHtmlEntities } from '../../common/text/decode-html-entities';
+
+export type MappingsFilter = 'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL' | 'USER';
+export interface MappingsPageQuery {
+  page: number;
+  limit: number;
+  search: string;
+  status: MappingsFilter;
+}
+
+const FILTERS: Record<MappingsFilter, Prisma.TitleMappingWhereInput> = {
+  ALL: {},
+  APPROVED: { isApproved: true },
+  PENDING: { isApproved: false },
+  GLOBAL: { isGlobal: true },
+  USER: { isGlobal: false },
+};
+
+/** Query string of the mappings lists, clamped (page >= 1, 1..100 per page, known filters). */
+export function parseMappingsQuery(q: { page?: string; limit?: string; search?: string; status?: string }): MappingsPageQuery {
+  const status = (q.status || 'ALL').toUpperCase() as MappingsFilter;
+  return {
+    page: Math.max(1, parseInt(q.page || '1', 10) || 1),
+    limit: Math.min(100, Math.max(1, parseInt(q.limit || '25', 10) || 25)),
+    search: (q.search || '').trim().slice(0, 100),
+    status: status in FILTERS ? status : 'ALL',
+  };
+}
 
 @Injectable()
 export class MappingsService {
@@ -232,32 +259,65 @@ export class MappingsService {
     });
   }
 
-  async getAllAdminMappings(isAdmin: boolean) {
+  async getAdminMappingsPage(isAdmin: boolean, q: MappingsPageQuery) {
     if (!isAdmin) {
       throw new NotFoundException('Access restricted to administrators.');
     }
+    return this.pageMappings({}, q);
+  }
 
-    const mappings = await this.prisma.titleMapping.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            avatarUrl: true,
-            role: true,
-          },
-        },
-      },
-      orderBy: [{ isGlobal: 'desc' }, { updatedAt: 'desc' }],
-    });
+  /**
+   * One page of mappings and the counts the tabs show, filtered by the database. The pages
+   * used to receive every mapping (every user's, for the admin) and filter in the browser.
+   * `scope.userId` limits it to one user; without it, it is the admin's view of everyone's,
+   * where the search also matches the username and each row carries its owner.
+   */
+  async pageMappings(scope: { userId?: string }, q: MappingsPageQuery) {
+    const base: Prisma.TitleMappingWhereInput = scope.userId ? { userId: scope.userId } : {};
+    const contains = { contains: q.search, mode: 'insensitive' as const };
+    const where: Prisma.TitleMappingWhereInput = {
+      ...base,
+      ...FILTERS[q.status],
+      ...(q.search
+        ? {
+            OR: [
+              { plexTitle: contains },
+              { anilistTitle: contains },
+              ...(scope.userId ? [] : [{ user: { username: contains } }]),
+            ],
+          }
+        : {}),
+    };
+    const orderBy: Prisma.TitleMappingOrderByWithRelationInput[] = scope.userId
+      ? [{ updatedAt: 'desc' }, { id: 'asc' }]
+      : [{ isGlobal: 'desc' }, { updatedAt: 'desc' }, { id: 'asc' }];
 
-    return mappings.map((m) => ({
-      ...m,
-      coverImage: m.anilistMediaId
-        ? anilistCoverUrl(m.anilistMediaId, m.anilistTitle || m.plexTitle)
-        : null,
-    }));
+    const [rows, total, all, approved, global] = await this.prisma.$transaction([
+      this.prisma.titleMapping.findMany({
+        where,
+        orderBy,
+        skip: (q.page - 1) * q.limit,
+        take: q.limit,
+        ...(scope.userId
+          ? {}
+          : { include: { user: { select: { id: true, username: true, email: true, avatarUrl: true, role: true } } } }),
+      }),
+      this.prisma.titleMapping.count({ where }),
+      this.prisma.titleMapping.count({ where: base }),
+      this.prisma.titleMapping.count({ where: { ...base, isApproved: true } }),
+      this.prisma.titleMapping.count({ where: { ...base, isGlobal: true } }),
+    ]);
+
+    return {
+      items: rows.map((m) => ({
+        ...m,
+        coverImage: m.anilistMediaId ? anilistCoverUrl(m.anilistMediaId, m.anilistTitle || m.plexTitle) : null,
+      })),
+      total,
+      page: q.page,
+      limit: q.limit,
+      counts: { all, approved, pending: all - approved, global, user: all - global },
+    };
   }
 
   async searchRemoteTitles(query: string, seasonNumber = 1) {

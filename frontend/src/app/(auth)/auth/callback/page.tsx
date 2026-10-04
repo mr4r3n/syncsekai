@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/ToastProvider';
 import { Loader2 } from 'lucide-react';
@@ -36,6 +37,7 @@ function sanitizeTarget(raw: string | null, fallback: string) {
 export default function AuthCallbackPage() {
   const { t } = useI18n();
   const { showToast } = useToast();
+  const router = useRouter();
   const executedRef = useRef(false);
 
   useEffect(() => {
@@ -48,9 +50,12 @@ export default function AuthCallbackPage() {
     const error = params.get('error');
 
     history.replaceState(null, '', window.location.pathname);
+    // Errors navigate inside the app so their notice survives (a full page load wiped it
+    // before anyone could read it). A successful sign-in still reloads the page, so the
+    // whole app starts with the new session.
     if (error) {
       showToast(t(`auth.oauthErrors.${OAUTH_ERRORS.includes(error) ? error : 'SOCIAL_AUTH_FAILED'}`), 'error');
-      window.location.replace(sanitizeTarget(returnTo, '/login'));
+      router.replace(sanitizeTarget(returnTo, '/login'));
       return;
     }
 
@@ -61,9 +66,9 @@ export default function AuthCallbackPage() {
       })
       .catch(() => {
         showToast(t('auth.socialSessionInvalid'), 'error');
-        window.location.replace('/login');
+        router.replace('/login');
       });
-  }, [showToast]);
+  }, [showToast, router]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)] flex flex-col items-center justify-center gap-4">

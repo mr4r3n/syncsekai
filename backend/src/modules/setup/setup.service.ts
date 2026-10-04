@@ -12,6 +12,18 @@ import { findNetwork } from '../../common/security/social-networks';
 import { SITE_SETTINGS, ICON_VERSION_KEY, resolveSiteSettings, readMaintenanceStatus } from '../../common/security/site-setting-definitions';
 import { emailTemplate, escapeHtml } from '../../common/email/email-template';
 import { isIP } from 'net';
+import { CachedValue } from '../../common/cached-value';
+
+/**
+ * What every visitor asks, kept for a few seconds: the maintenance flag is read on every page
+ * change (5 s), the site settings by every footer (10 s). The admin's saves clear them
+ * (admin/site-settings.service.ts), so a change shows at once.
+ * ponytail: per process; with several backend processes the others show it within that time.
+ */
+export const publicSettings = {
+  maintenance: new CachedValue<{ inMaintenance: boolean; message: string; estimatedEnd: string | null }>(5_000),
+  site: new CachedValue<ReturnType<typeof resolveSiteSettings>>(10_000),
+};
 
 @Injectable()
 export class SetupService {
@@ -55,7 +67,14 @@ export class SetupService {
    * Everything returned here is measured or counted; without data it returns
    * null, never a default value.
    */
-  async getPublicStats() {
+  // ponytail: the landing statistics count over the biggest tables, for every visitor: kept 60 s.
+  private readonly publicStats = new CachedValue<Awaited<ReturnType<SetupService['countPublicStats']>>>(60_000);
+
+  getPublicStats() {
+    return this.publicStats.get(() => this.countPublicStats());
+  }
+
+  private async countPublicStats() {
     const startDb = Date.now();
     // The result matters: it is the only real measurement that the database answers.
     const databaseAlive = await this.prisma
@@ -142,9 +161,11 @@ export class SetupService {
   }
 
 
-  async getMaintenanceStatus() {
-    const { enabled, message, estimatedEnd } = await readMaintenanceStatus(this.prisma);
-    return { inMaintenance: enabled, message, estimatedEnd };
+  getMaintenanceStatus() {
+    return publicSettings.maintenance.get(async () => {
+      const { enabled, message, estimatedEnd } = await readMaintenanceStatus(this.prisma);
+      return { inMaintenance: enabled, message, estimatedEnd };
+    });
   }
 
   async hasCustomIcon(): Promise<boolean> {
@@ -153,12 +174,14 @@ export class SetupService {
   }
 
   /** Name, title, description, contact and registration state. All public. */
-  async getSiteSettings() {
-    const rows = await this.prisma.systemSetting.findMany({
-      where: { key: { in: [...SITE_SETTINGS.map((a) => a.key), ICON_VERSION_KEY] } },
-      select: { key: true, value: true },
+  getSiteSettings() {
+    return publicSettings.site.get(async () => {
+      const rows = await this.prisma.systemSetting.findMany({
+        where: { key: { in: [...SITE_SETTINGS.map((a) => a.key), ICON_VERSION_KEY] } },
+        select: { key: true, value: true },
+      });
+      return resolveSiteSettings(new Map(rows.map((f) => [f.key, f.value || ''])));
     });
-    return resolveSiteSettings(new Map(rows.map((f) => [f.key, f.value || ''])));
   }
 
   /**

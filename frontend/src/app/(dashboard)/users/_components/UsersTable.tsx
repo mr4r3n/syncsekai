@@ -12,7 +12,8 @@ interface UsersTableProps {
   sort: { field: SortField; asc: boolean };
   sortBy: (sortField: SortField) => void;
   pageUsers: any[];
-  sortedUsers: any[];
+  /** Users that match the filters, across every page. */
+  total: number;
   perPage: number;
   setPerPage: (n: number) => void;
   currentPage: number;
@@ -34,7 +35,7 @@ export function UsersTable({
   sort,
   sortBy,
   pageUsers,
-  sortedUsers,
+  total,
   perPage,
   setPerPage,
   currentPage,
@@ -255,7 +256,7 @@ export function UsersTable({
       </div>
 
       {/* Footer: rows per page and pagination */}
-      {!loading && sortedUsers.length > 0 && (
+      {!loading && total > 0 && (
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-[var(--glass-border)] text-[11px] font-mono text-[var(--text-muted)]">
           <div className="flex items-center gap-2">
             <span>{t('users.rowsPerPage')}</span>
@@ -275,8 +276,8 @@ export function UsersTable({
             <span>
               {t('users.showingRange', {
                 from: (currentPage - 1) * perPage + 1,
-                to: Math.min(currentPage * perPage, sortedUsers.length),
-                total: sortedUsers.length,
+                to: Math.min(currentPage * perPage, total),
+                total,
               })}
             </span>
           </div>

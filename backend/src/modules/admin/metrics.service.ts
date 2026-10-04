@@ -2,12 +2,16 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { recentActivity } from '../../common/logging/activity-log';
 import { PrismaService } from '../../prisma/prisma.service';
+import axios from 'axios';
+import { withTrackerPriority } from '../../common/http/tracker-gate';
 import { SyncStatus } from '@prisma/client';
 
 /** Panel metrics: summary, charts, activity heatmap, genres and failures. */
 @Injectable()
 export class MetricsService implements OnModuleInit {
   private readonly logger = new Logger(MetricsService.name);
+  // ponytail: AniList genres per anime, in memory (they do not change); lost on restart.
+  private readonly genresByMedia = new Map<number, string[]>();
 
   // In-memory TTL cache for aggregated metrics (reduces database load)
   private readonly dashboardMetricsCache = new Map<string, { data: any; timestamp: number }>();
@@ -930,19 +934,31 @@ export class MetricsService implements OnModuleInit {
           }
         `;
 
-        try {
-          const res = await fetch('https://graphql.anilist.co', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-            body: JSON.stringify({ query, variables: { ids: batchIds } }),
-          });
-          const json = await res.json();
-          const list = json.data?.Page?.media || [];
-          for (const item of list) {
-            mediaGenresMap[item.id] = item.genres || [];
+        // Genres do not change: only the ones not seen yet are asked for, through the
+        // trackers' queue as background work (each dashboard visit used to cost a request).
+        const missing = batchIds.filter((id) => !this.genresByMedia.has(id));
+        if (missing.length > 0) {
+          try {
+            const res = await withTrackerPriority(
+              'background',
+              () =>
+                axios.post(
+                  'https://graphql.anilist.co',
+                  { query, variables: { ids: missing } },
+                  { headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, timeout: 8000 },
+                ),
+              5_000,
+            );
+            for (const item of res.data?.data?.Page?.media || []) {
+              this.genresByMedia.set(item.id, item.genres || []);
+            }
+          } catch (e: any) {
+            this.logger.warn(`Error getting genres from AniList: ${e.message}`);
           }
-        } catch (e: any) {
-          this.logger.warn(`Error getting genres from AniList: ${e.message}`);
+        }
+        for (const id of batchIds) {
+          const genres = this.genresByMedia.get(id);
+          if (genres) mediaGenresMap[id] = genres;
         }
       }
 

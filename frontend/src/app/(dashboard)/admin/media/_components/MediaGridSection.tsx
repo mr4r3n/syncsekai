@@ -13,7 +13,8 @@ interface MediaGridSectionProps {
   loading: boolean;
   loadError: boolean;
   loadMedia: () => Promise<void>;
-  filteredMedia: MediaItem[];
+  /** Files that match the filters, across every page. */
+  total: number;
   paginatedMedia: MediaItem[];
   selectedItem: MediaItem | null;
   setSelectedItem: (item: MediaItem | null) => void;
@@ -28,7 +29,7 @@ export function MediaGridSection({
   loading,
   loadError,
   loadMedia,
-  filteredMedia,
+  total,
   paginatedMedia,
   selectedItem,
   setSelectedItem,
@@ -57,7 +58,7 @@ export function MediaGridSection({
                   <span>{t('admin.retry')}</span>
                 </button>
               </div>
-            ) : filteredMedia.length === 0 ? (
+            ) : total === 0 ? (
               <div className="py-20 text-center space-y-3">
                 <ImageIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto opacity-30" />
                 <p className="text-sm font-semibold text-[var(--text-secondary)]">{t('admin.noMediaForFilters')}</p>
@@ -82,8 +83,8 @@ export function MediaGridSection({
                 <div>
                   {t('admin.showingMediaRange', {
                     from: (page - 1) * itemsPerPage + 1,
-                    to: Math.min(page * itemsPerPage, filteredMedia.length),
-                    total: filteredMedia.length,
+                    to: Math.min(page * itemsPerPage, total),
+                    total,
                   })}
                 </div>
 

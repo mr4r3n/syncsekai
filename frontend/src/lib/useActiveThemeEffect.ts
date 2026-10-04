@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
+import { onVisibleInterval } from '@/lib/visibleInterval';
 
 export interface ActiveThemeEffect {
   effectType: string;
@@ -53,11 +54,11 @@ export function useActiveThemeEffect(): ActiveThemeEffect {
     };
 
     window.addEventListener('plexsync:announcement-updated', handleUpdate);
-    const interval = setInterval(checkActive, 15000);
+    const stopPolling = onVisibleInterval(checkActive, 15000);
 
     return () => {
       window.removeEventListener('plexsync:announcement-updated', handleUpdate);
-      clearInterval(interval);
+      stopPolling();
     };
   }, [checkActive]);
 

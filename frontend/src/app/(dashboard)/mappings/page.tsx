@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
+import type { MappingsPage as MappingsResult } from '@/lib/api';
 import { Topbar } from '@/components/Topbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastProvider';
@@ -23,10 +24,15 @@ export default function MappingsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   // History and notifications link here with anime to map:
   // /mappings?search=Titulo&season=2.
+  // One page from the server; `total` (after filters) and `counts` (tabs) describe the whole list.
   const [mappings, setMappings] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState<MappingsResult['counts']>({ all: 0, approved: 0, pending: 0, global: 0, user: 0 });
+  const latestRequest = useRef(0);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL'>('ALL');
 
   // Pagination States
@@ -145,34 +151,44 @@ export default function MappingsPage() {
   const { dialogProps: mappingProps } = useModalA11y(Boolean(showModal), () => setShowModal(false));
 
   useEffect(() => {
-    loadUserAndMappings();
+    api.auth.me().then((res) => setCurrentUser(res?.user || res)).catch(() => {});
   }, []);
 
-  const loadUserAndMappings = async () => {
-    try {
-      setLoading(true);
-      const [userRes, mapRes] = await Promise.allSettled([
-        api.auth.me(),
-        api.mappings.get(),
-      ]);
+  // The search reaches the server a moment after the last keystroke, not on every one.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchFilter.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchFilter]);
 
-      if (userRes.status === 'fulfilled') {
-        const u = userRes.value?.user || userRes.value;
-        setCurrentUser(u);
+  useEffect(() => {
+    loadMappings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, statusFilter, debouncedSearch]);
+
+  /** The page on screen, filtered by the server. An older answer arriving late is ignored. */
+  const loadMappings = async () => {
+    const request = ++latestRequest.current;
+    try {
+      const res = await api.mappings.getPage({ page, limit, search: debouncedSearch, status: statusFilter });
+      if (request !== latestRequest.current) return;
+      // The page emptied (its last mapping was deleted): go to the last one that has rows.
+      if (res.items.length === 0 && page > 1 && res.total > 0) {
+        changePage(Math.ceil(res.total / limit));
+        return;
       }
-      if (mapRes.status === 'fulfilled') {
-        setMappings(mapRes.value || []);
-      }
+      setMappings(res.items || []);
+      setTotal(res.total || 0);
+      setCounts(res.counts);
     } catch (e: any) {
-      showToast(`${t('mappings.loadMappingsError')} ` + e.message, 'error');
+      if (request === latestRequest.current) showToast(`${t('mappings.loadMappingsError')} ` + e.message, 'error');
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadUserAndMappings();
+    await loadMappings();
     setIsRefreshing(false);
     showToast(t('mappings.updatedToast'), 'success');
   };
@@ -181,7 +197,7 @@ export default function MappingsPage() {
     try {
       await api.mappings.approve(id);
       showToast(t('mappings.mappingApproved'), 'success');
-      loadUserAndMappings();
+      loadMappings();
     } catch {
       setMappings((prev) =>
         prev.map((m) => (m.id === id ? { ...m, isApproved: true, confidenceScore: 1.0 } : m)),
@@ -199,7 +215,7 @@ export default function MappingsPage() {
           : t('mappings.revokedToPersonal'),
         'success',
       );
-      loadUserAndMappings();
+      loadMappings();
     } catch (e: any) {
       showToast(`${t('mappings.globalMappingError')} ` + e.message, 'error');
     }
@@ -213,8 +229,9 @@ export default function MappingsPage() {
       onConfirm: () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         setMappings((prev) => prev.filter((m) => m.id !== item.id));
+        setTotal((n) => Math.max(0, n - 1));
         showUndoToast(t('common.deletingItem', { name: item.plexTitle }), {
-          onUndo: () => loadUserAndMappings(),
+          onUndo: () => loadMappings(),
           onExpire: async () => {
             try {
               await api.mappings.unlink(item.id);
@@ -222,7 +239,7 @@ export default function MappingsPage() {
             } catch (e: any) {
               showToast(e.message || t('mappings.deletedToast'), 'error');
             }
-            loadUserAndMappings();
+            loadMappings();
           },
         });
       },
@@ -319,7 +336,7 @@ export default function MappingsPage() {
 
       showToast(t('mappings.mappingSaved'), 'success');
       setShowModal(false);
-      loadUserAndMappings();
+      loadMappings();
     } catch (err: any) {
       showToast(`${t('mappings.saveMappingError')} ` + err.message, 'error');
     } finally {
@@ -329,12 +346,19 @@ export default function MappingsPage() {
 
 
   // Exportar Mapeos en Formato JSON
-  const handleExportMappings = () => {
-    if (mappings.length === 0) {
+  const handleExportMappings = async () => {
+    let everything: any[] = [];
+    try {
+      everything = await api.mappings.get();
+    } catch (e: any) {
+      showToast(`${t('mappings.loadMappingsError')} ` + e.message, 'error');
+      return;
+    }
+    if (everything.length === 0) {
       showToast(t('mappings.noMappingsToExport'), 'info');
       return;
     }
-    const exportData = mappings.map((m) => ({
+    const exportData = everything.map((m) => ({
       plexTitle: m.plexTitle,
       plexSeason: m.plexSeason || 1,
       anilistMediaId: m.anilistMediaId,
@@ -350,7 +374,7 @@ export default function MappingsPage() {
     a.download = `plexsync-mappings-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(t('mappings.exportedJsonCount', { n: mappings.length }), 'success');
+    showToast(t('mappings.exportedJsonCount', { n: everything.length }), 'success');
   };
 
   // Import Mappings from JSON File
@@ -366,7 +390,7 @@ export default function MappingsPage() {
       }
       const res = await api.mappings.import(parsed);
       showToast(res.message || t('mappings.mappingsImported'), 'success');
-      await loadUserAndMappings();
+      await loadMappings();
     } catch (err: any) {
       showToast(`${t('mappings.importJsonError')} ` + err.message, 'error');
     } finally {
@@ -374,21 +398,7 @@ export default function MappingsPage() {
     }
   };
 
-  // Filtrado de Mapeos
-  const filteredMappings = mappings.filter((item) => {
-    const matchesSearch =
-      (item.plexTitle || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (item.anilistTitle || '').toLowerCase().includes(searchFilter.toLowerCase());
-
-    if (!matchesSearch) return false;
-    if (statusFilter === 'APPROVED') return item.isApproved;
-    if (statusFilter === 'PENDING') return !item.isApproved;
-    if (statusFilter === 'GLOBAL') return item.isGlobal;
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredMappings.length / limit));
-  const paginatedMappings = filteredMappings.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <div
@@ -415,7 +425,7 @@ export default function MappingsPage() {
           />
 
           <MappingsFilterTabs
-            mappings={mappings}
+            counts={counts}
             statusFilter={statusFilter}
             handleStatusFilterChange={handleStatusFilterChange}
             t={t}
@@ -424,8 +434,8 @@ export default function MappingsPage() {
           {/* MAIN CONTAINER: ADMIN TOP SHOWS STYLE */}
           <div className="glass-card -mx-4 sm:mx-0 rounded-none sm:rounded-[10px] border-x-0 sm:border-x px-0 py-4 sm:p-6 space-y-4">
             <MappingsListSection
-              filteredMappings={filteredMappings}
-              paginatedMappings={paginatedMappings}
+              total={total}
+              paginatedMappings={mappings}
               searchFilter={searchFilter}
               handleSearchFilterChange={handleSearchFilterChange}
               loading={loading}
@@ -439,9 +449,9 @@ export default function MappingsPage() {
             />
 
             {/* COMPLETE PAGINATION BAR */}
-            {filteredMappings.length > 0 && (
+            {total > 0 && (
               <MappingsPagination
-                filteredMappings={filteredMappings}
+                total={total}
                 page={page}
                 limit={limit}
                 totalPages={totalPages}

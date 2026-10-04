@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AnimeProvider } from '@prisma/client';
 import axios from 'axios';
 import { readStoredSetting } from '../../common/crypto/stored-setting';
+import { apiLatency } from '../../common/http/tracker-gate';
 
 @Injectable()
 export class KitsuService {
@@ -16,6 +17,9 @@ export class KitsuService {
   // In-memory search cache (1-hour TTL)
   private readonly searchCache = new Map<string, { data: any[]; timestamp: number }>();
   private readonly SEARCH_CACHE_TTL_MS = 60 * 60 * 1000;
+  private readonly searchesInFlight = new Map<string, Promise<any[]>>();
+  // ponytail: Kitsu entries found by MAL/AniList id, in memory (they do not change); lost on restart.
+  private readonly externalIds = new Map<string, { kitsuId: number; title: string }>();
 
   constructor(
     private prisma: PrismaService,
@@ -254,6 +258,12 @@ export class KitsuService {
     }
   }
 
+  /** A search already answered within the last hour, without asking Kitsu (undefined if none). */
+  cachedSearch(query: string): any[] | undefined {
+    const cached = this.searchCache.get(`kitsu_search_${query.trim().toLowerCase()}`);
+    return cached && Date.now() - cached.timestamp < this.SEARCH_CACHE_TTL_MS ? cached.data : undefined;
+  }
+
   /**
    * Searches anime on Kitsu (with an in-memory cache).
    */
@@ -262,11 +272,17 @@ export class KitsuService {
     if (!cleanQuery) return [];
 
     const cacheKey = `kitsu_search_${cleanQuery.toLowerCase()}`;
-    const cached = this.searchCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < this.SEARCH_CACHE_TTL_MS) {
-      return cached.data;
-    }
+    const cached = this.cachedSearch(query);
+    if (cached) return cached;
+    // The same search already on its way (another visitor, a queued background lookup) is shared.
+    const pending = this.searchesInFlight.get(cacheKey);
+    if (pending) return pending;
+    const search = this.fetchSearch(cleanQuery, limit, cacheKey).finally(() => this.searchesInFlight.delete(cacheKey));
+    this.searchesInFlight.set(cacheKey, search);
+    return search;
+  }
 
+  private async fetchSearch(cleanQuery: string, limit: number, cacheKey: string): Promise<any[]> {
     try {
       const res = await axios.get(
         `${this.baseUrl}/anime?filter[text]=${encodeURIComponent(cleanQuery)}&page[limit]=${limit}`,
@@ -298,9 +314,46 @@ export class KitsuService {
       this.searchCache.set(cacheKey, { data: items, timestamp: Date.now() });
       return items;
     } catch (err: any) {
-      this.logger.error(`Error searching Kitsu: ${err.message}`);
+      // A full queue is expected under load; it is retried on a later visit.
+      if (err?.code !== 'TRACKER_BUSY') this.logger.error(`Error searching Kitsu: ${err.message}`);
       return [];
     }
+  }
+
+  /**
+   * The Kitsu entry for a MyAnimeList or AniList id, from Kitsu's own mappings.
+   * A title search returns the first season for every sequel ("Clevatess" for
+   * "Clevatess II"), so syncing by title put sequels on the first season.
+   */
+  async findByExternalIds(
+    malId?: number | null,
+    anilistId?: number | null,
+  ): Promise<{ kitsuId: number; title: string } | null> {
+    const sites: Array<[string, number | null | undefined]> = [
+      ['myanimelist/anime', malId],
+      ['anilist/anime', anilistId],
+    ];
+    for (const [site, id] of sites) {
+      if (!id) continue;
+      const key = `${site}:${id}`;
+      const known = this.externalIds.get(key);
+      if (known) return known;
+      try {
+        const res = await axios.get(
+          `${this.baseUrl}/mappings?filter[externalSite]=${site}&filter[externalId]=${id}&include=item&fields[anime]=canonicalTitle`,
+          { headers: this.getHeaders(), timeout: 8000 },
+        );
+        const item = (res.data?.included || []).find((i: any) => i.type === 'anime');
+        if (item) {
+          const found = { kitsuId: Number(item.id), title: item.attributes?.canonicalTitle || '' };
+          this.externalIds.set(key, found);
+          return found;
+        }
+      } catch (err: any) {
+        this.logger.warn(`Could not look up the Kitsu entry for ${key}: ${err.message}`);
+      }
+    }
+    return null;
   }
 
   /**
@@ -506,13 +559,13 @@ export class KitsuService {
       return { isConnected: false, latencyMs: 0 };
     }
 
-    const start = Date.now();
     try {
-      await axios.get(`${this.baseUrl}/anime?page[limit]=1`, {
-        headers: this.getHeaders(),
-        timeout: 5000,
-      });
-      const latencyMs = Date.now() - start;
+      const latencyMs = await apiLatency('kitsu', () =>
+        axios.get(`${this.baseUrl}/anime?page[limit]=1`, {
+          headers: this.getHeaders(),
+          timeout: 5000,
+        }),
+      );
 
       await this.prisma.animeConnection.update({
         where: { id: conn.id },

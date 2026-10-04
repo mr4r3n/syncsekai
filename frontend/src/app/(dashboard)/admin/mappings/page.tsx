@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
+import type { MappingsPage as MappingsResult } from '@/lib/api';
 import { Topbar } from '@/components/Topbar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastProvider';
@@ -21,10 +22,15 @@ export default function AdminMappingsPage() {
   const { isCollapsed } = useSidebar();
   const { showToast, showUndoToast } = useToast();
   const { t } = useI18n();
+  // One page from the server; `total` (after filters) and `counts` (KPIs, tabs) describe every mapping.
   const [mappings, setMappings] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState<MappingsResult['counts']>({ all: 0, approved: 0, pending: 0, global: 0, user: 0 });
+  const latestRequest = useRef(0);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'GLOBAL' | 'USER' | 'PENDING'>('ALL');
 
   // Pagination States
@@ -120,19 +126,35 @@ export default function AdminMappingsPage() {
   // Dialog semantics and focus management for modals in this view.
   const { dialogProps: mappingProps } = useModalA11y(Boolean(showModal), () => setShowModal(false));
 
+  // The search reaches the server a moment after the last keystroke, not on every one.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchFilter.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchFilter]);
+
   useEffect(() => {
     loadAdminMappings();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, typeFilter, debouncedSearch]);
 
+  /** The page on screen, filtered by the server. An older answer arriving late is ignored. */
   const loadAdminMappings = async () => {
+    const request = ++latestRequest.current;
     try {
-      setLoading(true);
-      const res = await api.mappings.getAdminAll();
-      setMappings(res || []);
+      const res = await api.mappings.getAdminPage({ page, limit, search: debouncedSearch, status: typeFilter });
+      if (request !== latestRequest.current) return;
+      // The page emptied (its last mapping was deleted): go to the last one that has rows.
+      if (res.items.length === 0 && page > 1 && res.total > 0) {
+        changePage(Math.ceil(res.total / limit));
+        return;
+      }
+      setMappings(res.items || []);
+      setTotal(res.total || 0);
+      setCounts(res.counts);
     } catch (e: any) {
-      showToast(`${t('admin.loadGlobalMappingsError')} ` + e.message, 'error');
+      if (request === latestRequest.current) showToast(`${t('admin.loadGlobalMappingsError')} ` + e.message, 'error');
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   };
 
@@ -176,6 +198,7 @@ export default function AdminMappingsPage() {
       onConfirm: () => {
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
         setMappings((prev) => prev.filter((m) => m.id !== item.id));
+        setTotal((n) => Math.max(0, n - 1));
         showUndoToast(t('common.deletingItem', { name: item.plexTitle }), {
           onUndo: () => loadAdminMappings(),
           onExpire: async () => {
@@ -274,28 +297,13 @@ export default function AdminMappingsPage() {
     }
   };
 
-  // KPIs
-  const totalCount = mappings.length;
-  const globalCount = mappings.filter((m) => m.isGlobal).length;
-  const userSpecificCount = mappings.filter((m) => !m.isGlobal).length;
-  const pendingCount = mappings.filter((m) => !m.isApproved).length;
+  // KPIs (every mapping, from the server)
+  const totalCount = counts.all;
+  const globalCount = counts.global;
+  const userSpecificCount = counts.user;
+  const pendingCount = counts.pending;
 
-  // Filtrado
-  const filteredMappings = mappings.filter((item) => {
-    const matchesSearch =
-      (item.plexTitle || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (item.anilistTitle || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (item.user?.username || '').toLowerCase().includes(searchFilter.toLowerCase());
-
-    if (!matchesSearch) return false;
-    if (typeFilter === 'GLOBAL') return item.isGlobal;
-    if (typeFilter === 'USER') return !item.isGlobal;
-    if (typeFilter === 'PENDING') return !item.isApproved;
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredMappings.length / limit));
-  const paginatedMappings = filteredMappings.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <div
@@ -335,14 +343,14 @@ export default function AdminMappingsPage() {
             pendingCount={pendingCount}
             searchFilter={searchFilter}
             handleSearchFilterChange={handleSearchFilterChange}
-            filteredMappings={filteredMappings}
+            total={total}
           />
 
           {/* Responsive Mappings List */}
           <AdminMappingsListSection
             loading={loading}
-            filteredMappings={filteredMappings}
-            paginatedMappings={paginatedMappings}
+            total={total}
+            paginatedMappings={mappings}
             setActiveAdminMappingSheetItem={setActiveAdminMappingSheetItem}
             handleToggleGlobal={handleToggleGlobal}
             handleApprove={handleApprove}
@@ -351,11 +359,11 @@ export default function AdminMappingsPage() {
           />
 
           {/* COMPLETE PAGINATION BAR */}
-          {filteredMappings.length > 0 && (
+          {total > 0 && (
             <AdminMappingsPagination
               page={page}
               limit={limit}
-              filteredMappings={filteredMappings}
+              total={total}
               handleLimitChange={handleLimitChange}
               totalPages={totalPages}
               changePage={changePage}

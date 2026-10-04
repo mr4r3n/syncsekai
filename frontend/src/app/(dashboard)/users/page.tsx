@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '@/lib/api';
 import { Topbar } from '@/components/Topbar';
 import { useToast } from '@/components/ToastProvider';
@@ -27,10 +27,15 @@ export default function UsersManagementPage() {
   const registrationDate = (iso?: string) =>
     iso ? new Date(iso).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
   const isRecent = (iso?: string) => !!iso && now - new Date(iso).getTime() < 7 * 24 * 60 * 60 * 1000;
+  // One page from the server; `total` (after filters) and `counts` (header) describe everyone.
   const [usersList, setUsersList] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState({ all: 0, admins: 0, active: 0, suspended: 0, new: 0 });
+  const latestRequest = useRef(0);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   // ?search= arrives from the bell's "new user" notification.
   useEffect(() => {
     const searched = new URLSearchParams(window.location.search).get('search');
@@ -98,26 +103,56 @@ export default function UsersManagementPage() {
   // Escape. Leaving it here mounted two focus traps on the same dialog.
 
   useEffect(() => {
-    loadUsers();
+    api.auth
+      .me()
+      .catch(() => null)
+      .then((meRes) => {
+        const meUser = meRes?.user || meRes;
+        if (!meUser || meUser.role !== 'ADMIN') {
+          showToast(t('users.adminRequired'), 'error');
+          router.push('/catalog');
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The search reaches the server a moment after the last keystroke, not on every one.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, perPage, roleFilter, statusFilter, sort, debouncedSearch]);
+
+  /** The page on screen, filtered and sorted by the server. An older answer arriving late is ignored. */
   const loadUsers = async () => {
+    const request = ++latestRequest.current;
     try {
-      setLoading(true);
-      const meRes = await api.auth.me().catch(() => null);
-      const meUser = meRes?.user || meRes;
-      if (!meUser || meUser.role !== 'ADMIN') {
-        showToast(t('users.adminRequired'), 'error');
-        router.push('/catalog');
+      const res = await api.admin.getUsers({
+        page,
+        limit: perPage,
+        search: debouncedSearch,
+        role: roleFilter,
+        status: statusFilter,
+        sort: sort.field,
+        asc: sort.asc,
+      });
+      if (request !== latestRequest.current) return;
+      // Past the last page (rows deleted, a narrower filter): go to the last one that has rows.
+      if (res.items.length === 0 && page > 1 && res.total > 0) {
+        setPage(Math.ceil(res.total / perPage));
         return;
       }
-
-      const res = await api.admin.getUsers();
-      setUsersList(res || []);
+      setUsersList(res.items || []);
+      setTotal(res.total || 0);
+      setCounts(res.counts);
     } catch (e: any) {
-      showToast(`${t('users.loadUsersError')} ` + e.message, 'error');
+      if (request === latestRequest.current) showToast(`${t('users.loadUsersError')} ` + e.message, 'error');
     } finally {
-      setLoading(false);
+      if (request === latestRequest.current) setLoading(false);
     }
   };
 
@@ -208,6 +243,7 @@ export default function UsersManagementPage() {
       );
 
       setEditingUser(null);
+      loadUsers();
     } catch (err: any) {
       showToast(`${t('users.saveError')} ` + err.message, 'error');
     } finally {
@@ -231,6 +267,7 @@ export default function UsersManagementPage() {
             : u
         )
       );
+      loadUsers();
     } catch (err: any) {
       showToast('Error: ' + err.message, 'error');
     }
@@ -245,6 +282,7 @@ export default function UsersManagementPage() {
       setUsersList((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
+      loadUsers();
     } catch (err: any) {
       showToast('Error: ' + err.message, 'error');
     }
@@ -256,57 +294,26 @@ export default function UsersManagementPage() {
     if (!deletingUser) return;
     const user = deletingUser;
     setUsersList((prev) => prev.filter((u) => u.id !== user.id));
+    setTotal((n) => Math.max(0, n - 1));
     setDeletingUser(null);
     showUndoToast(t('users.deletingUser', { username: user.username }), {
-      onUndo: () => setUsersList((prev) => [...prev, user]),
+      onUndo: () => loadUsers(),
       onExpire: async () => {
         try {
           await api.admin.deleteUser(user.id);
           showToast(t('users.userDeleted', { username: user.username }), 'info');
         } catch (err: any) {
-          setUsersList((prev) => [...prev, user]);
           showToast(`${t('users.deleteUserError')} ` + err.message, 'error');
         }
+        loadUsers();
       },
     });
   };
 
-  // Filtros
-  const filteredUsers = usersList.filter((u) => {
-    const matchesSearch =
-      !searchQuery ||
-      u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const isSuspended = u.permissions?.isSuspended;
-    const roleOk = roleFilter === 'ALL' || u.role === roleFilter;
-    const statusOk =
-      statusFilter === 'ALL' ||
-      (statusFilter === 'ACTIVE' && !isSuspended) ||
-      (statusFilter === 'SUSPENDED' && isSuspended) ||
-      (statusFilter === 'NEW' && isRecent(u.createdAt));
-    return matchesSearch && roleOk && statusOk;
-  });
-
-  // Stable sort: tiebreaker is name, preventing identical rows from jittering.
-  const sortValue = (u: any): string | number => {
-    switch (sort.field) {
-      case 'status': return u.permissions?.isSuspended ? 1 : 0;
-      case 'role': return u.role === 'ADMIN' ? 0 : 1;
-      case 'createdAt': return new Date(u.createdAt).getTime();
-      case 'lastActiveAt': return u.lastActiveAt ? new Date(u.lastActiveAt).getTime() : 0;
-      default: return (u.username || '').toLowerCase();
-    }
-  };
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    const va = sortValue(a);
-    const vb = sortValue(b);
-    const cmp = va < vb ? -1 : va > vb ? 1 : a.username.localeCompare(b.username);
-    return sort.asc ? cmp : -cmp;
-  });
-  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / perPage));
+  // Filters, sort (name breaks ties) and pages are applied by the server (admin-users.service.ts).
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
   const currentPage = Math.min(page, totalPages);
-  const pageUsers = sortedUsers.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const pageUsers = usersList;
   const SORTS: Array<{ value: string; label: string; field: SortField; asc: boolean }> = [
     { value: 'newest', label: t('users.sortNewest'), field: 'createdAt', asc: false },
     { value: 'oldest', label: t('users.sortOldest'), field: 'createdAt', asc: true },
@@ -316,11 +323,11 @@ export default function UsersManagementPage() {
   ];
   const currentSort = SORTS.find((o) => o.field === sort.field && o.asc === sort.asc)?.value || '';
 
-  const totalUsersCount = usersList.length;
-  const adminUsersCount = usersList.filter((u) => u.role === 'ADMIN').length;
-  const activeUsersCount = usersList.filter((u) => !u.permissions?.isSuspended).length;
-  const suspendedUsersCount = usersList.filter((u) => u.permissions?.isSuspended).length;
-  const newUsersCount = usersList.filter((u) => isRecent(u.createdAt)).length;
+  const totalUsersCount = counts.all;
+  const adminUsersCount = counts.admins;
+  const activeUsersCount = counts.active;
+  const suspendedUsersCount = counts.suspended;
+  const newUsersCount = counts.new;
 
   return (
     <div
@@ -361,7 +368,7 @@ export default function UsersManagementPage() {
           sort={sort}
           sortBy={sortBy}
           pageUsers={pageUsers}
-          sortedUsers={sortedUsers}
+          total={total}
           perPage={perPage}
           setPerPage={setPerPage}
           currentPage={currentPage}
@@ -380,7 +387,7 @@ export default function UsersManagementPage() {
         <UsersCardGrid
           view={vista}
           loading={loading}
-          filteredUsers={filteredUsers}
+          total={total}
           pageUsers={pageUsers}
           totalPages={totalPages}
           currentPage={currentPage}
@@ -399,7 +406,7 @@ export default function UsersManagementPage() {
         <UserActionSheet
           activeUserMenuId={activeUserMenuId}
           setActiveUserMenuId={setActiveUserMenuId}
-          filteredUsers={filteredUsers}
+          pageUsers={pageUsers}
           handleOpenEdit={handleOpenEdit}
           handleToggleRole={handleToggleRole}
           handleToggleBlock={handleToggleBlock}

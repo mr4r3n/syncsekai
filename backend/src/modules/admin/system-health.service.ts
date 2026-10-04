@@ -1,13 +1,65 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as os from 'os';
+import axios from 'axios';
+import { TrackerApi, trackerGateStatus, withTrackerPriority } from '../../common/http/tracker-gate';
+
+type Ping = { status: string; latency: string; rateLimit: string };
 
 /** Server status and sign-up domain policy. */
 @Injectable()
 export class SystemHealthService {
+  // ponytail: one minute of cache for the trackers' pings. The panel refreshes every 10 s and
+  // each refresh used to spend one of AniList's 30 requests a minute.
+  private pingCache: { at: number; pings: Record<TrackerApi, Ping> } | null = null;
+
   constructor(
     private prisma: PrismaService,
   ) {}
+
+  /**
+   * Pings the four trackers in parallel, as background work in their queue. An API the gate
+   * paused after a 429 is not pinged: it is DEGRADED for as long as the pause lasts.
+   */
+  private async pingTrackers(): Promise<Record<TrackerApi, Ping>> {
+    if (this.pingCache && Date.now() - this.pingCache.at < 60_000) return this.pingCache.pings;
+    const pace = (api: TrackerApi) => {
+      const lane = trackerGateStatus()[api];
+      if (!lane) return 'Not limited';
+      return `${lane.sentInWindow}/${lane.limitPerWindow} per min${lane.queued ? `, ${lane.queued} waiting` : ''}`;
+    };
+    const ping = async (api: TrackerApi, url: string, init: { method: 'GET' | 'POST' | 'HEAD'; data?: unknown; headers?: Record<string, string> }): Promise<Ping> => {
+      const paused = trackerGateStatus()[api]?.pausedForMs ?? 0;
+      if (paused > 0) return { status: 'DEGRADED', latency: `paused ${Math.ceil(paused / 1000)} s`, rateLimit: pace(api) };
+      const t0 = Date.now();
+      try {
+        const res = await withTrackerPriority(
+          'background',
+          () => axios.request({ url, ...init, timeout: 4000, validateStatus: () => true }),
+          2_000,
+        );
+        const status = res.status >= 500 || res.status === 429 ? 'DEGRADED' : 'ONLINE';
+        return { status, latency: `${Date.now() - t0}ms`, rateLimit: pace(api) };
+      } catch (e: any) {
+        // The API is up; our own queue to it is busy (see trackerGateStatus).
+        if (e?.code === 'TRACKER_BUSY') return { status: 'ONLINE', latency: `${trackerGateStatus()[api]?.queued ?? 0} waiting`, rateLimit: pace(api) };
+        return { status: 'OFFLINE', latency: 'Timeout', rateLimit: pace(api) };
+      }
+    };
+    const [anilist, mal, kitsu, jikan] = await Promise.all([
+      ping('anilist', 'https://graphql.anilist.co', {
+        method: 'POST',
+        data: { query: '{ SiteStatistics { anime { nodes { count } } } }' },
+        headers: { 'Content-Type': 'application/json' },
+      }),
+      ping('mal', 'https://myanimelist.net', { method: 'HEAD' }),
+      ping('kitsu', 'https://kitsu.io/api/edge/anime?page[limit]=1', { method: 'GET', headers: { Accept: 'application/vnd.api+json' } }),
+      ping('jikan', 'https://api.jikan.moe/v4/anime/1', { method: 'GET' }),
+    ]);
+    const pings = { anilist, mal, kitsu, jikan };
+    this.pingCache = { at: Date.now(), pings };
+    return pings;
+  }
 
   /**
    * Status and health of API and system connections (real live pings).
@@ -24,80 +76,8 @@ export class SystemHealthService {
       dbStatus = 'ERROR';
     }
 
-    // 2. Live ping to the AniList GraphQL API
-    let anilistStatus = 'ONLINE';
-    let anilistLatencyMs = 0;
-    try {
-      const t0 = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch('https://graphql.anilist.co', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: '{ SiteStatistics { anime { nodes { count } } } }' }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      anilistLatencyMs = Date.now() - t0;
-      if (!res.ok && res.status >= 500) anilistStatus = 'DEGRADED';
-    } catch {
-      anilistStatus = 'OFFLINE';
-    }
-
-    // 3. Live ping to MyAnimeList
-    let malStatus = 'ONLINE';
-    let malLatencyMs = 0;
-    try {
-      const t0 = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch('https://myanimelist.net', {
-        method: 'HEAD',
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      malLatencyMs = Date.now() - t0;
-      if (!res.ok && res.status >= 500) malStatus = 'DEGRADED';
-    } catch {
-      malStatus = 'OFFLINE';
-    }
-
-    // 4. Live ping to the Kitsu API
-    let kitsuStatus = 'ONLINE';
-    let kitsuLatencyMs = 0;
-    try {
-      const t0 = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch('https://kitsu.io/api/edge/anime?page[limit]=1', {
-        method: 'GET',
-        headers: { Accept: 'application/vnd.api+json' },
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      kitsuLatencyMs = Date.now() - t0;
-      if (!res.ok && res.status >= 500) kitsuStatus = 'DEGRADED';
-    } catch {
-      kitsuStatus = 'OFFLINE';
-    }
-
-    // 5. Live ping to the Jikan API (MAL backup)
-    let jikanStatus = 'ONLINE';
-    let jikanLatencyMs = 0;
-    try {
-      const t0 = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-      const res = await fetch('https://api.jikan.moe/v4/anime/1', {
-        method: 'GET',
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      jikanLatencyMs = Date.now() - t0;
-      if (!res.ok && res.status >= 500) jikanStatus = 'DEGRADED';
-    } catch {
-      jikanStatus = 'OFFLINE';
-    }
+    // 2-5. AniList, MyAnimeList, Kitsu and Jikan (cached for a minute)
+    const pings = await this.pingTrackers();
 
     // 6. Server hardware and memory diagnostics
     const memory = process.memoryUsage();
@@ -123,31 +103,23 @@ export class SystemHealthService {
         },
         anilist: {
           name: 'AniList GraphQL API',
-          status: anilistStatus,
-          latency: anilistLatencyMs > 0 ? `${anilistLatencyMs}ms` : 'Timeout',
+          ...pings.anilist,
           endpoint: 'https://graphql.anilist.co',
-          rateLimit: '90 req / min (OK)',
         },
         mal: {
           name: 'MyAnimeList REST API v2',
-          status: malStatus,
-          latency: malLatencyMs > 0 ? `${malLatencyMs}ms` : 'Timeout',
+          ...pings.mal,
           endpoint: 'https://api.myanimelist.net/v2',
-          rateLimit: 'Normal',
         },
         kitsu: {
           name: 'Kitsu API (Metadata)',
-          status: kitsuStatus,
-          latency: kitsuLatencyMs > 0 ? `${kitsuLatencyMs}ms` : 'Timeout',
+          ...pings.kitsu,
           endpoint: 'https://kitsu.io/api/edge',
-          rateLimit: 'Normal',
         },
         jikan: {
           name: 'Jikan API (MAL Backup)',
-          status: jikanStatus,
-          latency: jikanLatencyMs > 0 ? `${jikanLatencyMs}ms` : 'Timeout',
+          ...pings.jikan,
           endpoint: 'https://api.jikan.moe/v4',
-          rateLimit: '60 req / min',
         },
         plexWebhook: {
           name: 'Plex Webhook Listener',

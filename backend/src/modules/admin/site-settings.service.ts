@@ -11,6 +11,7 @@ import {
 import { reencodeSiteIcon, SITE_ICON_VARIANTS } from '../../common/security/image-file';
 import { SYSTEM_CREDENTIALS, findCredential, displayValue } from '../../common/security/system-credentials';
 import { EncryptionService } from '../../common/crypto/encryption.service';
+import { publicSettings } from '../setup/setup.service';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -60,6 +61,7 @@ export class SiteSettingsService {
       update: { value: version, isSecret: false },
       create: { key: ICON_VERSION_KEY, value: version, isSecret: false },
     });
+    publicSettings.site.clear();
     await this.prisma.auditLog
       .create({ data: { level: 'INFO', service: 'ADMIN', message: 'Site icon updated', details: { adminId } } })
       .catch(() => {});
@@ -71,6 +73,7 @@ export class SiteSettingsService {
     // The version in the database decides whether it is served; a file that
     // cannot be deleted is not shown.
     await this.prisma.systemSetting.deleteMany({ where: { key: ICON_VERSION_KEY } });
+    publicSettings.site.clear();
     for (const v of Object.values(SITE_ICON_VARIANTS)) {
       const onDisk = path.join(this.siteIconDir, v.file);
       try {
@@ -105,6 +108,7 @@ export class SiteSettingsService {
       updated.push(key);
     }
     if (updated.length === 0) throw new BadRequestException('None of the submitted keys can be changed here.');
+    publicSettings.site.clear();
 
     await this.prisma.auditLog
       .create({ data: { level: 'INFO', service: 'ADMIN', message: `Site settings updated: ${updated.join(', ')}`, details: { adminId, keys: updated } } })
@@ -253,6 +257,7 @@ export class SiteSettingsService {
       });
     }
 
+    publicSettings.maintenance.clear();
     return this.getMaintenanceStatus();
   }
 }

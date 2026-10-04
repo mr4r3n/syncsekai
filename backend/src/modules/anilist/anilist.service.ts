@@ -6,6 +6,7 @@ import { AnimeProvider } from '@prisma/client';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import { readStoredSetting } from '../../common/crypto/stored-setting';
+import { apiLatency } from '../../common/http/tracker-gate';
 
 @Injectable()
 export class AnilistService {
@@ -659,14 +660,14 @@ export class AnilistService {
       return { isConnected: false, latencyMs: 0 };
     }
 
-    const start = Date.now();
     try {
-      await axios.post(
-        this.graphqlEndpoint,
-        { query: '{ Page(page: 1, perPage: 1) { media(type: ANIME) { id } } }' },
-        { headers: this.getHeaders(), timeout: 3500 },
+      const latencyMs = await apiLatency('anilist', () =>
+        axios.post(
+          this.graphqlEndpoint,
+          { query: '{ Page(page: 1, perPage: 1) { media(type: ANIME) { id } } }' },
+          { headers: this.getHeaders(), timeout: 3500 },
+        ),
       );
-      const latencyMs = Date.now() - start;
 
       await this.prisma.animeConnection.update({
         where: { id: conn.id },

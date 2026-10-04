@@ -2,14 +2,15 @@ import React from 'react';
 import { CustomSelect } from '@/components/CustomSelect';
 
 interface MappingsFilterTabsProps {
-  mappings: any[];
+  /** Counts of the whole list (not only the page on screen). */
+  counts: { all: number; approved: number; pending: number; global: number };
   statusFilter: 'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL';
   handleStatusFilterChange: (val: 'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL') => void;
   t: (key: string, params?: any) => string;
 }
 
 export function MappingsFilterTabs({
-  mappings,
+  counts,
   statusFilter,
   handleStatusFilterChange,
   t,
@@ -26,10 +27,10 @@ export function MappingsFilterTabs({
     <>
       {(() => {
         const filters: { id: 'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL'; label: string; count: number; active: string }[] = [
-          { id: 'ALL', label: t('mappings.filterAll'), count: mappings.length, active: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
-          { id: 'APPROVED', label: t('mappings.filterLinked'), count: mappings.filter((m) => m.isApproved).length, active: 'bg-[var(--status-success-bg)] text-[var(--status-success)] border-[var(--status-success)]/30' },
-          { id: 'PENDING', label: t('mappings.filterPending'), count: mappings.filter((m) => !m.isApproved).length, active: 'bg-[var(--status-warning-bg)] text-[var(--status-warning)] border-[var(--status-warning)]/30' },
-          { id: 'GLOBAL', label: t('mappings.filterGlobal'), count: mappings.filter((m) => m.isGlobal).length, active: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
+          { id: 'ALL', label: t('mappings.filterAll'), count: counts.all, active: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
+          { id: 'APPROVED', label: t('mappings.filterLinked'), count: counts.approved, active: 'bg-[var(--status-success-bg)] text-[var(--status-success)] border-[var(--status-success)]/30' },
+          { id: 'PENDING', label: t('mappings.filterPending'), count: counts.pending, active: 'bg-[var(--status-warning-bg)] text-[var(--status-warning)] border-[var(--status-warning)]/30' },
+          { id: 'GLOBAL', label: t('mappings.filterGlobal'), count: counts.global, active: 'bg-[var(--nav-active-bg)] text-[var(--nav-active-text)] border-[var(--nav-active-border)]' },
         ];
 
         return (

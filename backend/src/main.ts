@@ -4,10 +4,15 @@ import { ValidationPipe, Logger, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
+import { installTrackerGate } from './common/http/tracker-gate';
 
 async function bootstrap() {
   const logger = new Logger('SyncSekaiBootstrap');
+  // Every request to AniList, MyAnimeList, Kitsu and Jikan waits its turn (rate limits).
+  installTrackerGate();
   const app = await NestFactory.create(AppModule);
+  // SIGTERM (a deploy) runs the shutdown hooks: the scrobbles being synced get a few seconds.
+  app.enableShutdownHooks();
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 4000;
@@ -78,6 +83,12 @@ async function bootstrap() {
     }),
   );
 
+  // Requests arrive through the frontend's proxy, which reuses idle connections. Node closes them
+  // after 5 s by default: one reused right then fails (ECONNRESET, a 500 for the visitor).
+  // Idle connections are kept longer than the proxy keeps them.
+  const server = app.getHttpServer();
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
   await app.listen(port, '0.0.0.0');
   logger.log(`=========================================`);
   logger.log(`  SyncSekai Backend API running on port ${port}`);

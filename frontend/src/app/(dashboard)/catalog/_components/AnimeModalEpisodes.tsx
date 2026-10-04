@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/ToastProvider';
 import { useI18n } from '@/i18n/I18nProvider';
+import { syncOutcome } from './syncOutcome';
 import {
   ChevronDown,
   Check,
@@ -84,11 +85,23 @@ export function AnimeModalEpisodes({
     const newStatus = isCompleted ? 'COMPLETED' : 'CURRENT';
     const newPct = total > 0 ? Math.min(100, Math.round((epNumber / total) * 100)) : 100;
 
+    const previous = selectedAnime;
     const updated = {
       ...selectedAnime,
       episodesWatched: epNumber,
       progressPercentage: newPct,
       status: newStatus,
+    };
+    // A save no tracker took is undone on screen: it must not look saved when it is not.
+    const undo = () => {
+      setSelectedAnime(previous);
+      setCatalog((prev) =>
+        prev.map((item) =>
+          item.id === previous.id || (item.anilistId && item.anilistId === previous.anilistId)
+            ? { ...item, episodesWatched: previous.episodesWatched, progressPercentage: previous.progressPercentage, status: previous.status }
+            : item,
+        ),
+      );
     };
     setSelectedAnime(updated);
     setCatalog((prev) =>
@@ -109,11 +122,19 @@ export function AnimeModalEpisodes({
         showTitle: selectedAnime.title,
         seasonNumber: selectedAnime.seasonNumber,
       });
-      const trackersMsg = res?.updatedTrackers?.length > 0
-        ? res.updatedTrackers.join(' y ')
-        : (selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList');
-      showToast(t('catalog.episodeSynced', { number: epNumber, trackers: trackersMsg }), 'success');
+      const outcome = syncOutcome(res);
+      if (outcome.kind === 'synced') {
+        showToast(t('catalog.episodeSynced', { number: epNumber, trackers: outcome.trackers }), 'success');
+      } else if (outcome.kind === 'syncing') {
+        showToast(t('catalog.syncStillRunning'), 'info');
+      } else if (outcome.kind === 'local') {
+        showToast(t('catalog.savedLocallyOnly'), 'info');
+      } else {
+        undo();
+        showToast(`${t('catalog.syncEpisodeError')} ${outcome.reason}`, 'error');
+      }
     } catch (err: any) {
+      undo();
       showToast(`${t('catalog.syncEpisodeError')} ` + err.message, 'error');
     } finally {
       setSyncingEpisode(null);

@@ -6,9 +6,36 @@ import * as crypto from 'crypto';
 import { CoversService } from '../covers/covers.service';
 import { AnimeMetadataService } from '../covers/anime-metadata.service';
 
+export interface MediaPageQuery {
+  page: number;
+  limit: number;
+  search: string;
+  category: string;
+  status: 'ALL' | 'LINKED' | 'ORPHAN';
+  sort: string;
+}
+
+/** Query string of the media list, clamped (page >= 1, 1..100 per page). */
+export function parseMediaQuery(q: Record<string, string | undefined>): MediaPageQuery {
+  const status = q.status === 'LINKED' || q.status === 'ORPHAN' ? q.status : 'ALL';
+  return {
+    page: Math.max(1, parseInt(q.page || '1', 10) || 1),
+    limit: Math.min(100, Math.max(1, parseInt(q.limit || '32', 10) || 32)),
+    search: (q.search || '').trim().toLowerCase().slice(0, 100),
+    category: q.category || 'ALL',
+    status,
+    sort: q.sort || 'RECENT',
+  };
+}
+
 /** Cover files: listing, deletion, purge and refresh. */
 @Injectable()
 export class AdminMediaService {
+  // ponytail: the enriched list (disk scan + usage counts) is rebuilt at most every 30 s, and
+  // at once after any change made here; files written by the covers service meanwhile show up
+  // within those 30 s.
+  private listCache: { at: number; list: Awaited<ReturnType<AdminMediaService['buildMediaList']>> } | null = null;
+
   constructor(
     private prisma: PrismaService,
     private coversService: CoversService,
@@ -16,9 +43,58 @@ export class AdminMediaService {
   ) {}
 
   /**
+   * One page of the media library, filtered and sorted as the page used to do in the
+   * browser, plus the totals of the whole library.
+   */
+  async getMediaPage(q: MediaPageQuery) {
+    if (!this.listCache || Date.now() - this.listCache.at > 30_000) {
+      this.listCache = { at: Date.now(), list: await this.buildMediaList() };
+    }
+    const { media, ...totals } = this.listCache.list;
+    const filtered = media
+      .filter((item) => {
+        const matchesCategory = q.category === 'ALL' || item.category === q.category;
+        const matchesStatus =
+          q.status === 'ALL' || (q.status === 'LINKED' && !item.isOrphan) || (q.status === 'ORPHAN' && item.isOrphan);
+        if (!matchesCategory || !matchesStatus) return false;
+        if (!q.search) return true;
+        return (
+          item.filename.toLowerCase().includes(q.search) ||
+          (item.titleEnglish && item.titleEnglish.toLowerCase().includes(q.search)) ||
+          (item.titleRomaji && item.titleRomaji.toLowerCase().includes(q.search)) ||
+          (item.plexTitles && item.plexTitles.some((t: string) => t.toLowerCase().includes(q.search))) ||
+          (item.anilistId && String(item.anilistId).includes(q.search)) ||
+          (item.malId && String(item.malId).includes(q.search))
+        );
+      })
+      .sort((a, b) => {
+        const english = (x: any) => x.titleEnglish || x.titleRomaji || x.filename;
+        const romaji = (x: any) => x.titleRomaji || x.titleEnglish || x.filename;
+        switch (q.sort) {
+          case 'RECENT': return new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime();
+          case 'OLDEST': return new Date(a.modifiedAt).getTime() - new Date(b.modifiedAt).getTime();
+          case 'TITLE_EN_ASC': return english(a).localeCompare(english(b));
+          case 'TITLE_EN_DESC': return english(b).localeCompare(english(a));
+          case 'TITLE_ROMAJI_ASC': return romaji(a).localeCompare(romaji(b));
+          case 'TITLE_ROMAJI_DESC': return romaji(b).localeCompare(romaji(a));
+          case 'SIZE_DESC': return b.sizeBytes - a.sizeBytes;
+          case 'SIZE_ASC': return a.sizeBytes - b.sizeBytes;
+          default: return 0;
+        }
+      });
+    return {
+      ...totals,
+      media: filtered.slice((q.page - 1) * q.limit, q.page * q.limit),
+      total: filtered.length,
+      page: q.page,
+      limit: q.limit,
+    };
+  }
+
+  /**
    * Media management: lists the files cached on the server, enriched with anime metadata.
    */
-  async getMediaList() {
+  private async buildMediaList() {
     const mediaDirs = [
       { dir: path.join(process.cwd(), 'uploads', 'covers'), category: 'Anime covers', urlPrefix: '/api/covers' },
       { dir: path.join(process.cwd(), 'uploads', 'general'), category: 'General', urlPrefix: '/uploads/general' },
@@ -36,12 +112,9 @@ export class AdminMediaService {
           malTitle: true,
         },
       }),
-      this.prisma.scrobbleHistory.findMany({
-        select: {
-          showTitle: true,
-          seasonNumber: true,
-        },
-      }),
+      // One row per distinct title with its count: reading every scrobble of every user here
+      // grew with the whole history on each visit.
+      this.prisma.scrobbleHistory.groupBy({ by: ['showTitle'], _count: { _all: true } }),
       this.prisma.userFavorite.findMany({
         select: {
           animeId: true,
@@ -109,7 +182,7 @@ export class AdminMediaService {
       const hash = `title_${crypto.createHash('md5').update(cleanPlex.toLowerCase()).digest('hex').slice(0, 16)}`;
       const hashEntry = titleHashUsage.get(hash);
       if (hashEntry) {
-        hashEntry.count += 1;
+        hashEntry.count += h._count._all;
         if (cleanPlex) hashEntry.plexTitles.add(cleanPlex);
       }
     }
@@ -295,6 +368,7 @@ export class AdminMediaService {
    * Deletes a specific media file.
    */
   async deleteMediaFile(filename: string) {
+    this.listCache = null;
     const safeName = path.basename(filename);
     const possiblePaths = [
       path.join(process.cwd(), 'uploads', 'covers', safeName),
@@ -315,6 +389,7 @@ export class AdminMediaService {
    * Purges the whole cover cache to free storage.
    */
   async purgeCoversCache() {
+    this.listCache = null;
     const coversDir = path.join(process.cwd(), 'uploads', 'covers');
     let deletedCount = 0;
 
@@ -339,7 +414,8 @@ export class AdminMediaService {
    * Purges only orphan covers (no associated mappings or plays).
    */
   async purgeOrphanCovers() {
-    const listRes = await this.getMediaList();
+    this.listCache = null;
+    const listRes = await this.buildMediaList();
     const orphans = listRes.media.filter((m: any) => m.category === 'Anime covers' && m.isOrphan);
     let deletedCount = 0;
 
@@ -364,6 +440,7 @@ export class AdminMediaService {
    * Forces a refresh and download of a specific cover.
    */
   async refreshCover(filename: string) {
+    this.listCache = null;
     const safeBase = path.parse(filename).name;
     const res = await this.coversService.forceRefreshCover(safeBase);
     if (!res.success) {

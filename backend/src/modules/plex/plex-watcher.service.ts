@@ -6,6 +6,8 @@ import axios from 'axios';
 import { PlexService, plexDirectHash } from './plex.service';
 import { PlexWebhookService } from './plex-webhook.service';
 import { recordActivity } from '../../common/logging/activity-log';
+import { PollSchedule, PollResult, runPool, POLL_CONCURRENCY, CONNECTIONS_TTL_MS } from '../../common/watch/poll-schedule';
+import { CachedValue } from '../../common/cached-value';
 
 /**
  * One Plex server, whatever address reaches it: the plex.direct certificate hash when
@@ -45,6 +47,9 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
   private readonly failures = new Map<string, number>();
   private readonly lastLookup = new Map<string, number>();
   private readonly serverTokens = new Map<string, string>();
+  // Who is polled when (common/watch/poll-schedule.ts) and the connections, read every 30 s.
+  private readonly schedule = new PollSchedule();
+  private readonly connections = new CachedValue<any[]>(CONNECTIONS_TTL_MS);
 
   constructor(
     private prisma: PrismaService,
@@ -71,28 +76,14 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
     this.isPolling = true;
 
     try {
-      const connections = await this.prisma.plexConnection.findMany({
-        where: {
-          isConnected: true,
-          encryptedAuthToken: { not: null },
-          serverUrl: { not: null },
-        },
-        include: {
-          user: {
-            include: {
-              settings: true,
-              blacklist: true,
-            },
-          },
-        },
-      });
-
-      // ponytail: fixed batches of 5 servers at a time, so one that times out (4 s) holds
-      // its batch instead of the whole round. A queue with per-server backoff if there are many.
-      const pollable = connections.filter((conn) => conn.serverUrl && conn.encryptedAuthToken);
-      for (let i = 0; i < pollable.length; i += 5) {
-        await Promise.allSettled(pollable.slice(i, i + 5).map((conn) => this.pollServerSessions(conn)));
-      }
+      const connections = await this.connections.get(() =>
+        this.prisma.plexConnection.findMany({
+          where: { isConnected: true, encryptedAuthToken: { not: null }, serverUrl: { not: null } },
+          include: { user: { include: { settings: true, blacklist: true } } },
+        }),
+      );
+      const due = connections.filter((conn) => conn.serverUrl && conn.encryptedAuthToken && this.schedule.due(conn.id));
+      await runPool(due, POLL_CONCURRENCY, async (conn) => this.schedule.record(conn.id, await this.pollServerSessions(conn)));
     } catch (e: any) {
       this.logger.warn(`PMS polling cycle error: ${e.message}`);
     } finally {
@@ -100,14 +91,14 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async pollServerSessions(conn: any) {
+  private async pollServerSessions(conn: any): Promise<PollResult> {
     const user = conn.user;
-    if (!user) return;
+    if (!user) return 'idle';
 
     // The token comes from findServerAccess before anything is sent: the stored one is
     // the account token for PIN links, and a server shared with the user never gets it.
     const token = this.serverTokens.get(conn.id) || (await this.lookUpServer(conn));
-    if (!token) return;
+    if (!token) return 'failed';
 
     try {
       const target = await this.plexService.validateUserServerTarget(conn.serverUrl);
@@ -284,7 +275,11 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
             },
           };
 
-          await this.plexWebhookService.handleWebhook(effectiveUser.webhookToken, scrobblePayload, 'PMS_DIRECT_WATCHER');
+          // Not awaited: syncing to the trackers can wait its turn with their rate limits, and
+          // this round must keep polling every other server meanwhile.
+          void this.plexWebhookService
+            .handleWebhook(effectiveUser.webhookToken, scrobblePayload, 'PMS_DIRECT_WATCHER')
+            .catch((err) => this.logger.error(`Watcher error while reporting the scrobble: ${err.message}`));
         }
       }
 
@@ -294,9 +289,11 @@ export class PlexWatcherService implements OnModuleInit, OnModuleDestroy {
           this.sessionsMap.delete(key);
         }
       }
+      return rawSessions.length > 0 ? 'playing' : 'idle';
     } catch {
       // Timeout, network error or a token the server refuses.
       this.noteFailure(conn.id);
+      return 'failed';
     }
   }
 

@@ -4,7 +4,8 @@ import { useI18n } from '@/i18n/I18nProvider';
 
 interface AdminMappingsListSectionProps {
   loading: boolean;
-  filteredMappings: any[];
+  /** Rows that match the filters, across every page. */
+  total: number;
   paginatedMappings: any[];
   setActiveAdminMappingSheetItem: (item: any) => void;
   handleToggleGlobal: (id: string) => void;
@@ -15,7 +16,7 @@ interface AdminMappingsListSectionProps {
 
 export function AdminMappingsListSection({
   loading,
-  filteredMappings,
+  total,
   paginatedMappings,
   setActiveAdminMappingSheetItem,
   handleToggleGlobal,
@@ -48,7 +49,7 @@ export function AdminMappingsListSection({
             </div>
           </div>
         ))
-      ) : filteredMappings.length === 0 ? (
+      ) : total === 0 ? (
         <div className="py-16 text-center text-xs font-mono text-[var(--text-muted)]">{t('admin.noMappingsForSelectedFilter')}</div>
       ) : (
         paginatedMappings.map((item) => {

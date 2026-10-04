@@ -6,6 +6,8 @@ import { KitsuService } from '../kitsu/kitsu.service';
 import { AnimeProvider, SyncStatus } from '@prisma/client';
 import axios from 'axios';
 import { CatalogService } from './catalog.service';
+import { withTrackerPriority } from '../../common/http/tracker-gate';
+import { syncingRows } from '../plex/scrobble-pipeline.service';
 
 /** Progress and score changes from the catalog, propagated to the trackers. */
 @Injectable()
@@ -22,8 +24,29 @@ export class CatalogProgressService {
 
   /**
    * Updates episode progress and/or score on every linked tracker (AniList, MyAnimeList, Kitsu).
+   *
+   * A sync in the trackers' queue, like a scrobble: it goes on for as long as the queue needs.
+   * The answer waits at most 15 s; past that it says the save is still syncing (the history
+   * shows it as such) instead of failing or claiming it synced.
    */
-  async updateProgressAndRating(
+  updateProgressAndRating(...args: Parameters<CatalogProgressService['saveProgressAndRating']>) {
+    const work = withTrackerPriority('sync', () => this.saveProgressAndRating(...args));
+    work.catch((e) => this.logger.error(`Catalog sync failed: ${e.message}`));
+    const stillSyncing = new Promise<'syncing'>((resolve) => setTimeout(() => resolve('syncing'), 15_000).unref());
+    return Promise.race([work, stillSyncing]).then((result) =>
+      result === 'syncing'
+        ? {
+            success: true,
+            queued: true,
+            results: {},
+            updatedTrackers: [] as string[],
+            message: 'Still syncing: the trackers are busy. The history shows it as synced once each one confirms it.',
+          }
+        : result,
+    );
+  }
+
+  private async saveProgressAndRating(
     userId: string,
     data: {
       anilistMediaId?: number;
@@ -55,6 +78,36 @@ export class CatalogProgressService {
     const anilistConn = user.animeConnections.find((c) => c.provider === AnimeProvider.ANILIST && c.isConnected);
     const malConn = user.animeConnections.find((c) => c.provider === AnimeProvider.MAL && c.isConnected);
     const kitsuConn = user.animeConnections.find((c) => c.provider === AnimeProvider.KITSU && c.isConnected);
+
+    // In the history at once, as "syncing" on each tracker it will be sent to; step 6 writes what
+    // each tracker answered. Not recording it never stops the sync itself.
+    const planned = (conn: unknown, allowed: boolean) =>
+      conn ? (allowed ? SyncStatus.SYNCING : SyncStatus.FAILED) : SyncStatus.SKIPPED;
+    const historyEntry =
+      data.progress === undefined
+        ? null
+        : await this.prisma.scrobbleHistory
+            .create({
+              data: {
+                userId,
+                showTitle: data.showTitle || (data.anilistMediaId ? `AniList #${data.anilistMediaId}` : `MAL #${data.malMediaId}`),
+                episodeNumber: data.progress,
+                seasonNumber: Number.isInteger(Number(data.seasonNumber))
+                  ? Math.max(1, Math.min(50, Number(data.seasonNumber)))
+                  : 1,
+                viewPercentage: 100,
+                rating: data.score,
+                anilistStatus: planned(anilistConn, canSyncAnilist),
+                malStatus: planned(malConn, canSyncMal),
+                kitsuStatus: planned(kitsuConn, canSyncKitsu),
+                viewedAt: new Date(),
+              },
+            })
+            .catch((err) => {
+              this.logger.warn(`Could not record the scrobble in the history: ${err.message}`);
+              return null;
+            });
+    if (historyEntry) syncingRows.add(historyEntry.id);
 
     let effectiveAnilistId = data.anilistMediaId;
     let effectiveMalId = data.malMediaId;
@@ -205,10 +258,15 @@ export class CatalogProgressService {
       } else {
         try {
           let kitsuAnimeId = effectiveKitsuId;
-          if (!kitsuAnimeId && resolvedTitle) {
-            const searchRes = await this.kitsuService.searchAnime(resolvedTitle, 1);
-            if (searchRes?.[0]?.kitsuId) {
-              kitsuAnimeId = searchRes[0].kitsuId;
+          if (!kitsuAnimeId) {
+            // By the MAL/AniList id when there is one: the title alone finds the first season of a sequel.
+            const found = effectiveMalId || effectiveAnilistId
+              ? await this.kitsuService.findByExternalIds(effectiveMalId, effectiveAnilistId)
+              : resolvedTitle
+                ? (await this.kitsuService.searchAnime(resolvedTitle, 1))?.[0]
+                : null;
+            if (found?.kitsuId) {
+              kitsuAnimeId = found.kitsuId;
             }
           }
           if (kitsuAnimeId) {
@@ -255,26 +313,21 @@ export class CatalogProgressService {
           : null,
       ].filter(Boolean);
 
-      await this.prisma.scrobbleHistory.create({
-        data: {
-          userId,
-          showTitle: resolvedTitle || (effectiveAnilistId ? `AniList #${effectiveAnilistId}` : `MAL #${effectiveMalId}`),
-          episodeNumber: data.progress,
-          seasonNumber: Number.isInteger(Number(data.seasonNumber))
-            ? Math.max(1, Math.min(50, Number(data.seasonNumber)))
-            : 1,
-          viewPercentage: 100,
-          rating: data.score,
-          anilistStatus: results.anilist?.success ? SyncStatus.SUCCESS : anilistConn ? SyncStatus.FAILED : SyncStatus.SKIPPED,
-          malStatus: results.mal?.success ? SyncStatus.SUCCESS : malConn ? SyncStatus.FAILED : SyncStatus.SKIPPED,
-          kitsuStatus: kitsuResults.success ? SyncStatus.SUCCESS : kitsuConn ? SyncStatus.FAILED : SyncStatus.SKIPPED,
-          errorMessage: failureReasons.length ? failureReasons.join(' | ').slice(0, 500) : null,
-          viewedAt: new Date(),
-        },
-      }).catch((err) => {
-        // If recording itself fails, at least leave it in the log.
-        this.logger.warn(`Could not record the scrobble in the history: ${err.message}`);
-      });
+      if (historyEntry) {
+        await this.prisma.scrobbleHistory.update({
+          where: { id: historyEntry.id },
+          data: {
+            showTitle: resolvedTitle || (effectiveAnilistId ? `AniList #${effectiveAnilistId}` : `MAL #${effectiveMalId}`),
+            anilistStatus: results.anilist?.success ? SyncStatus.SUCCESS : anilistConn ? SyncStatus.FAILED : SyncStatus.SKIPPED,
+            malStatus: results.mal?.success ? SyncStatus.SUCCESS : malConn ? SyncStatus.FAILED : SyncStatus.SKIPPED,
+            kitsuStatus: kitsuResults.success ? SyncStatus.SUCCESS : kitsuConn ? SyncStatus.FAILED : SyncStatus.SKIPPED,
+            errorMessage: failureReasons.length ? failureReasons.join(' | ').slice(0, 500) : null,
+          },
+        }).catch((err) => {
+          // If recording itself fails, at least leave it in the log.
+          this.logger.warn(`Could not record the scrobble in the history: ${err.message}`);
+        }).finally(() => syncingRows.delete(historyEntry.id));
+      }
     }
 
     // 7. Invalidate all the user's caches so the changes show live in every tab

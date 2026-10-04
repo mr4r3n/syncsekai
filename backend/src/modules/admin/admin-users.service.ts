@@ -1,8 +1,43 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { assertValidUsername } from '../../common/text/username';
+
+export type UsersSort = 'createdAt' | 'username' | 'lastActiveAt' | 'status' | 'role';
+export interface UsersPageQuery {
+  page: number;
+  limit: number;
+  search: string;
+  role: 'ALL' | 'ADMIN' | 'USER';
+  status: 'ALL' | 'ACTIVE' | 'SUSPENDED' | 'NEW';
+  sort: UsersSort;
+  asc: boolean;
+}
+
+/** Query string of the users list, clamped to known values (page >= 1, 1..100 per page). */
+export function parseUsersQuery(q: Record<string, string | undefined>): UsersPageQuery {
+  const pick = <T extends string>(value: string | undefined, allowed: readonly T[], fallback: T): T =>
+    allowed.includes(value as T) ? (value as T) : fallback;
+  return {
+    page: Math.max(1, parseInt(q.page || '1', 10) || 1),
+    limit: Math.min(100, Math.max(1, parseInt(q.limit || '10', 10) || 10)),
+    search: (q.search || '').trim().slice(0, 100),
+    role: pick(q.role, ['ALL', 'ADMIN', 'USER'] as const, 'ALL'),
+    status: pick(q.status, ['ALL', 'ACTIVE', 'SUSPENDED', 'NEW'] as const, 'ALL'),
+    sort: pick(q.sort, ['createdAt', 'username', 'lastActiveAt', 'status', 'role'] as const, 'createdAt'),
+    asc: q.asc === 'true',
+  };
+}
+
+/** What each sort orders by; a closed list, so no user text ever reaches the ORDER BY. */
+const USERS_ORDER: Record<UsersSort, Prisma.Sql> = {
+  createdAt: Prisma.sql`u."createdAt"`,
+  username: Prisma.sql`lower(u.username)`,
+  lastActiveAt: Prisma.sql`COALESCE(ls.last, to_timestamp(0))`,
+  status: Prisma.sql`(CASE WHEN COALESCE(st."isSuspended", false) THEN 1 ELSE 0 END)`,
+  role: Prisma.sql`(CASE WHEN u.role = 'ADMIN' THEN 0 ELSE 1 END)`,
+};
 
 /** User management from the panel: listing, permissions and deletion. */
 @Injectable()
@@ -12,10 +47,14 @@ export class AdminUsersService {
   ) {}
 
   /**
-   * Lists every user with their permissions, connections and metrics.
+   * One page of users with their permissions, connections and metrics, plus the counts the
+   * header shows. Filtered, sorted and cut by the database: the page used to receive every
+   * user and do it in the browser.
    */
-  async getUsersList() {
-    const users = await this.prisma.user.findMany({
+  async getUsersPage(q: UsersPageQuery) {
+    const { ids, total, counts } = await this.findUserPage(q);
+    const found = await this.prisma.user.findMany({
+      where: { id: { in: ids } },
       select: {
         id: true,
         email: true,
@@ -78,10 +117,11 @@ export class AdminUsersService {
         // Only the most recent session: it answers "when did they last sign in?".
         sessions: { select: { lastActiveAt: true }, orderBy: { lastActiveAt: 'desc' }, take: 1 },
       },
-      orderBy: { createdAt: 'desc' },
     });
+    const byId = new Map(found.map((u) => [u.id, u]));
+    const users = ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
 
-    return users.map((u) => ({
+    const items = users.map((u) => ({
       id: u.id,
       email: u.email,
       username: u.username,
@@ -119,6 +159,50 @@ export class AdminUsersService {
         kitsuUser: u.animeConnections.find((c) => c.provider === 'KITSU')?.remoteUsername ?? null,
       },
     }));
+    return { items, total, page: q.page, limit: q.limit, counts };
+  }
+
+  /**
+   * Ids of the users on the page, in order, and the counts. Raw SQL because one sort is by
+   * the most recent session, which Prisma cannot order by. Every value is a parameter and
+   * the sort column comes from USERS_ORDER.
+   */
+  private async findUserPage(q: UsersPageQuery) {
+    const like = `%${q.search}%`;
+    const suspended = Prisma.sql`COALESCE(st."isSuspended", false)`;
+    const isNew = Prisma.sql`u."createdAt" > now() - interval '7 days'`;
+    const from = Prisma.sql`
+      FROM "User" u
+      LEFT JOIN "UserSettings" st ON st."userId" = u.id
+      LEFT JOIN LATERAL (SELECT MAX(s."lastActiveAt") AS last FROM "Session" s WHERE s."userId" = u.id) ls ON true`;
+    const where = Prisma.sql`
+      WHERE (${q.search} = '' OR u.username ILIKE ${like} OR u.email ILIKE ${like})
+        AND (${q.role} = 'ALL' OR u.role::text = ${q.role})
+        AND (${q.status} = 'ALL'
+          OR (${q.status} = 'ACTIVE' AND NOT ${suspended})
+          OR (${q.status} = 'SUSPENDED' AND ${suspended})
+          OR (${q.status} = 'NEW' AND ${isNew}))`;
+    const dir = q.asc ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+
+    const [rows, [{ total }], [c]] = await Promise.all([
+      this.prisma.$queryRaw<{ id: string }[]>`
+        SELECT u.id ${from} ${where}
+        ORDER BY ${USERS_ORDER[q.sort]} ${dir}, lower(u.username) ${dir}, u.id ${dir}
+        LIMIT ${q.limit} OFFSET ${(q.page - 1) * q.limit}`,
+      this.prisma.$queryRaw<{ total: bigint }[]>`SELECT COUNT(*) AS total ${from} ${where}`,
+      this.prisma.$queryRaw<{ all: bigint; admins: bigint; active: bigint; suspended: bigint; new: bigint }[]>`
+        SELECT COUNT(*) AS all,
+               COUNT(*) FILTER (WHERE u.role = 'ADMIN') AS admins,
+               COUNT(*) FILTER (WHERE NOT ${suspended}) AS active,
+               COUNT(*) FILTER (WHERE ${suspended}) AS suspended,
+               COUNT(*) FILTER (WHERE ${isNew}) AS new
+        FROM "User" u LEFT JOIN "UserSettings" st ON st."userId" = u.id`,
+    ]);
+    return {
+      ids: rows.map((r) => r.id),
+      total: Number(total),
+      counts: { all: Number(c.all), admins: Number(c.admins), active: Number(c.active), suspended: Number(c.suspended), new: Number(c.new) },
+    };
   }
 
   /**

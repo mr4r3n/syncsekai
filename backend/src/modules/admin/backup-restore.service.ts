@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as zlib from 'zlib';
 import { ensureDirectoryExists } from './ensure-directory';
 import { BackupService } from './backup.service';
+import { publicSettings } from '../setup/setup.service';
 
 /**
  * Resolves where to write a file from a backup, keeping its subdirectory
@@ -116,6 +117,8 @@ export class BackupRestoreService {
           });
           restoredCount++;
         }
+        publicSettings.site.clear();
+        publicSettings.maintenance.clear();
       }
 
       // 2. Restore DomainPolicies

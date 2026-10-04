@@ -208,6 +208,7 @@ export function HistoryList({
                 const resolvedCover = resolveCoverUrl(item.coverImage);
                 const failed =
                   item.anilistStatus === 'FAILED' || item.malStatus === 'FAILED';
+                const syncing = [item.anilistStatus, item.malStatus, item.kitsuStatus].includes('SYNCING');
                 const unmapped =
                   !item.isMapped &&
                   !item.anilistMediaId &&
@@ -272,7 +273,9 @@ export function HistoryList({
                           mal={item.malStatus}
                           kitsu={item.kitsuStatus}
                           summary={
-                            failed
+                            syncing
+                              ? t('history.syncSummarySyncing')
+                              : failed
                               ? t('history.syncSummaryFailed')
                               : t('history.syncSummary', {
                                   ok: [
@@ -310,10 +313,10 @@ export function HistoryList({
                         <button
                           type="button"
                           onClick={() => handleDeleteAndRevert(item)}
-                          disabled={isBatchProcessing}
+                          disabled={isBatchProcessing || syncing}
                           className="w-8 h-8 rounded-[var(--radius-sm)] border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--status-danger-bg)] hover:border-[var(--status-danger)]/40 text-[var(--text-muted)] hover:text-[var(--status-danger)] flex items-center justify-center transition-colors cursor-pointer shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={t('history.revertScrobble')}
-                          aria-label={t('history.revertScrobble')}
+                          title={syncing ? t('history.revertWhileSyncing') : t('history.revertScrobble')}
+                          aria-label={syncing ? t('history.revertWhileSyncing') : t('history.revertScrobble')}
                         >
                           <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </button>

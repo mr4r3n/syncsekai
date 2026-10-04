@@ -16,7 +16,8 @@ interface MediaPageHeaderProps {
   totalOrphans: number;
   setPurgeOrphansModalOpen: (open: boolean) => void;
   setPurgeModalOpen: (open: boolean) => void;
-  mediaList: MediaItem[];
+  /** Files in the whole library (the purge button needs at least one). */
+  totalFiles: number;
   t: (key: string, values?: any) => string;
 }
 
@@ -27,7 +28,7 @@ export function MediaPageHeader({
   totalOrphans,
   setPurgeOrphansModalOpen,
   setPurgeModalOpen,
-  mediaList,
+  totalFiles,
   t,
 }: MediaPageHeaderProps) {
   return (
@@ -68,7 +69,7 @@ export function MediaPageHeader({
 
             <button
               onClick={() => setPurgeModalOpen(true)}
-              disabled={loading || mediaList.length === 0}
+              disabled={loading || totalFiles === 0}
               className="px-3.5 py-2 rounded-[6px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
             >
               <Trash2 className="w-3.5 h-3.5" />

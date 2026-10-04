@@ -24,6 +24,8 @@ enum SyncStatus {
   FAILED
   SKIPPED
   REVERTED
+  /// Waiting its turn in the trackers' queue (common/http/tracker-gate.ts) or being sent: never shown as synced.
+  SYNCING
 }
 
 model User {

@@ -9,6 +9,7 @@ import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useRouter } from 'next/navigation';
+import { onVisibleInterval } from '@/lib/visibleInterval';
 import type { HeatmapDay, HeatmapResponse } from './_components/types';
 import { HistorySelectionBar } from './_components/HistorySelectionBar';
 import { HistoryHeader } from './_components/HistoryHeader';
@@ -211,6 +212,19 @@ export default function HistoryPage() {
   useEffect(() => {
     loadHistory(page, limit, search);
   }, [page, limit, search, loadHistory]);
+
+  // A scrobble still waiting for a tracker shows as syncing; its row is refreshed every 5 s
+  // (visible tab only) until every tracker has answered, so it turns synced on its own. Quiet:
+  // no spinner, the selection stays, and a load the user asked for meanwhile wins.
+  const hasSyncing = history.some((h) => [h.anilistStatus, h.malStatus, h.kitsuStatus].includes('SYNCING'));
+  useEffect(() => {
+    if (!hasSyncing) return;
+    return onVisibleInterval(async () => {
+      const at = latestRequest.current;
+      const res = await api.history.get({ page, limit, search }).catch(() => null);
+      if (at === latestRequest.current && res && !Array.isArray(res)) setHistory(res.items || []);
+    }, 5000);
+  }, [hasSyncing, page, limit, search]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

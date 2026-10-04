@@ -141,6 +141,64 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 }
 
+/**
+ * The background effects and the top bar's theme both ask for the active announcement every
+ * 15 s: one request, reused for 5 s, answers both.
+ */
+let activeAnnouncement: { at: number; answer: Promise<any> } | null = null;
+function sharedActiveAnnouncement(): Promise<any> {
+  if (!activeAnnouncement || Date.now() - activeAnnouncement.at > 5_000) {
+    const answer = request<any>('/api/announcements/active');
+    activeAnnouncement = { at: Date.now(), answer };
+    answer.catch(() => {
+      if (activeAnnouncement?.answer === answer) activeAnnouncement = null;
+    });
+  }
+  return activeAnnouncement.answer;
+}
+
+/**
+ * The signed-in user. The sidebar and the page ask for it at the same time when a page opens:
+ * while one request is on its way, the others get its answer. Nothing is kept once it answers,
+ * so a later call always reads fresh data.
+ */
+let meInFlight: Promise<any> | null = null;
+function sharedMe(): Promise<any> {
+  if (!meInFlight) {
+    const answer = request<any>('/api/auth/me');
+    meInFlight = answer;
+    answer.then(
+      () => (meInFlight = null),
+      () => (meInFlight = null),
+    );
+  }
+  return meInFlight;
+}
+
+export type MappingsStatus = 'ALL' | 'APPROVED' | 'PENDING' | 'GLOBAL' | 'USER';
+export interface MappingsPageParams {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: MappingsStatus;
+}
+/** One page of mappings, filtered by the server, and the counts of the whole list for the tabs. */
+export interface MappingsPage {
+  items: any[];
+  total: number;
+  page: number;
+  limit: number;
+  counts: { all: number; approved: number; pending: number; global: number; user: number };
+}
+/** No empty search parameter: the demo recording (lib/demo.ts) is keyed without it. */
+const mappingsQuery = (p: MappingsPageParams) =>
+  new URLSearchParams({
+    page: String(p.page),
+    limit: String(p.limit),
+    status: p.status || 'ALL',
+    ...(p.search ? { search: p.search } : {}),
+  });
+
 export const api = {
   auth: {
     checkDomain: (email: string) =>
@@ -159,7 +217,7 @@ export const api = {
       request<any>('/api/auth/logout', { method: 'POST' })
         .catch(() => {})
         .finally(() => clearAuthToken()),
-    me: () => request<any>('/api/auth/me'),
+    me: () => sharedMe(),
     updateProfile: (data: { username?: string; email?: string; currentPassword?: string }) =>
       request<any>('/api/auth/profile', { method: 'POST', body: JSON.stringify(data) }),
     uploadAvatar: (formData: FormData) =>
@@ -399,8 +457,10 @@ export const api = {
   },
 
   mappings: {
+    /** The whole list (export); the page asks for one page at a time with getPage. */
     get: () => request<any[]>('/api/mappings'),
-    getAdminAll: () => request<any[]>('/api/mappings/admin/all'),
+    getPage: (params: MappingsPageParams) => request<MappingsPage>(`/api/mappings?${mappingsQuery(params)}`),
+    getAdminPage: (params: MappingsPageParams) => request<MappingsPage>(`/api/mappings/admin/all?${mappingsQuery(params)}`),
     toggleGlobal: (id: string) => request<any>(`/api/mappings/${id}/toggle-global`, { method: 'POST' }),
     approve: (id: string) => request<any>(`/api/mappings/${id}/approve`, { method: 'POST' }),
     setManual: (data: any) => request<any>('/api/mappings/manual', { method: 'POST', body: JSON.stringify(data) }),
@@ -484,7 +544,25 @@ export const api = {
       }>(`/api/admin/failed-scrobbles?page=${page}&limit=${limit}`),
     resetGeoMetrics: () =>
       request<{ success: boolean; message: string }>('/api/admin/metrics/geo', { method: 'DELETE' }),
-    getUsers: () => request<any[]>('/api/admin/users'),
+    /** One page of users, filtered and sorted by the server, and the counts of all of them. */
+    getUsers: (params: { page: number; limit: number; search?: string; role?: string; status?: string; sort?: string; asc?: boolean }) =>
+      request<{
+        items: any[];
+        total: number;
+        page: number;
+        limit: number;
+        counts: { all: number; admins: number; active: number; suspended: number; new: number };
+      }>(
+        `/api/admin/users?${new URLSearchParams({
+          page: String(params.page),
+          limit: String(params.limit),
+          role: params.role || 'ALL',
+          status: params.status || 'ALL',
+          sort: params.sort || 'createdAt',
+          asc: String(!!params.asc),
+          ...(params.search ? { search: params.search } : {}),
+        })}`,
+      ),
     updateUserPermissions: (id: string, payload: any) =>
       request<any>(`/api/admin/users/${id}/permissions`, { method: 'PATCH', body: JSON.stringify(payload) }),
     deleteUser: (id: string) => request<any>(`/api/admin/users/${id}`, { method: 'DELETE' }),
@@ -559,15 +637,26 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(schedule),
       }),
-    getMedia: () =>
+    /** One page of the media library, filtered and sorted by the server, and the library's totals. */
+    getMedia: (params: { page: number; limit: number; search?: string; category?: string; status?: string; sort?: string }) =>
       request<{
         media: any[];
+        total: number;
         totalFiles: number;
         totalSizeBytes: number;
         totalSizeFormatted: string;
         totalLinked?: number;
         totalOrphans?: number;
-      }>('/api/admin/media'),
+      }>(
+        `/api/admin/media?${new URLSearchParams({
+          page: String(params.page),
+          limit: String(params.limit),
+          category: params.category || 'ALL',
+          status: params.status || 'ALL',
+          sort: params.sort || 'RECENT',
+          ...(params.search ? { search: params.search } : {}),
+        })}`,
+      ),
     deleteMedia: (filename: string) =>
       request<{ success: boolean; message: string }>(`/api/admin/media/${encodeURIComponent(filename)}`, {
         method: 'DELETE',
@@ -791,7 +880,7 @@ export const api = {
   },
 
   announcements: {
-    getActive: () => request<any>('/api/announcements/active'),
+    getActive: () => sharedActiveAnnouncement(),
     getAdminConfig: () =>
       request<{ announcement: any; presets: any[]; customPresets: any[] }>('/api/admin/announcements'),
     update: (data: any) =>

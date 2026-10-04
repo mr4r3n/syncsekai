@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadGatewayException, Logger } from '@nestjs/common';
+import { SyncStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AnilistService } from '../anilist/anilist.service';
 import { MalService } from '../mal/mal.service';
 import { KitsuService } from '../kitsu/kitsu.service';
 import { CoversService, anilistCoverUrl } from '../covers/covers.service';
+import { withTrackerPriority } from '../../common/http/tracker-gate';
 
 @Injectable()
 export class HistoryService {
@@ -134,12 +136,21 @@ export class HistoryService {
     };
   }
 
-  async deleteAndRevert(userId: string, historyId: string) {
+  /** A sync in the trackers' queue, waiting at most 30 s: someone is waiting for the answer. */
+  deleteAndRevert(userId: string, historyId: string) {
+    return withTrackerPriority('sync', () => this.revertEverywhere(userId, historyId), 30_000);
+  }
+
+  private async revertEverywhere(userId: string, historyId: string) {
     const entry = await this.prisma.scrobbleHistory.findFirst({
       where: { id: historyId, userId },
     });
 
     if (!entry) throw new NotFoundException('History entry not found.');
+    // Its sync is still queued: undone now, it would be sent to the trackers again right after.
+    if ([entry.anilistStatus, entry.malStatus, entry.kitsuStatus].includes(SyncStatus.SYNCING)) {
+      throw new ConflictException('Still syncing with the trackers: undo it once it has finished.');
+    }
 
     // 1. Robust title mapping (multi-level: user -> user any season -> global -> AniList search)
     let mapping = await this.prisma.titleMapping.findFirst({
@@ -305,11 +316,8 @@ export class HistoryService {
       this.logger.warn(
         `Local history entry (${entry.id}) not deleted because of remote revert errors: ${revertErrors.join(', ')}`,
       );
-      return {
-        success: false,
-        message: `Could not revert on these trackers: ${revertErrors.join(', ')}. The local record was kept.`,
-        errors: revertErrors,
-      };
+      // An error status, so the page never reports as undone what a tracker still has.
+      throw new BadGatewayException(`Could not revert on these trackers: ${revertErrors.join(', ')}. The local record was kept.`);
     }
 
     await this.prisma.scrobbleHistory.delete({

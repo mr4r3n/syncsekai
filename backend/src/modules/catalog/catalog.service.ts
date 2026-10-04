@@ -6,6 +6,7 @@ import { CoversService } from '../covers/covers.service';
 import { AnimeProvider, SyncStatus } from '@prisma/client';
 import axios from 'axios';
 import { inferSeasonNumber, clampProgress, ANILIST_GRAPHQL_ENDPOINT, BROWSER_USER_AGENT } from './catalog-utils';
+import { withTrackerPriority } from '../../common/http/tracker-gate';
 
 export interface CatalogAnimeItem {
   id: string | number;
@@ -58,6 +59,8 @@ export interface CatalogQueryOptions {
 
 export interface UserCacheEntry {
   timestamp: number;
+  /** Set when a rebuild failed (e.g. the tracker is busy): until then the old list is served. */
+  retryAfter?: number;
   rawItems: CatalogAnimeItem[];
   username: string | null;
   avatarUrl: string | null;
@@ -68,9 +71,15 @@ export interface UserCacheEntry {
 export class CatalogService {
   private readonly logger = new Logger(CatalogService.name);
 
-  // In-memory cache per user and provider, 5-minute TTL
+  // In-memory cache per user and provider. 30 minutes, or until the user scrobbles something
+  // newer: each rebuild costs a request of the tracker's shared budget (30 a minute on AniList).
+  // ponytail: per process and lost on restart, so the first visit after a deploy asks again.
   readonly userCache = new Map<string, UserCacheEntry>();
-  private readonly CACHE_TTL_MS = 5 * 60 * 1000;
+  private readonly CACHE_TTL_MS = 30 * 60 * 1000;
+  /** After a failed rebuild, the previous list is served without asking again for this long. */
+  private readonly RETRY_AFTER_FAILURE_MS = 60 * 1000;
+  /** The refresh button is ignored on a list younger than this (a double click, not a change on the tracker). */
+  private readonly MIN_REFRESH_AGE_MS = 10 * 1000;
 
   constructor(
     private prisma: PrismaService,
@@ -209,6 +218,8 @@ export class CatalogService {
 
     let rawItems: CatalogAnimeItem[] = [];
     let username: string | null = null;
+    /** Set when the tracker could not be asked and an older list is served: when that list was fetched. */
+    let staleSince: number | undefined;
     let avatarUrl: string | null = null;
     let activeProvider: 'ANILIST' | 'MAL' | 'KITSU' | 'LOCAL' = 'LOCAL';
 
@@ -248,16 +259,17 @@ export class CatalogService {
       // Preload public Kitsu metadata for local titles
       const uniqueShowTitles = Array.from(new Set(scrobbles.map((s) => s.showTitle.trim()))).filter(Boolean);
       const kitsuMetaMap = new Map<string, any>();
-      await Promise.all(
-        uniqueShowTitles.map(async (title) => {
-          try {
-            const results = await this.kitsuService.searchAnime(title, 1);
-            if (results && results.length > 0) {
-              kitsuMetaMap.set(title.toLowerCase().trim(), results[0]);
-            }
-          } catch {}
-        }),
-      );
+      // Decoration only (cover, episode count): what Kitsu already answered is used now; the
+      // rest is asked in the background (Kitsu takes one request a second) and shows on a
+      // later visit, instead of this page waiting for it.
+      for (const title of uniqueShowTitles) {
+        const cachedResults = this.kitsuService.cachedSearch(title);
+        if (cachedResults?.length) {
+          kitsuMetaMap.set(title.toLowerCase().trim(), cachedResults[0]);
+        } else if (!cachedResults) {
+          void withTrackerPriority('background', () => this.kitsuService.searchAnime(title, 1)).catch(() => {});
+        }
+      }
 
       const localMap = new Map<string, CatalogAnimeItem>();
 
@@ -292,8 +304,11 @@ export class CatalogService {
 
         let cover = existing?.coverUrl || kitsuMeta?.coverUrl;
         if (!cover || cover.includes('dicebear.com')) {
-          const localOrFetched = await this.coversService.getOrFetchCover(scrobble.showTitle, anilistId || null);
-          cover = localOrFetched || kitsuMeta?.coverUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(scrobble.showTitle)}`;
+          // The cover on disk now; a missing one is looked up in the background and shows on a
+          // later visit (the lookup can wait its turn in the trackers' queue, this page should not).
+          const local = this.coversService.localCoverFor(scrobble.showTitle, anilistId || null);
+          if (!local) void this.coversService.getOrFetchCover(scrobble.showTitle, anilistId || null).catch(() => {});
+          cover = local || kitsuMeta?.coverUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(scrobble.showTitle)}`;
         }
 
         const generatedId = Math.abs(key.split('').reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0));
@@ -408,7 +423,13 @@ export class CatalogService {
 
       const cacheKey = `${userId}_${activeProvider}`;
       const cached = this.userCache.get(cacheKey);
-      const isCacheValid = cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS && !forceRefresh;
+      const now = Date.now();
+      const lastScrobbleAt = user.scrobbleHistory[0]?.createdAt?.getTime() ?? 0;
+      const refreshAsked = forceRefresh && (!cached || now - cached.timestamp > this.MIN_REFRESH_AGE_MS);
+      const isCacheValid =
+        cached &&
+        ((cached.retryAfter !== undefined && now < cached.retryAfter) ||
+          (now - cached.timestamp < this.CACHE_TTL_MS && cached.timestamp >= lastScrobbleAt && !refreshAsked));
 
       username = (activeProvider === 'MAL' ? malConn?.remoteUsername : activeProvider === 'KITSU' ? kitsuConn?.remoteUsername : anilistConn?.remoteUsername) || null;
       avatarUrl = (activeProvider === 'MAL' ? malConn?.avatarUrl : activeProvider === 'KITSU' ? kitsuConn?.avatarUrl : anilistConn?.avatarUrl) || null;
@@ -532,6 +553,7 @@ export class CatalogService {
         this.logger.error(`Error querying MyAnimeList REST: ${malErr.message}`);
         if (cached) {
           rawItems = cached.rawItems;
+          cached.retryAfter = Date.now() + this.RETRY_AFTER_FAILURE_MS;
         } else {
           return {
             connected: true,
@@ -575,6 +597,7 @@ export class CatalogService {
         this.logger.error(`Error querying Kitsu: ${kitsuErr.message}`);
         if (cached) {
           rawItems = cached.rawItems;
+          cached.retryAfter = Date.now() + this.RETRY_AFTER_FAILURE_MS;
         } else {
           return {
             connected: true,
@@ -803,11 +826,14 @@ export class CatalogService {
         this.logger.warn(`Local/offline mode or catalog query error (${error.message})`);
         if (cached) {
           rawItems = cached.rawItems;
+          cached.retryAfter = Date.now() + this.RETRY_AFTER_FAILURE_MS;
         } else {
           rawItems = [];
         }
       }
     }
+      // A list whose rebuild failed (tracker busy or down) is served as it was: the page says how old it is.
+      if (cached && rawItems === cached.rawItems && cached.retryAfter !== undefined) staleSince = cached.timestamp;
     }
 
     // Compute the global counters
@@ -874,6 +900,7 @@ export class CatalogService {
         favorites: await this.prisma.userFavorite.count({ where: { userId } }),
       },
       items: paginatedItems,
+      ...(staleSince !== undefined && { staleSince: new Date(staleSince).toISOString() }),
     };
   }
 

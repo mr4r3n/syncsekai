@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, BeforeApplicationShutdown } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AnilistService } from '../anilist/anilist.service';
 import { MalService } from '../mal/mal.service';
@@ -6,9 +7,10 @@ import { KitsuService } from '../kitsu/kitsu.service';
 import { CoversService } from '../covers/covers.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CommunityMappingService } from '../mappings/community-mapping.service';
-import { SyncStatus, Prisma, MappingSource } from '@prisma/client';
+import { SyncStatus, Prisma, MappingSource, AnimeProvider } from '@prisma/client';
 import axios from 'axios';
 import { recordActivity } from '../../common/logging/activity-log';
+import { withTrackerPriority } from '../../common/http/tracker-gate';
 
 // Common intermediate shape across sources (Plex, Jellyfin, whatever comes next).
 // Each source knows how to translate ITS payload into this; from here on nothing
@@ -30,6 +32,14 @@ export interface NormalizedScrobbleEvent {
   hasPayload: boolean; // false if the source brought no usable item data (Plex: no Metadata)
   rawPayload: any; // stored as is in ScrobbleHistory.payloadSnapshot for debugging
 }
+
+/**
+ * History rows whose tracker sync runs in this process right now ("syncing" in the history),
+ * from the pipeline and from the catalog (catalog-progress.service.ts). Shutdown and the
+ * sweep for interrupted syncs tell a live sync from one a restart cut short by it.
+ */
+export const syncingRows = new Set<string>();
+export const INTERRUPTED_SYNC = 'Interrupted by a server restart before the tracker answered.';
 
 class AsyncKeyedLock {
   private activeLocks = new Map<string, Promise<any>>();
@@ -60,7 +70,7 @@ class AsyncKeyedLock {
  * resolves the title and propagates progress to the connected trackers.
  */
 @Injectable()
-export class ScrobblePipelineService {
+export class ScrobblePipelineService implements OnModuleInit, BeforeApplicationShutdown {
   private readonly logger = new Logger(ScrobblePipelineService.name);
 
   private readonly scrobbleLock = new AsyncKeyedLock();
@@ -85,7 +95,57 @@ export class ScrobblePipelineService {
    * Plex, Jellyfin and Emby inject this service. Candidate for its own
    * `scrobble` module.
    */
-  async processScrobbleEvent(webhookOwner: any, evt: NormalizedScrobbleEvent, clientIp = '127.0.0.1') {
+  processScrobbleEvent(...args: Parameters<ScrobblePipelineService['handleScrobbleEvent']>) {
+    // Every tracker request of a scrobble goes first in the queue (common/http/tracker-gate.ts).
+    return withTrackerPriority('sync', () => this.handleScrobbleEvent(...args));
+  }
+
+  /**
+   * On shutdown (a deploy) the syncs under way get up to 8 s to finish; the ones still waiting
+   * their turn show as interrupted right away instead of "syncing" until the sweep below.
+   * The same episode played again (a watcher polling after the restart) sends them again.
+   */
+  async beforeApplicationShutdown() {
+    const deadline = Date.now() + 8_000;
+    while (syncingRows.size > 0 && Date.now() < deadline) await new Promise((r) => setTimeout(r, 200));
+    if (syncingRows.size > 0) await this.markInterrupted({ id: { in: [...syncingRows] } });
+  }
+
+  onModuleInit() {
+    void this.closeInterruptedSyncs();
+  }
+
+  /**
+   * A sync left "syncing" by a restart that cut it short (a crash, or a shutdown that could not
+   * record it) becomes FAILED, with the reason. A request waits at most 10 minutes in the
+   * trackers' queue, so a row syncing for 15 that no sync of this process holds is not being
+   * worked on.
+   */
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  closeInterruptedSyncs() {
+    // No parameters: the cron calls this with arguments of its own.
+    return this.markInterrupted({
+      createdAt: { lt: new Date(Date.now() - 15 * 60_000) },
+      id: { notIn: [...syncingRows] },
+    });
+  }
+
+  private async markInterrupted(rows: Prisma.ScrobbleHistoryWhereInput) {
+    const errorMessage = INTERRUPTED_SYNC;
+    try {
+      const closed = await this.prisma.$transaction([
+        this.prisma.scrobbleHistory.updateMany({ where: { ...rows, anilistStatus: SyncStatus.SYNCING }, data: { anilistStatus: SyncStatus.FAILED, errorMessage } }),
+        this.prisma.scrobbleHistory.updateMany({ where: { ...rows, malStatus: SyncStatus.SYNCING }, data: { malStatus: SyncStatus.FAILED, errorMessage } }),
+        this.prisma.scrobbleHistory.updateMany({ where: { ...rows, kitsuStatus: SyncStatus.SYNCING }, data: { kitsuStatus: SyncStatus.FAILED, errorMessage } }),
+      ]);
+      const count = closed.reduce((n, r) => n + r.count, 0);
+      if (count > 0) this.logger.warn(`${count} tracker sync(s) cut short by a restart marked as failed.`);
+    } catch (e: any) {
+      this.logger.warn(`Could not close interrupted syncs: ${e.message}`);
+    }
+  }
+
+  private async handleScrobbleEvent(webhookOwner: any, evt: NormalizedScrobbleEvent, clientIp = '127.0.0.1') {
     const source = evt.source;
     const showTitle = evt.showTitle;
     const librarySectionTitle = evt.librarySectionTitle;
@@ -276,8 +336,18 @@ export class ScrobblePipelineService {
         },
         orderBy: { createdAt: 'desc' },
       });
+      // A row a restart left syncing, or marked as interrupted, never reached the trackers:
+      // sent again on that same row instead of being taken for an already synced duplicate.
+      // One that a sync of this process holds is still on its way.
+      const interrupted =
+        recentDuplicate &&
+        !syncingRows.has(recentDuplicate.id) &&
+        (recentDuplicate.errorMessage === INTERRUPTED_SYNC ||
+          [recentDuplicate.anilistStatus, recentDuplicate.malStatus, recentDuplicate.kitsuStatus].includes(SyncStatus.SYNCING))
+          ? recentDuplicate
+          : null;
 
-      if (recentDuplicate) {
+      if (recentDuplicate && !interrupted) {
         const consolidatedPercentage = Math.max(recentDuplicate.viewPercentage, Math.max(viewPercentage, threshold));
         const updatedEntry = await this.prisma.scrobbleHistory.update({
           where: { id: recentDuplicate.id },
@@ -415,12 +485,61 @@ export class ScrobblePipelineService {
 
       const preferredTracker = user.settings?.preferredTracker || 'BOTH';
 
-      // 2. Real sync with AniList via GraphQL mutation (only if the mapping is approved)
       const canSyncAnilist = !isMappingPendingApproval &&
-                             (user.settings?.canSyncAnilist ?? true) && 
-                             (user.settings?.canScrobble ?? true) && 
+                             (user.settings?.canSyncAnilist ?? true) &&
+                             (user.settings?.canScrobble ?? true) &&
                              (preferredTracker === 'BOTH' || preferredTracker === 'ANILIST');
-      if (canSyncAnilist && anilistMediaId) {
+      const canSyncMal = !isMappingPendingApproval &&
+                         (user.settings?.canSyncMal ?? true) &&
+                         (user.settings?.canScrobble ?? true) &&
+                         (preferredTracker === 'BOTH' || preferredTracker === 'MAL');
+      const canSyncKitsu = !isMappingPendingApproval &&
+                           (user.settings?.canSyncKitsu ?? true) &&
+                           (user.settings?.canScrobble ?? true) &&
+                           (preferredTracker === 'BOTH' || preferredTracker === 'KITSU');
+
+      // 1.9 Recorded now, as "syncing" on each linked tracker it will be sent to, so it shows in
+      // the history while it waits its turn in the trackers' queue (tracker-gate.ts). Each one
+      // turns SUCCESS only once that tracker has confirmed it (step 4); a tracker that is not
+      // linked is SKIPPED, never "failed".
+      const linked = new Set(
+        (await this.prisma.animeConnection.findMany({
+          where: { userId: user.id, isConnected: true },
+          select: { provider: true },
+        })).map((c) => c.provider),
+      );
+      const willSyncAnilist = canSyncAnilist && Boolean(anilistMediaId) && linked.has(AnimeProvider.ANILIST);
+      const willSyncMal = canSyncMal && Boolean(malMediaId || anilistMediaId) && linked.has(AnimeProvider.MAL);
+      const willSyncKitsu = canSyncKitsu && linked.has(AnimeProvider.KITSU);
+      const planned = (will: boolean) => (will ? SyncStatus.SYNCING : SyncStatus.SKIPPED);
+      const plan = {
+        viewPercentage: Math.max(interrupted?.viewPercentage ?? 0, viewPercentage, threshold),
+        rating: rating ? Number(rating) : null,
+        anilistStatus: planned(willSyncAnilist),
+        malStatus: planned(willSyncMal),
+        kitsuStatus: planned(willSyncKitsu),
+        errorMessage: syncErrorMessage,
+        payloadSnapshot: evt.rawPayload as any,
+      };
+      let historyEntry = interrupted
+        ? await this.prisma.scrobbleHistory.update({ where: { id: interrupted.id }, data: plan })
+        : await this.prisma.scrobbleHistory.create({
+            data: {
+              userId: user.id,
+              showTitle,
+              episodeNumber,
+              seasonNumber,
+              source,
+              serverName: evt.serverTitle || null,
+              libraryName: librarySectionTitle || null,
+              viewedAt: new Date(),
+              ...plan,
+            },
+          });
+      syncingRows.add(historyEntry.id);
+
+      // 2. Real sync with AniList via GraphQL mutation (only if the mapping is approved)
+      if (willSyncAnilist && anilistMediaId) {
         try {
           const ratingVal = user.settings?.syncRatings ? (rating ? Number(rating) : undefined) : undefined;
           const anilistRes = await this.anilistService.updateProgress(
@@ -445,13 +564,8 @@ export class ScrobblePipelineService {
       }
 
       // 3. Sync with MyAnimeList if enabled (only if the mapping is approved)
-      const canSyncMal = !isMappingPendingApproval &&
-                         (user.settings?.canSyncMal ?? true) && 
-                         (user.settings?.canScrobble ?? true) && 
-                         (preferredTracker === 'BOTH' || preferredTracker === 'MAL');
-
       let effectiveMalId = malMediaId;
-      if (canSyncMal && !effectiveMalId && anilistMediaId) {
+      if (willSyncMal && !effectiveMalId && anilistMediaId) {
         try {
           const alRes = await axios.post(
             'https://graphql.anilist.co',
@@ -474,7 +588,7 @@ export class ScrobblePipelineService {
         }
       }
 
-      if (canSyncMal && effectiveMalId) {
+      if (willSyncMal && effectiveMalId) {
         try {
           const malRes = await this.malService.updateProgress(
             user.id,
@@ -497,21 +611,20 @@ export class ScrobblePipelineService {
       }
 
       // 3.5 Sync with Kitsu if connected (only if the mapping is approved)
-      const canSyncKitsu = !isMappingPendingApproval &&
-                           (user.settings?.canSyncKitsu ?? true) && 
-                           (user.settings?.canScrobble ?? true) &&
-                           (preferredTracker === 'BOTH' || preferredTracker === 'KITSU');
       let kitsuMediaId = mapping?.kitsuMediaId;
 
-      if (canSyncKitsu && !kitsuMediaId) {
+      if (willSyncKitsu && !kitsuMediaId) {
         try {
-          const kitsuResults = await this.kitsuService.searchAnime(showTitle, 1);
-          if (kitsuResults && kitsuResults.length > 0) {
-            kitsuMediaId = kitsuResults[0].kitsuId;
+          // By the MAL/AniList id when there is one: the title alone finds the first season of a sequel.
+          const found = malMediaId || anilistMediaId
+            ? await this.kitsuService.findByExternalIds(malMediaId, anilistMediaId)
+            : (await this.kitsuService.searchAnime(showTitle, 1))?.[0];
+          if (found) {
+            kitsuMediaId = found.kitsuId;
             if (mapping) {
               await this.prisma.titleMapping.update({
                 where: { id: mapping.id },
-                data: { kitsuMediaId, kitsuTitle: kitsuResults[0].title },
+                data: { kitsuMediaId, kitsuTitle: found.title },
               }).catch(() => {});
             }
           }
@@ -520,7 +633,7 @@ export class ScrobblePipelineService {
         }
       }
 
-      if (canSyncKitsu && kitsuMediaId) {
+      if (willSyncKitsu && kitsuMediaId) {
         try {
           const ratingTwenty = rating ? Math.round(Number(rating) * 2) : undefined;
           const kitsuRes = await this.kitsuService.updateProgress(
@@ -543,26 +656,18 @@ export class ScrobblePipelineService {
         }
       }
 
-      // 4. Record in ScrobbleHistory
-      const historyEntry = await this.prisma.scrobbleHistory.create({
-        data: {
-          userId: user.id,
-          showTitle,
-          episodeNumber,
-          seasonNumber,
-          viewPercentage: Math.max(viewPercentage, threshold),
-          rating: rating ? Number(rating) : null,
-          anilistStatus: anilistSyncStatus,
-          malStatus: malSyncStatus,
-          kitsuStatus: kitsuSyncStatus,
-          source,
-          serverName: evt.serverTitle || null,
-          libraryName: librarySectionTitle || null,
-          errorMessage: syncErrorMessage,
-          viewedAt: new Date(),
-          payloadSnapshot: evt.rawPayload as any,
-        },
-      });
+      // 4. What each tracker answered replaces "syncing" (one that was not sent ends SKIPPED)
+      historyEntry = await this.prisma.scrobbleHistory
+        .update({
+          where: { id: historyEntry.id },
+          data: {
+            anilistStatus: anilistSyncStatus,
+            malStatus: malSyncStatus,
+            kitsuStatus: kitsuSyncStatus,
+            errorMessage: syncErrorMessage,
+          },
+        })
+        .finally(() => syncingRows.delete(historyEntry.id));
 
       // 4.5 Pre-cache the cover on disk right away so the history never shows it broken
       this.coversService.getOrFetchCover(showTitle, anilistMediaId).catch(() => {});

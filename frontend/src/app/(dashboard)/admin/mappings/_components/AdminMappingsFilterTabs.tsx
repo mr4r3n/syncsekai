@@ -11,7 +11,8 @@ interface AdminMappingsFilterTabsProps {
   pendingCount: number;
   searchFilter: string;
   handleSearchFilterChange: (val: string) => void;
-  filteredMappings: any[];
+  /** Rows that match the filters, across every page. */
+  total: number;
 }
 
 export function AdminMappingsFilterTabs({
@@ -23,7 +24,7 @@ export function AdminMappingsFilterTabs({
   pendingCount,
   searchFilter,
   handleSearchFilterChange,
-  filteredMappings,
+  total,
 }: AdminMappingsFilterTabsProps) {
   const { t } = useI18n();
 
@@ -33,7 +34,7 @@ export function AdminMappingsFilterTabs({
         <GitMerge className="w-4 h-4 text-[var(--accent-text)]" />
         <h2 className="text-sm font-bold text-[var(--text-primary)] font-heading">{t('admin.generalMappingCatalogue')}</h2>
         <span className="text-xs text-[var(--text-muted)] font-mono">
-          {t('admin.shownCount', { count: filteredMappings.length })}
+          {t('admin.shownCount', { count: total })}
         </span>
       </div>
 

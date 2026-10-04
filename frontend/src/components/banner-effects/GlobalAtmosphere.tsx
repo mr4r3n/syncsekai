@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { api } from '@/lib/api';
 import { FireworksCanvas } from './FireworksCanvas';
+import { onVisibleInterval } from '@/lib/visibleInterval';
 
 interface GlobalAtmosphereProps {
   previewEffectType?: string;
@@ -61,12 +62,12 @@ export function GlobalAtmosphere({
 
     window.addEventListener('plexsync:announcement-updated', handleUpdate);
 
-    // Light polling every 15s to synchronize global state
-    const interval = setInterval(fetchActive, 15000);
+    // Light polling every 15s to synchronize global state (only while the tab is visible)
+    const stopPolling = onVisibleInterval(fetchActive, 15000);
 
     return () => {
       window.removeEventListener('plexsync:announcement-updated', handleUpdate);
-      clearInterval(interval);
+      stopPolling();
     };
   }, [isPreview, previewEffectType, previewEnabled, fetchActive]);
 

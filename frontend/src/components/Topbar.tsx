@@ -14,6 +14,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { useToast } from '@/components/ToastProvider';
 import { api } from '@/lib/api';
 import { useNow } from '@/lib/useNow';
+import { onVisibleInterval } from '@/lib/visibleInterval';
 
 interface TopbarProps {
   rootLabel?: string;
@@ -50,8 +51,7 @@ export function Topbar({
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 20000);
-    return () => clearInterval(interval);
+    return onVisibleInterval(fetchUnreadCount, 20000);
   }, []);
 
   useEffect(() => {

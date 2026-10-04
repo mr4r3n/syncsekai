@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { CoversService } from './covers.service';
+import { withTrackerPriority } from '../../common/http/tracker-gate';
 
 /**
  * Titles (English, romaji, native) and MAL id of AniList anime, requested in
@@ -14,7 +15,12 @@ export class AnimeMetadataService {
 
   private animeMetaCache = new Map<number, { english: string; romaji: string; native: string; malId: number | null }>();
 
-  async batchFetchAnimeMetadata(ids: number[]): Promise<Map<number, { english: string; romaji: string; native: string; malId: number | null }>> {
+  /** Background work for the trackers' queue. */
+  batchFetchAnimeMetadata(ids: number[]) {
+    return withTrackerPriority('background', () => this.fetchAnimeMetadata(ids), 10_000);
+  }
+
+  private async fetchAnimeMetadata(ids: number[]): Promise<Map<number, { english: string; romaji: string; native: string; malId: number | null }>> {
     const missing = ids.filter((id) => id > 0 && !this.animeMetaCache.has(id));
     if (missing.length > 0) {
       for (let i = 0; i < missing.length; i += 50) {

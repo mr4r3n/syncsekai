@@ -22,7 +22,8 @@ interface MediaToolbarProps {
   sortBy: string;
   setSortBy: (val: string) => void;
   sortOptions: { value: string; label: string }[];
-  filteredMedia: MediaItem[];
+  /** Files that match the filters, across every page. */
+  total: number;
   t: (key: string, values?: any) => string;
 }
 
@@ -39,7 +40,7 @@ export function MediaToolbar({
   sortBy,
   setSortBy,
   sortOptions,
-  filteredMedia,
+  total,
   t,
 }: MediaToolbarProps) {
   return (
@@ -149,7 +150,7 @@ export function MediaToolbar({
               </div>
 
               <div className="text-xs font-mono text-[var(--text-muted)] whitespace-nowrap">
-                <span>{t('admin.itemsCount', { n: filteredMedia.length })}</span>
+                <span>{t('admin.itemsCount', { n: total })}</span>
               </div>
             </div>
           </div>

@@ -6,7 +6,8 @@ import { useI18n } from '@/i18n/I18nProvider';
 interface AdminMappingsPaginationProps {
   page: number;
   limit: number;
-  filteredMappings: any[];
+  /** Rows that match the filters, across every page. */
+  total: number;
   handleLimitChange: (newLimit: number) => void;
   totalPages: number;
   changePage: (newPage: number, newLimit?: number) => void;
@@ -18,7 +19,7 @@ interface AdminMappingsPaginationProps {
 export function AdminMappingsPagination({
   page,
   limit,
-  filteredMappings,
+  total,
   handleLimitChange,
   totalPages,
   changePage,
@@ -33,7 +34,7 @@ export function AdminMappingsPagination({
       {/* Limit Selector & Count */}
       <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-muted)] flex-wrap">
         <span>
-          {t('mappings.showingRange', { from: (page - 1) * limit + 1, to: Math.min(page * limit, filteredMappings.length), total: filteredMappings.length })}
+          {t('mappings.showingRange', { from: (page - 1) * limit + 1, to: Math.min(page * limit, total), total })}
         </span>
 
         <div className="flex items-center gap-1.5 ml-0 md:ml-2">

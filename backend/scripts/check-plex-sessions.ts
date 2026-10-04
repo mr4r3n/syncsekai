@@ -46,8 +46,9 @@ const watcher = new PlexWatcherService(
     validateUserServerTarget: async (url: string) => ({ url }),
     findServerAccess: async (url: string) => { lookups.push(url); return resolve(url); },
   } as any,
-  { handleWebhook: async (token: string) => { scrobbles.push(token); } } as any,
+  { handleWebhook: (token: string) => webhook(token) } as any,
 );
+let webhook: (token: string) => Promise<unknown> = async (token) => { scrobbles.push(token); };
 const poll = (conn: any) => (watcher as any).pollServerSessions(conn);
 const tenMinutesPass = () => (watcher as any).lastLookup.clear();
 const playing = (title: string, owner: string) => ({
@@ -104,6 +105,18 @@ async function main() {
   await poll(dark);
   assert.deepEqual(updates, [{ where: { id: 'd' }, data: { serverUrl: newUrl } }], 'the new address is saved');
   assert.deepEqual(sent, [{ host: new URL(newUrl).host, token: 'server-token' }], 'and used in the same poll');
+
+  // A sync still waiting for the trackers' rate limits does not hold the poll.
+  scrobbles.length = 0;
+  resolve = () => 'stored-token';
+  webhook = (token) => { scrobbles.push(token); return new Promise(() => {}); };
+  sessionsByHost['slow.example:32400'] = [playing('Show S', 'sam')];
+  const finished = await Promise.race([
+    poll(conn('s', 'http://slow.example:32400', 'sam')).then(() => true),
+    new Promise((r) => setTimeout(() => r(false), 2000)),
+  ]);
+  assert.equal(finished, true, 'the poll finishes while the sync is still waiting');
+  assert.deepEqual(scrobbles, ['whk_sam'], 'and the scrobble was handed over');
 
   // findServerAccess itself.
   const plex = Object.create(PlexService.prototype) as PlexService;

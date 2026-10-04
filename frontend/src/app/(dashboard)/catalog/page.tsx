@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { onVisibleInterval } from '@/lib/visibleInterval';
 import { Topbar } from '@/components/Topbar';
 import { useToast } from '@/components/ToastProvider';
 import { useSidebar } from '@/components/SidebarProvider';
@@ -109,6 +111,18 @@ export default function CatalogPage() {
     loadCatalog(currentPage, statusFilter, debouncedSearch, selectedTracker);
   }, [currentPage, statusFilter, debouncedSearch, selectedTracker]);
 
+  // The tracker was busy and an older list is shown (staleSince): asked again every minute,
+  // quietly, while the tab is visible, until a fresh one arrives.
+  useEffect(() => {
+    if (!catalogResponse?.staleSince) return;
+    return onVisibleInterval(
+      () => loadCatalog(currentPage, statusFilter, debouncedSearch, selectedTracker, false, true),
+      65_000,
+    );
+    // Every new list (a new page, filter or tracker included) is a new catalogResponse.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogResponse]);
+
   const handleToggleFavorite = async (anime: any, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -153,10 +167,11 @@ export default function CatalogPage() {
     search = '',
     tracker = selectedTracker,
     forceRefresh = false,
+    quiet = false,
   ) => {
     const myRequest = ++catalogRequest.current;
     try {
-      setLoading(true);
+      if (!quiet) setLoading(true);
       const isFavFilter = status === 'FAVORITES';
       const res = await api.catalog.getUser({
         page: isFavFilter ? 1 : page,
@@ -182,6 +197,7 @@ export default function CatalogPage() {
 
       setCatalogResponse(res);
       setCatalog(items);
+      return res;
 
       // Backend is authority on active tracker, including 'LOCAL'
       // when none is linked.
@@ -197,18 +213,21 @@ export default function CatalogPage() {
     }
   };
 
+  const trackerName = selectedTracker === 'MAL' ? 'MyAnimeList' : selectedTracker === 'KITSU' ? 'Kitsu' : selectedTracker === 'LOCAL' ? t('catalog.localBase') : 'AniList';
+  const staleNotice = (since: string) =>
+    t('catalog.staleList', { tracker: trackerName, minutes: Math.max(1, Math.round((Date.now() - Date.parse(since)) / 60_000)) });
+
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
+      const [res] = await Promise.all([
         loadCatalog(currentPage, statusFilter, debouncedSearch, selectedTracker, true),
         loadUserStats(),
       ]);
-      const trackerName = selectedTracker === 'MAL' ? 'MyAnimeList' : selectedTracker === 'KITSU' ? 'Kitsu' : selectedTracker === 'LOCAL' ? t('catalog.localBase') : 'AniList';
-      showToast(
-        t('catalog.syncedFromTracker', { tracker: trackerName }),
-        'success',
-      );
+      // "Synced" only when a fresh list arrived: a failed load already said so, and a busy
+      // tracker leaves the previous list on screen.
+      if (res?.staleSince) showToast(staleNotice(res.staleSince), 'info');
+      else if (res) showToast(t('catalog.syncedFromTracker', { tracker: trackerName }), 'success');
     } catch (e: any) {
       showToast(`${t('catalog.refreshCatalogueError')} ` + e.message, 'error');
     } finally {
@@ -291,6 +310,15 @@ export default function CatalogPage() {
 
       {/* MAIN SCROLLABLE CONTAINER */}
       <main className="w-full px-4 sm:px-6 md:px-8 py-6 space-y-7 min-w-0" ref={catalogTopRef}>
+        {catalogResponse?.staleSince && (
+          <p
+            role="status"
+            className="flex items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--status-warning-bg)] border border-[var(--status-warning)]/30 text-sm text-[var(--text-primary)]"
+          >
+            <Loader2 className="w-4 h-4 shrink-0 animate-spin text-[var(--status-warning)]" aria-hidden="true" />
+            {staleNotice(catalogResponse.staleSince)}
+          </p>
+        )}
         <CatalogContent
           loading={loading}
           catalogResponse={catalogResponse}

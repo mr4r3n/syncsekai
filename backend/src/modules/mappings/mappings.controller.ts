@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Delete, Body, Param, UseGuards, Query, ForbiddenException } from '@nestjs/common';
-import { MappingsService } from './mappings.service';
+import { MappingsService, parseMappingsQuery } from './mappings.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -8,15 +8,29 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class MappingsController {
   constructor(private mappingsService: MappingsService) {}
 
+  /** With ?page= one page at a time (the mappings page); without it, the whole list (export). */
   @Get()
-  async getMappings(@CurrentUser() user: any) {
+  async getMappings(
+    @CurrentUser() user: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
+    if (page) return this.mappingsService.pageMappings({ userId: user.id }, parseMappingsQuery({ page, limit, search, status }));
     return this.mappingsService.getUserMappings(user.id);
   }
 
   @Get('admin/all')
-  async getAllAdminMappings(@CurrentUser() user: any) {
+  async getAllAdminMappings(
+    @CurrentUser() user: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
     const isAdmin = user.role === 'ADMIN';
-    return this.mappingsService.getAllAdminMappings(isAdmin);
+    return this.mappingsService.getAdminMappingsPage(isAdmin, parseMappingsQuery({ page, limit, search, status }));
   }
 
   @Post(':id/toggle-global')

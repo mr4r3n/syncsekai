@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from '../../common/crypto/encryption.service';
 import { ConfigService } from '@nestjs/config';
 import { ScrobblePipelineService, NormalizedScrobbleEvent } from '../plex/scrobble-pipeline.service';
-import * as os from 'os';
+import { lanAddress } from '../../common/http/lan-address';
 import axios from 'axios';
 import { decodeHtmlEntities } from '../../common/text/decode-html-entities';
 import {
@@ -326,16 +326,7 @@ export class JellyfinService {
       baseUrl = baseUrl.replace(/\/+$/, '');
     }
 
-    const nets = os.networkInterfaces();
-    let localIp = '127.0.0.1';
-    for (const name of Object.keys(nets)) {
-      for (const net of nets[name] || []) {
-        if (net.family === 'IPv4' && !net.internal && !net.address.startsWith('172.')) {
-          localIp = net.address;
-          break;
-        }
-      }
-    }
+    const localIp = lanAddress();
 
     const port = this.configService.get<number>('PORT') || 4000;
     const lanWebhookUrl = `http://${localIp}:${port}/api/jellyfin/webhook/${user.webhookToken}`;

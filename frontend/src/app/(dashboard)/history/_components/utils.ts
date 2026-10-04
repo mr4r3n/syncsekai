@@ -52,6 +52,8 @@ function syncLabels(item: any, t: (k: string, v?: any) => string) {
       ? t('history.syncedOn', { tracker })
       : status === 'FAILED'
       ? t('history.syncFailedOn', { tracker })
+      : status === 'SYNCING'
+      ? t('history.syncingOn', { tracker })
       : t('history.notConfiguredOn', { tracker });
 
   return {

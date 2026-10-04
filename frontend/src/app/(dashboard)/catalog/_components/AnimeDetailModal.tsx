@@ -10,6 +10,7 @@ import { AnimeModalSidebar } from './AnimeModalSidebar';
 import { AnimeModalSeasonsBar } from './AnimeModalSeasonsBar';
 import { AnimeModalEpisodes } from './AnimeModalEpisodes';
 import { AnimeModalSyncFooter } from './AnimeModalSyncFooter';
+import { syncOutcome } from './syncOutcome';
 
 interface AnimeDetailModalProps {
   selectedAnime: any;
@@ -196,7 +197,19 @@ export function AnimeDetailModal({
     }
     setSavingRating(true);
 
+    const previous = selectedAnime;
     const updated = { ...selectedAnime, rating: newScore };
+    // A rating no tracker took is undone on screen: it must not look saved when it is not.
+    const undo = () => {
+      setSelectedAnime(previous);
+      setCatalog((prev) =>
+        prev.map((item) =>
+          item.id === previous.id || (item.anilistId && item.anilistId === previous.anilistId)
+            ? { ...item, rating: previous.rating }
+            : item,
+        ),
+      );
+    };
     setSelectedAnime(updated);
     setCatalog((prev) =>
       prev.map((item) =>
@@ -216,11 +229,19 @@ export function AnimeDetailModal({
         showTitle: selectedAnime.title,
         seasonNumber: selectedAnime.seasonNumber,
       });
-      const trackersMsg = res?.updatedTrackers?.length > 0
-        ? res.updatedTrackers.join(' y ')
-        : (selectedTracker === 'MAL' ? 'MyAnimeList' : 'AniList');
-      showToast(t('catalog.scoreSynced', { score: newScore.toFixed(1), trackers: trackersMsg }), 'success');
+      const outcome = syncOutcome(res);
+      if (outcome.kind === 'synced') {
+        showToast(t('catalog.scoreSynced', { score: newScore.toFixed(1), trackers: outcome.trackers }), 'success');
+      } else if (outcome.kind === 'syncing') {
+        showToast(t('catalog.syncStillRunning'), 'info');
+      } else if (outcome.kind === 'local') {
+        showToast(t('catalog.savedLocallyOnly'), 'info');
+      } else {
+        undo();
+        showToast(`${t('catalog.saveRatingError')} ${outcome.reason}`, 'error');
+      }
     } catch (err: any) {
+      undo();
       showToast(`${t('catalog.saveRatingError')} ` + err.message, 'error');
     } finally {
       setSavingRating(false);
